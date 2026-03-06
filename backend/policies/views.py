@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from users.models import Worker
 from ai_engine.risk_calculator import calculate_risk_and_premium
 from .models import Policy
@@ -15,7 +17,9 @@ class PolicyQuoteQuerySerializer(serializers.Serializer):
 from rest_framework import status, generics
 
 class PolicyQuoteView(generics.GenericAPIView):
-    serializer_class = PolicyQuoteQuerySerializer # Use for validation & docs
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = PolicyQuoteQuerySerializer 
     
     @swagger_auto_schema(
         query_serializer=PolicyQuoteQuerySerializer,
@@ -31,11 +35,13 @@ class PolicyQuoteView(generics.GenericAPIView):
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Mock weather risk and pollution risk (real scenario: fetch from external/DB)
+        # Security: Ensure user can only get their own quote
+        if not request.user.is_staff and worker.user != request.user:
+            return Response({"error": "You do not have permission to view this quote"}, status=status.HTTP_403_FORBIDDEN)
+
         weather_risk = 0.4 
         pollution_risk = 0.3
         
-        # Calculate premium
         quote = calculate_risk_and_premium(
             zone=worker.zone, 
             avg_income=worker.avg_daily_income,
@@ -53,6 +59,9 @@ class PolicyQuoteView(generics.GenericAPIView):
         })
 
 class PolicyPurchaseView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -79,7 +88,10 @@ class PolicyPurchaseView(APIView):
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Mock weather risk and pollution risk
+        # Security: Ensure user can only purchase for themselves
+        if not request.user.is_staff and worker.user != request.user:
+            return Response({"error": "You do not have permission to purchase for this worker"}, status=status.HTTP_403_FORBIDDEN)
+
         weather_risk = 0.4 
         pollution_risk = 0.3
         quote = calculate_risk_and_premium(
@@ -89,7 +101,6 @@ class PolicyPurchaseView(APIView):
             pollution_risk=pollution_risk
         )
 
-        # Create policy
         policy = Policy.objects.create(
             worker=worker,
             weekly_premium=quote['premium'],

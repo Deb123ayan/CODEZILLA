@@ -1,9 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from claims.models import Claim
 
 class PayoutProcessView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUser]
+
     def post(self, request, *args, **kwargs):
         claim_id = request.data.get('claim_id')
         if not claim_id:
