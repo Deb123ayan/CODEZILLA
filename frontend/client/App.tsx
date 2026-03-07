@@ -30,6 +30,10 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminAlerts from "./pages/AdminAlerts";
 import AdminSettings from "./pages/AdminSettings";
 import AdminLogin from "./pages/AdminLogin";
+import AdminGuard from "./components/AdminGuard";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
+import UserGuard from "./components/UserGuard";
+import { UserAuthProvider } from "./context/UserAuthContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,40 +44,44 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<PlatformSelection />} />
+        <AdminAuthProvider>
+          <UserAuthProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<PlatformSelection />} />
 
-          {/* Registration Routes */}
-          <Route path="/register/zomato" element={<RegisterZomato />} />
-          <Route path="/register/blinkit" element={<RegisterBlinkit />} />
-          <Route path="/register/flipkart" element={<RegisterFlipkart />} />
-          <Route path="/register/amazon" element={<RegisterAmazon />} />
-          <Route path="/register/zepto" element={<RegisterZepto />} />
-          <Route path="/register/swiggy" element={<RegisterSwiggy />} />
+              {/* Registration Routes */}
+              <Route path="/register/zomato" element={<RegisterZomato />} />
+              <Route path="/register/blinkit" element={<RegisterBlinkit />} />
+              <Route path="/register/flipkart" element={<RegisterFlipkart />} />
+              <Route path="/register/amazon" element={<RegisterAmazon />} />
+              <Route path="/register/zepto" element={<RegisterZepto />} />
+              <Route path="/register/swiggy" element={<RegisterSwiggy />} />
 
-          {/* Worker Dashboard Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/policies" element={<Policies />} />
-          <Route path="/claims" element={<Claims />} />
-          <Route path="/payouts" element={<Payouts />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/settings" element={<Settings />} />
+              {/* Worker Dashboard Routes */}
+              <Route path="/dashboard" element={<UserGuard><Dashboard /></UserGuard>} />
+              <Route path="/policies" element={<UserGuard><Policies /></UserGuard>} />
+              <Route path="/claims" element={<UserGuard><Claims /></UserGuard>} />
+              <Route path="/payouts" element={<UserGuard><Payouts /></UserGuard>} />
+              <Route path="/notifications" element={<UserGuard><NotificationsPage /></UserGuard>} />
+              <Route path="/settings" element={<UserGuard><Settings /></UserGuard>} />
 
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/workers" element={<AdminWorkers />} />
-          <Route path="/admin/claims" element={<AdminClaims />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
-          <Route path="/admin/alerts" element={<AdminAlerts />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+              <Route path="/admin/workers" element={<AdminGuard><AdminWorkers /></AdminGuard>} />
+              <Route path="/admin/claims" element={<AdminGuard><AdminClaims /></AdminGuard>} />
+              <Route path="/admin/analytics" element={<AdminGuard><AdminAnalytics /></AdminGuard>} />
+              <Route path="/admin/alerts" element={<AdminGuard><AdminAlerts /></AdminGuard>} />
+              <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
 
-          {/* Catch-all for 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+              {/* Catch-all for 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </UserAuthProvider>
+        </AdminAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

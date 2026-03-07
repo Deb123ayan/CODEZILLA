@@ -85,7 +85,7 @@ export default function Claims() {
             </div>
 
             <div className="overflow-x-auto no-scrollbar pt-2">
-              <table className="w-full text-left">
+              <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
                     <th className="px-8 py-5">Claim ID</th>

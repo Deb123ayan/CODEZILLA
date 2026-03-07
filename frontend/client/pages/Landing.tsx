@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Cloud, TrendingUp, AlertTriangle, Shield, Zap, X, MessageSquare, ArrowRight, Play, LayoutGrid, Award, ShieldCheck, MapPin } from "lucide-react";
+import { CheckCircle2, Cloud, TrendingUp, AlertTriangle, Shield, Zap, X, MessageSquare, ArrowRight, Play, LayoutGrid, Award, ShieldCheck, MapPin, Activity, Smartphone, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -78,34 +78,40 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
               <Link
                 to="/register"
-                className="w-full sm:w-auto px-10 py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95 flex items-center justify-center space-x-3"
+                className="w-full sm:w-auto px-6 py-4 md:px-10 md:py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95 flex items-center justify-center space-x-3"
               >
                 <span>Start Protection</span>
                 <Zap size={18} className="fill-current text-white" />
               </Link>
               <Link
                 to="/login"
-                className="w-full sm:w-auto px-10 py-6 bg-white border border-gray-100 text-gray-900 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-50 transition-all shadow-xl active:scale-95 flex items-center justify-center"
+                className="w-full sm:w-auto px-6 py-4 md:px-10 md:py-6 bg-white border border-gray-100 text-gray-900 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-50 transition-all shadow-xl active:scale-95 flex items-center justify-center"
               >
                 Go to Dashboard
               </Link>
             </div>
 
-            {/* Trust Line */}
-            <div className="pt-16 md:pt-24 flex flex-wrap items-center justify-center gap-6 md:gap-16 transition-all duration-700">
-              {[
-                { name: "Amazon", logo: AmazonLogo },
-                { name: "Zomato", logo: ZomatoLogo },
-                { name: "Flipkart", logo: FlipkartLogo },
-                { name: "Zepto", logo: ZeptoLogo },
-                { name: "Blinkit", logo: BlinkitLogo },
-                { name: "Swiggy", logo: SwiggyLogo }
-              ].map(p => (
-                <div key={p.name} className="p-8 bg-white rounded-[3rem] shadow-sm hover:shadow-xl hover:-translate-y-3 transition-all duration-500 group">
-                  <img src={p.logo} alt={p.name} className="h-16 md:h-24 object-contain rounded-xl" />
-                </div>
-              ))}
-            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partners Section */}
+      <section id="partners" className="section-padding py-20 bg-white border-b border-gray-50 reveal active">
+        <div className="max-w-7xl mx-auto flex flex-col items-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-12">Proudly partnering with top platforms</p>
+          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-20 w-full">
+            {[
+              { name: "Amazon", logo: AmazonLogo },
+              { name: "Zomato", logo: ZomatoLogo },
+              { name: "Flipkart", logo: FlipkartLogo },
+              { name: "Zepto", logo: ZeptoLogo },
+              { name: "Blinkit", logo: BlinkitLogo },
+              { name: "Swiggy", logo: SwiggyLogo }
+            ].map(p => (
+              <div key={p.name} className="group cursor-pointer">
+                <img src={p.logo} alt={p.name} className="h-12 md:h-16 object-contain group-hover:scale-110 transition-all duration-500" />
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -168,13 +174,90 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Expanded Features Section */}
+      <section id="features" className="section-padding py-20 md:py-40 bg-white reveal active border-t border-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-24 space-y-6">
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter">Everything you need <br /><span className="text-blue-600">to earn securely.</span></h2>
+            <p className="text-gray-400 font-bold max-w-2xl mx-auto text-lg md:text-xl">Our intelligent platform handles the risk while you focus on the road.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-orange-50 text-orange-600" },
+              { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-50 text-blue-600" },
+              { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-red-50 text-red-600" },
+              { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-emerald-50 text-emerald-600" },
+              { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-purple-50 text-purple-600" },
+              { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-gray-100 text-gray-900" }
+            ].map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div key={i} className="bg-gray-50/50 border border-gray-50 rounded-[2.5rem] p-10 hover:bg-white hover:shadow-2xl hover:border-transparent transition-all duration-500 group transform hover:-translate-y-2">
+                  <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500", f.color)}>
+                    <Icon size={24} className="group-hover:animate-pulse" />
+                  </div>
+                  <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-blue-600 transition-colors">{f.title}</h3>
+                  <p className="text-sm font-bold text-gray-400 leading-relaxed">{f.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="section-padding py-20 md:py-40 bg-black text-white reveal active overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-[60%] h-[100%] bg-emerald-900/20 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[40%] h-[60%] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row gap-20 items-center">
+
+            <div className="lg:w-1/3 space-y-8">
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-10 shadow-2xl">
+                <LayoutGrid size={32} className="text-emerald-400" />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">How it <br /><span className="text-emerald-400">Works.</span></h2>
+              <p className="text-gray-400 font-bold text-lg leading-relaxed">Three simple steps to absolute peace of mind during your shifts.</p>
+              <button className="px-8 py-5 mt-4 bg-white/5 border border-white/10 hover:bg-white hover:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500">
+                View detailed guide
+              </button>
+            </div>
+
+            <div className="lg:w-2/3 grid sm:grid-cols-3 gap-8 relative">
+              {/* Connecting line for desktop */}
+              <div className="hidden sm:block absolute top-[4.5rem] left-10 right-10 h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 z-0" />
+
+              {[
+                { step: "01", title: "Connect", desc: "Link your delivery accounts with one secure click to sync data.", icon: ShieldCheck, color: "text-blue-400" },
+                { step: "02", title: "Drive", desc: "Our AI silently monitors weather and traffic in the background.", icon: Zap, color: "text-yellow-400" },
+                { step: "03", title: "Earn", desc: "Instant payouts triggered automatically if conditions breach limits.", icon: Wallet, color: "text-emerald-400" }
+              ].map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <div key={i} className="relative z-10 bg-[#111] p-8 lg:p-10 rounded-[2.5rem] border border-white/5 hover:bg-[#151515] hover:border-white/10 transition-all duration-500 group transform hover:-translate-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-8 group-hover:text-white transition-colors">Step {s.step}</p>
+                    <div className="w-20 h-20 bg-black rounded-3xl flex items-center justify-center mb-8 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                      <Icon size={32} className={cn("transition-colors", s.color)} />
+                    </div>
+                    <h3 className="text-2xl font-black tracking-tight mb-4 text-gray-100 group-hover:text-white transition-colors">{s.title}</h3>
+                    <p className="text-xs font-bold text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{s.desc}</p>
+                  </div>
+                )
+              })}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof Section */}
       <section className="section-padding py-20 md:py-40 reveal active">
         <div className="max-w-7xl mx-auto text-center lg:text-left grid lg:grid-cols-3 gap-20 items-center">
           <div className="lg:col-span-1 space-y-8">
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none mb-6">Trusted by thousands of delivery heroes.</h2>
             <p className="text-gray-400 font-bold text-lg md:text-xl leading-relaxed">Join the next generation of gig economy security.</p>
-            <button className="px-10 py-5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center space-x-4 mx-auto lg:mx-0 group hover:scale-105 transition-all duration-500 active:scale-95">
+            <button className="px-6 py-4 md:px-10 md:py-5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center space-x-4 mx-auto lg:mx-0 group hover:scale-105 transition-all duration-500 active:scale-95">
               <Play className="fill-current text-blue-600 transition-colors" size={20} />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">Watch our story</span>
             </button>
@@ -212,13 +295,13 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link
                 to="/register"
-                className="w-full sm:w-auto px-12 py-7 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-emerald-400 transition-all duration-500 hover:scale-110"
+                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-emerald-400 transition-all duration-500 hover:scale-110"
               >
                 Register Account
               </Link>
               <Link
                 to="/login"
-                className="w-full sm:w-auto px-12 py-7 bg-white/10 text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white/20 transition-all"
+                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white/10 text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white/20 transition-all"
               >
                 Sign In
               </Link>

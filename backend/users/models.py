@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from django.utils import timezone
 
 class Worker(models.Model):
     PLATFORM_CHOICES = [
@@ -8,6 +9,15 @@ class Worker(models.Model):
         ('Swiggy', 'Swiggy'),
         ('Blinkit', 'Blinkit'),
         ('Amazon', 'Amazon'),
+        ('Flipkart', 'Flipkart'),
+        ('Zepto', 'Zepto'),
+    ]
+    
+    VEHICLE_CHOICES = [
+        ('Bike', 'Bike'),
+        ('Scooter', 'Scooter'),
+        ('Cycle', 'Cycle'),
+        ('Car', 'Car'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -15,10 +25,36 @@ class Worker(models.Model):
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15, unique=True)
     platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
+    partner_id = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=100)
     zone = models.CharField(max_length=100)
-    avg_daily_income = models.IntegerField()
+    
+    # Onboarding Data
+    weekly_earnings = models.IntegerField(default=0)
+    working_hours = models.IntegerField(default=8)
+    working_days = models.JSONField(default=list) # e.g., ["Mon", "Tue"]
+    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_CHOICES, default='Bike')
+    
+    # Status
+    is_verified = models.BooleanField(default=False)
+    onboarding_completed = models.BooleanField(default=False)
+    
+    avg_daily_income = models.IntegerField(default=0) # Legacy support or calculated
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({self.platform} - {self.zone})"
+
+class OTP(models.Model):
+    phone = models.CharField(max_length=15)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    is_verified = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"OTP for {self.phone} - {self.code}"

@@ -1,5 +1,5 @@
 import Navbar from "@/components/Navbar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Mail, Lock, Globe, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,12 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [platform, setPlatform] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const { status, login } = useUserAuth();
+
+  if (status === "authenticated") {
+    const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
+    return <Navigate to={destination} replace />;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,13 +63,11 @@ export default function Login() {
     const username = email.includes("@") ? email.split("@")[0] : email;
     const formattedUsername = username.charAt(0).toUpperCase() + username.slice(1);
 
+    login(platform, formattedUsername);
     toast.success(`Logged into ${platform.charAt(0).toUpperCase() + platform.slice(1)} successfully!`);
-    navigate("/dashboard", {
-      state: {
-        selectedPlatform: platform,
-        username: formattedUsername
-      }
-    });
+
+    const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
+    navigate(destination);
   };
 
   return (
@@ -156,7 +162,7 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                  className="w-full h-14 md:h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
                 >
                   <span>Sign In</span>
                   <ArrowRight size={16} />
@@ -168,7 +174,7 @@ export default function Login() {
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
                   <span className="relative bg-white px-6 text-[10px] font-black uppercase tracking-widest text-gray-300">New around here?</span>
                 </div>
-                <Link to="/register" className="inline-block px-10 py-5 bg-gray-50 text-gray-900 border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm">
+                <Link to="/register" className="inline-block px-6 py-4 md:px-10 md:py-5 bg-gray-50 text-gray-900 border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm">
                   Create Member Account
                 </Link>
               </div>

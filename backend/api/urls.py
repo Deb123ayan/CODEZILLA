@@ -1,12 +1,28 @@
 from django.urls import path
-from users.views import WorkerRegisterView
+from users.views import (
+    WorkerRegisterView, 
+    GenerateOTPView, 
+    VerifyOTPView, 
+    MockPlatformConnectView, 
+    UpdateWorkDetailsView, 
+    FinalizeOnboardingView
+)
+from fraud_detection.views import VerifyScreenshotView
 from policies.views import PolicyQuoteView, PolicyPurchaseView
 from api.admin_views import AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView
 from payments.views import PayoutProcessView
 from api.risk_views import RealTimeRiskPredictionView
 
 urlpatterns = [
-    # Worker Registration (Step 1)
+    # Onboarding Flow (Mock OAuth Integration)
+    path('auth/otp/generate/', GenerateOTPView.as_view(), name='otp-generate'),
+    path('auth/otp/verify/', VerifyOTPView.as_view(), name='otp-verify'),
+    path('auth/platform/connect/', MockPlatformConnectView.as_view(), name='platform-connect'),
+    path('auth/screenshot/verify/', VerifyScreenshotView.as_view(), name='screenshot-verify'),
+    path('auth/work-details/', UpdateWorkDetailsView.as_view(), name='update-work-details'),
+    path('auth/finalize/', FinalizeOnboardingView.as_view(), name='finalize-onboarding'),
+
+    # Worker Registration (Legacy/Fallback)
     path('workers/register/', WorkerRegisterView.as_view(), name='worker-register'),
     
     # Policy Quote (Step 2)

@@ -12,12 +12,13 @@ import {
 } from "recharts";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
-  const location = useLocation();
-  const platform = location.state?.selectedPlatform || "general";
-  const username = location.state?.username || "Rajesh";
+  const { platform: userPlatform, username: userUsername } = useUserAuth();
+  const platform = userPlatform || "general";
+  const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);

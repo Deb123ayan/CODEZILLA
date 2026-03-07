@@ -1,32 +1,31 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import AllowAny
 from users.models import Worker
 from claims.models import Claim
 from events.models import Event
 from django.db.models import Count, Sum
 
 class AdminWorkerListView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
     
     def get(self, request):
-        workers = Worker.objects.all().values('name', 'platform', 'city', 'zone', 'avg_daily_income')
-        return Response(workers)
+        workers = Worker.objects.all().values(
+            'id', 'name', 'platform', 'partner_id', 'city', 'zone',
+            'avg_daily_income', 'weekly_earnings', 'vehicle_type',
+            'is_verified', 'onboarding_completed', 'created_at'
+        )
+        return Response(list(workers))
 
 class AdminRiskHeatmapView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
     def get(self, request):
-        # Count events per zone for heatmap
         heatmap = Event.objects.values('zone').annotate(event_count=Count('event_id'))
-        return Response(heatmap)
+        return Response(list(heatmap))
 
 class AdminClaimsMonitoringView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         stats = {

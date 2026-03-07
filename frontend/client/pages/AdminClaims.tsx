@@ -86,7 +86,7 @@ export default function AdminClaims() {
             </div>
 
             <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full text-left">
+              <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
                     <th className="px-10 py-6">Claim & Worker</th>
@@ -138,7 +138,7 @@ export default function AdminClaims() {
               </table>
             </div>
 
-            <div className="p-8 bg-blue-50/50 border-t border-blue-100 flex items-center space-x-6">
+            <div className="p-5 md:p-8 bg-blue-50/50 border-t border-blue-100 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm shrink-0">
                 <FileText size={24} />
               </div>
@@ -146,7 +146,7 @@ export default function AdminClaims() {
                 <p className="text-sm font-black text-blue-900 uppercase tracking-widest mb-1">AI Verification Active</p>
                 <p className="text-xs font-medium text-blue-700/70">85% of claims are automatically cross-referenced against platform telemetry.</p>
               </div>
-              <button className="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95">
+              <button className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95 shrink-0">
                 Adjust Engines
               </button>
             </div>

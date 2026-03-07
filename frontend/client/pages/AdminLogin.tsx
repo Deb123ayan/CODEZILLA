@@ -1,14 +1,23 @@
 import Navbar from "@/components/Navbar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Lock, ShieldAlert, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const location = useLocation();
+    const { status, login } = useAdminAuth();
+
+    // Already authenticated → skip login page
+    if (status === "authenticated") {
+        const destination = (location.state as any)?.from?.pathname ?? "/admin";
+        return <Navigate to={destination} replace />;
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,8 +32,13 @@ export default function AdminLogin() {
             return;
         }
 
+        // Update auth context (also stamps sessionStorage)
+        login();
         toast.success("Administrator access granted");
-        navigate("/admin");
+
+        // Redirect to originally-requested page, or /admin by default
+        const destination = (location.state as any)?.from?.pathname ?? "/admin";
+        navigate(destination);
     };
 
     return (
@@ -101,7 +115,7 @@ export default function AdminLogin() {
 
                                 <button
                                     type="submit"
-                                    className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-red-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                                    className="w-full h-14 md:h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-red-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
                                 >
                                     <span>Authorize Access</span>
                                     <ArrowRight size={16} />

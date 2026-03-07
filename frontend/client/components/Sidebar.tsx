@@ -12,6 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 interface SidebarProps {
   isAdmin?: boolean;
@@ -21,10 +23,17 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { logout: adminLogout } = useAdminAuth();
+  const { logout: userLogout } = useUserAuth();
 
   const handleLogout = () => {
     setIsOpen(false);
-    navigate("/");
+    if (isAdmin) {
+      // Delegate to context: stamps session as logged_out, wipes admin state, → /
+      adminLogout();
+    } else {
+      userLogout();
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;

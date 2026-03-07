@@ -62,7 +62,7 @@ export default function AdminDashboard() {
           "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
           scrolled ? "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
         )}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pl-20 md:pl-0">
             <div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Platform Overview</h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Live EarnLock ecosystem monitoring</p>
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
               return (
                 <div
                   key={stat.label}
-                  className="bg-white p-8 rounded-[2.5rem] border border-gray-100 hover:bg-black group transition-all duration-500 transform hover:-translate-y-1 cursor-pointer reveal active shadow-sm hover:shadow-2xl"
+                  className="bg-white p-5 md:p-8 rounded-[2.5rem] border border-gray-100 hover:bg-black group transition-all duration-500 transform hover:-translate-y-1 cursor-pointer reveal active shadow-sm hover:shadow-2xl"
                   style={{ transitionDelay: `${i * 100}ms` }}
                 >
                   <div className="flex items-start justify-between mb-6">
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Activity Chart */}
-            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 reveal active">
+            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 p-5 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 reveal active">
               <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                   <h2 className="text-xl font-black tracking-tight">Active Operations</h2>
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="h-[350px]">
+              <div className="h-[250px] sm:h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f9f9f9" />
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Platform Distribution */}
-            <div className="bg-black rounded-[2.5rem] p-8 text-white shadow-2xl reveal active" style={{ transitionDelay: "300ms" }}>
+            <div className="bg-black rounded-[2.5rem] p-5 md:p-8 text-white shadow-2xl reveal active" style={{ transitionDelay: "300ms" }}>
               <h2 className="text-xl font-black tracking-tight mb-2">Platform Split</h2>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-10">Active distribution</p>
 
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
 
           {/* System Feed */}
           <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden reveal active">
-            <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+            <div className="p-5 md:p-8 border-b border-gray-50 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black tracking-tight">System Events</h2>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Audit Log</p>
@@ -202,21 +202,21 @@ export default function AdminDashboard() {
                 { time: "45m", msg: "Batch payout processing completed", status: "success", type: "ops" },
                 { time: "2h", msg: "Weather API timeout - secondary engaged", status: "error", type: "infra" },
               ].map((log, i) => (
-                <div key={i} className="p-6 flex items-center justify-between hover:bg-gray-50/50 transition-all rounded-3xl group cursor-pointer">
-                  <div className="flex items-center space-x-6">
+                <div key={i} className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-all rounded-3xl group cursor-pointer">
+                  <div className="flex items-start sm:items-center space-x-4 sm:space-x-6">
                     <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-all shadow-sm",
+                      "w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-all shadow-sm",
                       log.status === "success" ? "bg-green-50 text-green-600" :
                         log.status === "warning" ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"
                     )}>
                       {log.status === "success" ? <Zap size={20} /> : <AlertCircle size={20} />}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-gray-900 group-hover:translate-x-1 transition-transform">{log.msg}</p>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">{log.type}</p>
+                      <p className="text-sm font-black text-gray-900 group-hover:translate-x-1 transition-transform leading-tight sm:leading-normal">{log.msg}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1 sm:mt-1">{log.type}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black text-gray-400 group-hover:text-black transition-colors">{log.time}</span>
+                  <span className="text-[10px] font-black text-gray-400 group-hover:text-black transition-colors self-start sm:self-auto ml-16 sm:ml-0">{log.time}</span>
                 </div>
               ))}
             </div>

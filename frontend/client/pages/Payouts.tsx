@@ -99,7 +99,7 @@ export default function Payouts() {
                 </button>
               </div>
               <div className="overflow-x-auto no-scrollbar">
-                <table className="w-full text-left">
+                <table className="w-full text-left whitespace-nowrap">
                   <thead>
                     <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
                       <th className="px-8 py-5">TXN ID</th>

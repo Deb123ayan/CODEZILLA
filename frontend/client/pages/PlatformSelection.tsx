@@ -108,7 +108,7 @@ export default function PlatformSelection() {
               onClick={() => handleSelectPlatform(platform)}
               className={cn(
                 "group relative bg-white p-10 rounded-[3rem] transition-all duration-700 transform hover:scale-105 hover:shadow-2xl overflow-hidden flex flex-col items-start text-left h-full",
-                selectedPlatform === platform.id ? "bg-black scale-105 shadow-2xl" : "border border-gray-100/50",
+                selectedPlatform === platform.id ? "border-2 border-blue-600 scale-105 shadow-2xl" : "border border-gray-100/50",
                 platform.color
               )}
               style={{ transitionDelay: `${i * 100}ms` }}
@@ -118,14 +118,14 @@ export default function PlatformSelection() {
                   <img src={platform.logo} alt={platform.name} className="h-16 md:h-20 object-contain rounded-xl" />
                 </div>
                 <div className="flex-1">
-                  <h2 className={cn("text-3xl font-black tracking-tight mb-4 transition-colors", selectedPlatform === platform.id ? "text-white" : "text-gray-900")}>
+                  <h2 className={cn("text-3xl font-black tracking-tight mb-4 transition-colors", selectedPlatform === platform.id ? "text-blue-600" : "text-gray-900")}>
                     {platform.name}
                   </h2>
-                  <p className={cn("text-sm font-bold leading-relaxed mb-8 transition-colors", selectedPlatform === platform.id ? "text-white/70" : "text-gray-500")}>
+                  <p className={cn("text-sm font-bold leading-relaxed mb-8 transition-colors text-gray-400")}>
                     {platform.description}
                   </p>
                 </div>
-                <div className={cn("flex items-center space-x-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all", selectedPlatform === platform.id ? "text-emerald-400" : "text-blue-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-2")}>
+                <div className={cn("flex items-center space-x-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all", selectedPlatform === platform.id ? "text-emerald-600" : "text-blue-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-2")}>
                   {selectedPlatform === platform.id ? <CheckCircle2 size={16} /> : <ArrowRight size={16} />}
                   <span>{selectedPlatform === platform.id ? "Selected" : "Continue"}</span>
                 </div>
