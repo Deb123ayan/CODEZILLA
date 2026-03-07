@@ -2,8 +2,10 @@ import Sidebar from "@/components/Sidebar";
 import { User, Bell, Shield, Smartphone, LogOut, ChevronRight, Globe, CreditCard, Edit3 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 export default function Settings() {
+  const { username, platform, phoneNumber } = useUserAuth();
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -17,20 +19,24 @@ export default function Settings() {
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const getInitials = (num: string) => {
+    return num.split(" ").map(n => n[0]).join("").toUpperCase();
+  };
+
   const settingsSections = [
     {
       title: "Account",
       items: [
-        { label: "Profile Information", icon: User, value: "Rajesh Kumar", description: "Personal details and display name" },
-        { label: "Email Address", icon: Globe, value: "rajesh.k@example.com", description: "Primary contact and login email" },
-        { label: "Phone Number", icon: Smartphone, value: "+91 98765 43210", description: "Mobile number for SMS alerts" },
+        { label: "Profile Information", icon: User, value: username || "Guest User", description: "Personal details and display name" },
+        { label: "Email Address", icon: Globe, value: `${(username || "guest").toLowerCase().replace(/\s+/g, ".")}@example.com`, description: "Primary contact and login email" },
+        { label: "Phone Number", icon: Smartphone, value: phoneNumber || "+91 00000 00000", description: "Mobile number for SMS alerts" },
       ],
     },
     {
       title: "Preferences",
       items: [
         { label: "Notifications", icon: Bell, value: "Push, Email", description: "Manage what alerts you receive" },
-        { label: "Connected Platforms", icon: Smartphone, value: "Zomato, Blinkit", description: "Link your work platform accounts" },
+        { label: "Connected Platforms", icon: Smartphone, value: platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : "None", description: "Link your work platform accounts" },
         { label: "Payout Methods", icon: CreditCard, value: "HDFC, GPay", description: "Where your earnings are sent" },
       ],
     },
@@ -64,7 +70,7 @@ export default function Settings() {
           <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm flex flex-col md:flex-row items-center gap-10 reveal active">
             <div className="relative group overflow-hidden rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-600">
               <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center text-gray-900 text-3xl font-black shadow-2xl relative overflow-hidden">
-                <span className="group-hover:opacity-0 transition-opacity">RK</span>
+                <span className="group-hover:opacity-0 transition-opacity">{getInitials(username || "GU")}</span>
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Edit3 className="text-white" size={24} />
                 </div>
@@ -72,7 +78,7 @@ export default function Settings() {
             </div>
             <div className="text-center md:text-left flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Rajesh Kumar</h2>
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">{username || "Guest User"}</h2>
                 <div className="flex gap-2 justify-center md:justify-start">
                   <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-yellow-100">Gold Tier</span>
                   <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-green-100">Verified</span>

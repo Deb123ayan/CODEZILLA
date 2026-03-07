@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Mail, Lock, Globe, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { Mail, Lock, Globe, ArrowRight, ShieldCheck, Zap, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { useUserAuth } from "@/context/UserAuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [platform, setPlatform] = useState("");
   const navigate = useNavigate();
@@ -32,16 +33,10 @@ export default function Login() {
       toast.error("Please select a platform to continue");
       return;
     }
-    if (!email || !password) {
-      toast.error("Please enter both email and password");
-      return;
-    }
-
-    // Password validation: max 6 charts, 1 capital, 1 special, 1 number
+    // Password validation: min 6 chars, 1 capital, 1 special character
     const hasCapital = /[A-Z]/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const isValidLength = password.length <= 6;
+    const isValidLength = password.length >= 6;
 
     if (!hasCapital) {
       toast.error("Password must include at least one capital letter");
@@ -51,19 +46,15 @@ export default function Login() {
       toast.error("Password must include at least one special character");
       return;
     }
-    if (!hasNumber) {
-      toast.error("Password must include at least one number");
-      return;
-    }
     if (!isValidLength) {
-      toast.error("Password must be maximum 6 characters long");
+      toast.error("Password must be at least 6 characters long");
       return;
     }
-
-    const username = email.includes("@") ? email.split("@")[0] : email;
+    
+    const username = email ? (email.includes("@") ? email.split("@")[0] : email) : "Guest";
     const formattedUsername = username.charAt(0).toUpperCase() + username.slice(1);
 
-    login(platform, formattedUsername);
+    login(platform, formattedUsername, phoneNumber);
     toast.success(`Logged into ${platform.charAt(0).toUpperCase() + platform.slice(1)} successfully!`);
 
     const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
@@ -135,9 +126,22 @@ export default function Login() {
                     <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
                     <input
                       type="email"
-                      placeholder="Email or phone"
+                      placeholder="Email address"
                       className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
                       onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Mobile Number</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                    <input
+                      type="tel"
+                      placeholder="+91 00000 00000"
+                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
                 </div>
@@ -152,12 +156,11 @@ export default function Login() {
                     <input
                       type="password"
                       placeholder="Your password"
-                      maxLength={6}
                       className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Max 6 Chars • 1 Capital • 1 Special • 1 Number</p>
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Min 6 Chars • 1 Capital • 1 Special</p>
                 </div>
 
                 <button

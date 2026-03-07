@@ -23,6 +23,7 @@ import Claims from "./pages/Claims";
 import Payouts from "./pages/Payouts";
 import NotificationsPage from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import ProfileSetup from "./pages/ProfileSetup";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWorkers from "./pages/AdminWorkers";
 import AdminClaims from "./pages/AdminClaims";
@@ -30,6 +31,14 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminAlerts from "./pages/AdminAlerts";
 import AdminSettings from "./pages/AdminSettings";
 import AdminLogin from "./pages/AdminLogin";
+import BuyPlan from "./pages/BuyPlan";
+import Tracking from "./pages/features/Tracking";
+import WeatherAI from "./pages/features/WeatherAI";
+import Traffic from "./pages/features/Traffic";
+import ZeroClickClaims from "./pages/features/ZeroClickClaims";
+import FraudProtection from "./pages/features/FraudProtection";
+import MobileOptimized from "./pages/features/MobileOptimized";
+import RiskPredictor from "./pages/RiskPredictor";
 import AdminGuard from "./components/AdminGuard";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import UserGuard from "./components/UserGuard";
@@ -52,6 +61,15 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<PlatformSelection />} />
 
+              {/* Feature Pages (Public) */}
+              <Route path="/features/tracking" element={<Tracking />} />
+              <Route path="/features/weather-ai" element={<WeatherAI />} />
+              <Route path="/features/traffic" element={<Traffic />} />
+              <Route path="/features/claims" element={<ZeroClickClaims />} />
+              <Route path="/features/fraud" element={<FraudProtection />} />
+              <Route path="/features/mobile" element={<MobileOptimized />} />
+              <Route path="/risk-predictor" element={<RiskPredictor />} />
+
               {/* Registration Routes */}
               <Route path="/register/zomato" element={<RegisterZomato />} />
               <Route path="/register/blinkit" element={<RegisterBlinkit />} />
@@ -67,6 +85,8 @@ const App = () => (
               <Route path="/payouts" element={<UserGuard><Payouts /></UserGuard>} />
               <Route path="/notifications" element={<UserGuard><NotificationsPage /></UserGuard>} />
               <Route path="/settings" element={<UserGuard><Settings /></UserGuard>} />
+              <Route path="/profile-setup" element={<UserGuard><ProfileSetup /></UserGuard>} />
+              <Route path="/buy-plan" element={<UserGuard><BuyPlan /></UserGuard>} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />

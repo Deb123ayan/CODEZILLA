@@ -1,7 +1,8 @@
 import Sidebar from "@/components/Sidebar";
-import { DollarSign, ArrowUpRight, ArrowDownRight, Download, Calendar, ArrowRight, Zap, Target } from "lucide-react";
+import { DollarSign, ArrowUpRight, ArrowDownRight, Download, Calendar, ArrowRight, Zap, Target, Phone } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 const transactions = [
   { id: "TXN-98765", amount: "₹800", date: "May 12, 2024", type: "Claim Payout", status: "Success", bank: "HDFC ****1234" },
@@ -10,6 +11,10 @@ const transactions = [
 ];
 
 export default function Payouts() {
+  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const platform = userPlatform || "general";
+  const username = userUsername || "Worker";
+  const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -23,6 +28,19 @@ export default function Payouts() {
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const getPlatformColor = (id: string) => {
+    switch (id) {
+      case "zomato": return "text-red-600";
+      case "blinkit": return "text-yellow-600";
+      case "flipkart": return "text-blue-600";
+      case "amazon": return "text-orange-600";
+      case "zepto": return "text-purple-600";
+      default: return "text-blue-600";
+    }
+  };
+
+  const platformColor = getPlatformColor(platform);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
       <Sidebar />
@@ -33,8 +51,16 @@ export default function Payouts() {
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Payout Center</h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">Manage your earnings and transfers</p>
+              <h1 className={cn("text-2xl md:text-3xl font-black tracking-tighter transition-all", platformColor)}>
+                {platformName} Payouts
+              </h1>
+              <p className="text-gray-500 text-sm font-medium mt-0.5">{username}'s earnings</p>
+              {phoneNumber && (
+                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                  <Phone size={12} className="text-blue-600" />
+                  <span>{phoneNumber}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-3">
               <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-white border border-gray-200 text-gray-400 hover:text-black hover:border-black rounded-2xl transition-all shadow-sm">

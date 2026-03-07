@@ -1,9 +1,10 @@
 import Navbar from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Lock, Hash, CheckCircle2, ArrowRight, Zap, ShieldCheck } from "lucide-react";
+import { User, Lock, Hash, CheckCircle2, ArrowRight, Zap, ShieldCheck, Phone, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 interface Props {
   platformName: string;
@@ -12,10 +13,13 @@ interface Props {
 
 export default function BaseRegistrationForm({ platformName, platformId }: Props) {
   const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [payoutType, setPayoutType] = useState<"credit" | "debit">("debit");
   const navigate = useNavigate();
+  const { login } = useUserAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,11 +34,10 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
       return;
     }
 
-    // Password validation: max 6 charts, 1 capital, 1 special, 1 number
+    // Password validation: min 6 chars, 1 capital, 1 special character
     const hasCapital = /[A-Z]/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const isValidLength = password.length <= 6;
+    const isValidLength = password.length >= 6;
 
     if (!hasCapital) {
       toast.error("Password must include at least one capital letter");
@@ -44,12 +47,8 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
       toast.error("Password must include at least one special character");
       return;
     }
-    if (!hasNumber) {
-      toast.error("Password must include at least one number");
-      return;
-    }
     if (!isValidLength) {
-      toast.error("Password must be maximum 6 characters long");
+      toast.error("Password must be at least 6 characters long");
       return;
     }
 
@@ -59,12 +58,9 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
     const firstName = name.split(" ")[0];
     const formattedUsername = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
-    navigate("/dashboard", {
-      state: {
-        selectedPlatform: platformId,
-        username: formattedUsername
-      }
-    });
+    login(platformId, formattedUsername, phoneNumber);
+
+    navigate("/profile-setup");
   };
 
   return (
@@ -120,6 +116,51 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
                 </div>
 
                 <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Mobile Number</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                    <input
+                      type="tel"
+                      placeholder="+91 00000 00000"
+                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Payout Destination</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setPayoutType("debit")}
+                      className={cn(
+                        "flex items-center justify-center space-x-3 h-16 rounded-2xl border-2 transition-all",
+                        payoutType === "debit" 
+                          ? "bg-black text-white border-black shadow-lg" 
+                          : "bg-gray-50 text-gray-400 border-transparent hover:border-gray-200"
+                      )}
+                    >
+                      <CreditCard size={18} />
+                      <span className="text-xs font-black uppercase">Debit Card</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPayoutType("credit")}
+                      className={cn(
+                        "flex items-center justify-center space-x-3 h-16 rounded-2xl border-2 transition-all",
+                        payoutType === "credit" 
+                          ? "bg-black text-white border-black shadow-lg" 
+                          : "bg-gray-50 text-gray-400 border-transparent hover:border-gray-200"
+                      )}
+                    >
+                      <CreditCard size={18} />
+                      <span className="text-xs font-black uppercase">Credit Card</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform Partner ID</label>
                   <div className="relative group">
                     <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
@@ -160,7 +201,7 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
                   </div>
                 </div>
 
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Max 6 Chars • 1 Capital • 1 Special • 1 Number</p>
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Min 6 Chars • 1 Capital • 1 Special</p>
 
                 <button
                   type="submit"

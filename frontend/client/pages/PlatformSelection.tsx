@@ -12,6 +12,8 @@ import ZeptoLogo from "@/assets/Zepto/Zepto_idm2wBp3DO_1.svg";
 import BlinkitLogo from "@/assets/Blinkit/Blinkit_idCmcpCDCZ_0.svg";
 import SwiggyLogo from "@/assets/Swiggy/Swiggy_id8bItcgXR_0.svg";
 
+import { useUserAuth } from "@/context/UserAuthContext";
+
 interface Platform {
   id: string;
   name: string;
@@ -24,6 +26,7 @@ interface Platform {
 export default function PlatformSelection() {
   const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const { login } = useUserAuth();
 
   const platforms: Platform[] = [
     {
@@ -32,7 +35,7 @@ export default function PlatformSelection() {
       logo: ZomatoLogo,
       description: "Food delivery with meal count tracking and zone management",
       color: "border-red-100/50",
-      route: "/register/zomato",
+      route: "/profile-setup",
     },
     {
       id: "blinkit",
@@ -40,7 +43,7 @@ export default function PlatformSelection() {
       logo: BlinkitLogo,
       description: "Quick commerce with hourly order tracking",
       color: "border-yellow-100/50",
-      route: "/register/blinkit",
+      route: "/profile-setup",
     },
     {
       id: "flipkart",
@@ -48,7 +51,7 @@ export default function PlatformSelection() {
       logo: FlipkartLogo,
       description: "Logistics and delivery with package tracking",
       color: "border-blue-100/50",
-      route: "/register/flipkart",
+      route: "/profile-setup",
     },
     {
       id: "amazon",
@@ -56,7 +59,7 @@ export default function PlatformSelection() {
       logo: AmazonLogo,
       description: "Global delivery network with performance tracking",
       color: "border-orange-100/50",
-      route: "/register/amazon",
+      route: "/profile-setup",
     },
     {
       id: "zepto",
@@ -64,7 +67,7 @@ export default function PlatformSelection() {
       logo: ZeptoLogo,
       description: "10-minute delivery with speed and efficiency tracking",
       color: "border-purple-100/50",
-      route: "/register/zepto",
+      route: "/profile-setup",
     },
     {
       id: "swiggy",
@@ -72,12 +75,16 @@ export default function PlatformSelection() {
       logo: SwiggyLogo,
       description: "Comprehensive food and grocery delivery partner network",
       color: "border-orange-100/50",
-      route: "/register/swiggy",
+      route: "/profile-setup",
     },
   ];
 
   const handleSelectPlatform = (platform: Platform) => {
     setSelectedPlatform(platform.id);
+    
+    // Simulate a quick login for demo purposes as requested
+    login(platform.id, "Guest Worker");
+    
     setTimeout(() => {
       navigate(platform.route);
     }, 400);

@@ -1,7 +1,8 @@
 import Sidebar from "@/components/Sidebar";
-import { Shield, Plus, CheckCircle, Calendar, ArrowRight } from "lucide-react";
+import { Shield, Plus, CheckCircle, Calendar, ArrowRight, Phone } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 const policies = [
   {
@@ -59,6 +60,10 @@ const availablePlans = [
 ];
 
 export default function Policies() {
+  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const platform = userPlatform || "general";
+  const username = userUsername || "Worker";
+  const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -72,6 +77,19 @@ export default function Policies() {
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const getPlatformColor = (id: string) => {
+    switch (id) {
+      case "zomato": return "text-red-600";
+      case "blinkit": return "text-yellow-600";
+      case "flipkart": return "text-blue-600";
+      case "amazon": return "text-orange-600";
+      case "zepto": return "text-purple-600";
+      default: return "text-blue-600";
+    }
+  };
+
+  const platformColor = getPlatformColor(platform);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
       <Sidebar />
@@ -82,8 +100,16 @@ export default function Policies() {
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter">My Policies</h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">Manage and protect your earnings</p>
+              <h1 className={cn("text-2xl md:text-3xl font-black tracking-tighter transition-all", platformColor)}>
+                {platformName} Policies
+              </h1>
+              <p className="text-gray-500 text-sm font-medium mt-0.5">{username}'s coverage</p>
+              {phoneNumber && (
+                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                  <Phone size={12} className="text-blue-600" />
+                  <span>{phoneNumber}</span>
+                </div>
+              )}
             </div>
             <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
               <Plus size={20} />

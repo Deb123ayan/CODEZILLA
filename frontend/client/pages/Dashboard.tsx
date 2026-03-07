@@ -1,5 +1,5 @@
 import Sidebar from "@/components/Sidebar";
-import { AlertCircle, TrendingUp, Shield, Cloud, Bell } from "lucide-react";
+import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -16,7 +16,7 @@ import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { platform: userPlatform, username: userUsername } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
@@ -83,6 +83,12 @@ export default function Dashboard() {
                 {platformName} Platform
               </h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Welcome back, {username}</p>
+              {phoneNumber && (
+                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                  <Phone size={12} className="text-blue-600" />
+                  <span>{phoneNumber}</span>
+                </div>
+              )}
             </div>
             <button className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all shadow-sm group">
               <Bell size={18} className="text-gray-400 group-hover:text-black transition-colors" />
@@ -131,8 +137,8 @@ export default function Dashboard() {
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Chart Area */}
-            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 reveal active">
-              <div className="flex items-center justify-between mb-8">
+            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 p-4 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-500 reveal active">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 px-2 sm:px-0">
                 <div>
                   <h2 className="text-xl font-black tracking-tight">Earnings Trend</h2>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Weekly Insight</p>
@@ -142,18 +148,18 @@ export default function Dashboard() {
                   <div className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full uppercase">Protected</div>
                 </div>
               </div>
-              <div className="h-[300px] w-full">
+              <div className="h-[250px] sm:h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f9f9f9" />
-                    <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 700 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 700 }} dx={-10} />
+                    <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 8, fontWeight: 700 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 8, fontWeight: 700 }} dx={-5} />
                     <Tooltip
-                      contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '1rem' }}
-                      itemStyle={{ fontWeight: 800, fontSize: '12px' }}
+                      contentStyle={{ borderRadius: '1.2rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 / 0.1)', padding: '0.8rem' }}
+                      itemStyle={{ fontWeight: 800, fontSize: '10px' }}
                     />
-                    <Line type="monotone" dataKey="earnings" stroke="#3b82f6" strokeWidth={4} dot={false} activeDot={{ r: 8, strokeWidth: 0 }} />
-                    <Line type="monotone" dataKey="protected" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 8, strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="earnings" stroke="#3b82f6" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="protected" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

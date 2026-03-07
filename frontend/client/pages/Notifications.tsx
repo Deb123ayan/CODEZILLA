@@ -1,7 +1,8 @@
 import Sidebar from "@/components/Sidebar";
-import { Bell, Cloud, AlertCircle, TrendingUp, Info, Trash2, CheckCircle2 } from "lucide-react";
+import { Bell, Cloud, AlertCircle, TrendingUp, Info, Trash2, CheckCircle2, Phone } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 const initialNotifications = [
   {
@@ -51,6 +52,10 @@ const initialNotifications = [
 ];
 
 export default function NotificationsPage() {
+  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const platform = userPlatform || "general";
+  const username = userUsername || "Worker";
+  const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const mainRef = useRef<HTMLElement>(null);
@@ -64,6 +69,19 @@ export default function NotificationsPage() {
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const getPlatformColor = (id: string) => {
+    switch (id) {
+      case "zomato": return "text-red-600";
+      case "blinkit": return "text-yellow-600";
+      case "flipkart": return "text-blue-600";
+      case "amazon": return "text-orange-600";
+      case "zepto": return "text-purple-600";
+      default: return "text-blue-600";
+    }
+  };
+
+  const platformColor = getPlatformColor(platform);
 
   const markAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
@@ -79,8 +97,16 @@ export default function NotificationsPage() {
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-16 sm:pl-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Notifications</h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">Stay updated with important alerts</p>
+              <h1 className={cn("text-2xl md:text-3xl font-black tracking-tighter transition-all", platformColor)}>
+                {platformName} Notifications
+              </h1>
+              <p className="text-gray-500 text-sm font-medium mt-0.5">{username}'s alerts</p>
+              {phoneNumber && (
+                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                  <Phone size={12} className="text-blue-600" />
+                  <span>{phoneNumber}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-3">
               <button

@@ -2,6 +2,8 @@ import Navbar from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import { CheckCircle2, Cloud, TrendingUp, AlertTriangle, Shield, Zap, X, MessageSquare, ArrowRight, Play, LayoutGrid, Award, ShieldCheck, MapPin, Activity, Smartphone, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
 
 // Partner Logos
@@ -13,44 +15,8 @@ import BlinkitLogo from "@/assets/Blinkit/Blinkit_idCmcpCDCZ_0.svg";
 import SwiggyLogo from "@/assets/Swiggy/Swiggy_id8bItcgXR_0.svg";
 
 export default function Landing() {
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selections, setSelections] = useState({
-    city: "",
-    weather: "",
-    traffic: ""
-  });
-
-  const steps = [
-    {
-      question: "Where are you delivering today?",
-      options: ["Mumbai", "Delhi", "Bangalore", "Hyderabad"],
-      key: "city" as const
-    },
-    {
-      question: "What's the current weather?",
-      options: ["Heat", "Rain", "Pollution", "Normal"],
-      key: "weather" as const
-    },
-    {
-      question: "How is the traffic level?",
-      options: ["Low", "Moderate", "Heavy"],
-      key: "traffic" as const
-    }
-  ];
-
-  const calculateRisk = () => {
-    const { weather, traffic } = selections;
-    if (weather === "Rain" || traffic === "Heavy") return "High";
-    if (weather !== "Normal" || traffic === "Moderate") return "Medium";
-    return "Low";
-  };
-
-  const resetPredictor = () => {
-    setIsAssistantOpen(false);
-    setCurrentStep(0);
-    setSelections({ city: "", weather: "", traffic: "" });
-  };
+  const navigate = useNavigate();
+  const { login } = useUserAuth();
 
   return (
     <div className="min-h-screen bg-white selection:bg-black selection:text-white overflow-hidden">
@@ -101,14 +67,21 @@ export default function Landing() {
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-12">Proudly partnering with top platforms</p>
           <div className="flex flex-wrap items-center justify-center gap-10 md:gap-20 w-full">
             {[
-              { name: "Amazon", logo: AmazonLogo },
-              { name: "Zomato", logo: ZomatoLogo },
-              { name: "Flipkart", logo: FlipkartLogo },
-              { name: "Zepto", logo: ZeptoLogo },
-              { name: "Blinkit", logo: BlinkitLogo },
-              { name: "Swiggy", logo: SwiggyLogo }
+              { id: "amazon", name: "Amazon", logo: AmazonLogo },
+              { id: "zomato", name: "Zomato", logo: ZomatoLogo },
+              { id: "flipkart", name: "Flipkart", logo: FlipkartLogo },
+              { id: "zepto", name: "Zepto", logo: ZeptoLogo },
+              { id: "blinkit", name: "Blinkit", logo: BlinkitLogo },
+              { id: "swiggy", name: "Swiggy", logo: SwiggyLogo }
             ].map(p => (
-              <div key={p.name} className="group cursor-pointer">
+              <div 
+                key={p.name} 
+                className="group cursor-pointer"
+                onClick={() => {
+                  login(p.id, "Demo Worker");
+                  navigate("/dashboard");
+                }}
+              >
                 <img src={p.logo} alt={p.name} className="h-12 md:h-16 object-contain group-hover:scale-110 transition-all duration-500" />
               </div>
             ))}
@@ -129,13 +102,13 @@ export default function Landing() {
               ].map((f, i) => {
                 const Icon = f.icon;
                 return (
-                  <div key={i} className="flex gap-8 group cursor-pointer">
-                    <div className="w-28 h-28 bg-white rounded-[3rem] flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-500">
-                      <Icon size={48} className="text-black" />
+                  <div key={i} className="flex gap-4 sm:gap-8 group cursor-pointer">
+                    <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-[2rem] md:rounded-[3rem] flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-500 shrink-0">
+                      <Icon size={32} className="md:size-[48px] text-black" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-2xl font-black tracking-tight">{f.title}</h3>
-                      <p className="text-gray-500 font-bold mt-2 max-w-sm leading-relaxed">{f.desc}</p>
+                      <h3 className="text-xl md:text-2xl font-black tracking-tight">{f.title}</h3>
+                      <p className="text-xs md:text-gray-500 font-bold mt-2 max-w-sm leading-relaxed">{f.desc}</p>
                     </div>
                   </div>
                 );
@@ -184,24 +157,34 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-orange-50 text-orange-600" },
-              { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-50 text-blue-600" },
-              { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-red-50 text-red-600" },
-              { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-emerald-50 text-emerald-600" },
-              { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-purple-50 text-purple-600" },
-              { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-gray-100 text-gray-900" }
+              { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-orange-50 text-orange-600", route: "/features/tracking" },
+              { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-50 text-blue-600", route: "/features/weather-ai" },
+              { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-red-50 text-red-600", route: "/features/traffic" },
+              { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-emerald-50 text-emerald-600", route: "/features/claims" },
+              { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-purple-50 text-purple-600", route: "/features/fraud" },
+              { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-gray-100 text-gray-900", route: "/features/mobile" }
             ].map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} className="bg-gray-50/50 border border-gray-50 rounded-[2.5rem] p-10 hover:bg-white hover:shadow-2xl hover:border-transparent transition-all duration-500 group transform hover:-translate-y-2">
+                <Link to={f.route} key={i} className="bg-gray-50/50 border border-gray-50 rounded-[2.5rem] p-10 hover:bg-white hover:shadow-2xl hover:border-transparent transition-all duration-500 group transform hover:-translate-y-2">
                   <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500", f.color)}>
                     <Icon size={24} className="group-hover:animate-pulse" />
                   </div>
-                  <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-blue-600 transition-colors">{f.title}</h3>
-                  <p className="text-sm font-bold text-gray-400 leading-relaxed">{f.desc}</p>
-                </div>
+                  <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-blue-600 transition-colors uppercase italic leading-none">{f.title}</h3>
+                  <p className="text-sm font-bold text-gray-400 leading-relaxed italic">"{f.desc}"</p>
+                </Link>
               )
             })}
+          </div>
+
+          <div className="mt-20 text-center">
+            <Link 
+              to="/register"
+              className="inline-flex items-center space-x-4 px-10 py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95"
+            >
+              <span>Explore All Features</span>
+              <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </section>
@@ -219,9 +202,12 @@ export default function Landing() {
               </div>
               <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">How it <br /><span className="text-emerald-400">Works.</span></h2>
               <p className="text-gray-400 font-bold text-lg leading-relaxed">Three simple steps to absolute peace of mind during your shifts.</p>
-              <button className="px-8 py-5 mt-4 bg-white/5 border border-white/10 hover:bg-white hover:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500">
-                View detailed guide
-              </button>
+              <Link 
+                to="/register"
+                className="inline-block px-8 py-5 mt-4 bg-white/5 border border-white/10 hover:bg-white hover:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 text-center"
+              >
+                Get Started
+              </Link>
             </div>
 
             <div className="lg:w-2/3 grid sm:grid-cols-3 gap-8 relative">
@@ -257,10 +243,6 @@ export default function Landing() {
           <div className="lg:col-span-1 space-y-8">
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none mb-6">Trusted by thousands of delivery heroes.</h2>
             <p className="text-gray-400 font-bold text-lg md:text-xl leading-relaxed">Join the next generation of gig economy security.</p>
-            <button className="px-6 py-4 md:px-10 md:py-5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center space-x-4 mx-auto lg:mx-0 group hover:scale-105 transition-all duration-500 active:scale-95">
-              <Play className="fill-current text-blue-600 transition-colors" size={20} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">Watch our story</span>
-            </button>
           </div>
 
           <div className="lg:col-span-2 grid sm:grid-cols-2 gap-8">
@@ -310,103 +292,29 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Risk Predictor Widget */}
+      {/* Risk Predictor Widget Link */}
       <div className="fixed bottom-10 right-10 z-[100] group">
-        <button
-          onClick={() => setIsAssistantOpen(true)}
-          className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative"
+        <Link
+          to="/risk-predictor"
+          className="w-14 h-14 md:w-16 md:h-16 bg-black text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative"
         >
-          <Zap className="fill-current text-blue-400" size={28} />
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
-        </button>
+          <Zap className="fill-current text-blue-400" size={24} />
+          <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+        </Link>
       </div>
 
-      {isAssistantOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-xl section-padding">
-          <div className="bg-white w-full max-w-xl rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100 animate-in zoom-in duration-500 relative">
-            <button
-              onClick={resetPredictor}
-              className="absolute top-8 right-8 p-3 text-gray-400 hover:bg-gray-50 rounded-2xl transition-all"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="p-12 space-y-10">
-              <div className="space-y-4">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                  <Zap size={32} />
-                </div>
-                <h3 className="text-3xl font-black tracking-tighter">AI Risk Predictor</h3>
-                <p className="text-gray-400 font-bold tracking-tight italic">Simulate conditions to see your potential protection payouts.</p>
-              </div>
-
-              {currentStep < steps.length ? (
-                <div className="space-y-8">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Step {currentStep + 1} of 3</p>
-                  <h4 className="text-xl font-black">{steps[currentStep].question}</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {steps[currentStep].options.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          setSelections({ ...selections, [steps[currentStep].key]: opt });
-                          setCurrentStep(currentStep + 1);
-                        }}
-                        className="p-6 text-left border-2 border-gray-50 rounded-3xl bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all duration-300 font-black text-sm tracking-tight"
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-                  <div className="bg-black p-10 rounded-[2.5rem] text-white space-y-6">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2">Simulated Result</p>
-                      <h4 className="text-4xl font-black tracking-tighter">
-                        {calculateRisk()} Risk Detected
-                      </h4>
-                    </div>
-                    <div className="pt-6 border-t border-white/10">
-                      <p className="text-sm font-bold text-gray-400">Estimated Income Protection:</p>
-                      <p className="text-3xl font-black text-emerald-400 mt-2">
-                        {calculateRisk() === "High" ? "₹300 – ₹600" : calculateRisk() === "Medium" ? "₹100 – ₹250" : "No Gap"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <Link
-                      to="/register"
-                      className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-center shadow-xl hover:bg-blue-700 transition-all hover:scale-105"
-                    >
-                      Activate Now
-                    </Link>
-                    <button
-                      onClick={resetPredictor}
-                      className="flex-1 py-5 bg-gray-50 text-gray-400 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:text-black transition-all"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 section-padding py-32">
+      <footer className="bg-black border-t border-white/5 section-padding py-32 text-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
           <div className="col-span-1 md:col-span-1 space-y-8">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Zap size={16} className="text-white fill-current" />
               </div>
               <span className="font-black text-xl tracking-tighter">EarnLock</span>
             </Link>
-            <p className="text-sm font-bold text-gray-400 leading-relaxed uppercase tracking-widest">
+            <p className="text-sm font-bold text-gray-500 leading-relaxed uppercase tracking-widest">
               Empowering the gig economy with smart, data-driven security.
             </p>
           </div>
@@ -417,14 +325,16 @@ export default function Landing() {
               { t: "Social", l: ["Twitter", "Instagram", "LinkedIn"] },
             ].map(col => (
               <div key={col.t} className="space-y-8">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">{col.t}</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">{col.t}</h4>
                 <ul className="space-y-4">
                   {col.l.map(link => (
                     <li key={link}>
                       {link === "Admin Portal" ? (
-                        <Link to="/admin/login" className="text-xs font-bold text-gray-400 hover:text-black transition-colors uppercase tracking-widest">{link}</Link>
+                        <Link to="/admin/login" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</Link>
+                      ) : link === "Predictor" ? (
+                        <Link to="/risk-predictor" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</Link>
                       ) : (
-                        <a href="#" className="text-xs font-bold text-gray-400 hover:text-black transition-colors uppercase tracking-widest">{link}</a>
+                        <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</a>
                       )}
                     </li>
                   ))}
@@ -433,11 +343,11 @@ export default function Landing() {
             ))}
           </div>
         </div>
-        <div className="max-w-7xl mx-auto pt-32 flex flex-col sm:flex-row items-center justify-between gap-8">
-          <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">&copy; 2024 EarnLock. Built for the future of work.</p>
+        <div className="max-w-7xl mx-auto pt-32 flex flex-col sm:flex-row items-center justify-between gap-8 border-t border-white/5 mt-10">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">&copy; 2024 EarnLock. Built for the future of work.</p>
           <div className="flex gap-8">
-            <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] cursor-pointer hover:text-black">Privacy</span>
-            <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] cursor-pointer hover:text-black">Cookies</span>
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Privacy</span>
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Cookies</span>
           </div>
         </div>
       </footer>
