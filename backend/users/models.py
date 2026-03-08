@@ -39,6 +39,10 @@ class Worker(models.Model):
     is_verified = models.BooleanField(default=False)
     onboarding_completed = models.BooleanField(default=False)
     
+    # Location (for real weather verification)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    
     avg_daily_income = models.IntegerField(default=0) # Legacy support or calculated
     created_at = models.DateTimeField(auto_now_add=True)
 

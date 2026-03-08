@@ -177,3 +177,153 @@ class WorkerRegisterView(generics.CreateAPIView):
             "access": str(refresh.access_token),
             "refresh": str(refresh),
         }, status=status.HTTP_201_CREATED)
+
+
+class UpdateLocationView(views.APIView):
+    """Save worker's GPS coordinates for weather-based fraud prevention."""
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['phone', 'latitude', 'longitude'],
+            properties={
+                'phone': openapi.Schema(type=openapi.TYPE_STRING, description="Worker phone number"),
+                'latitude': openapi.Schema(type=openapi.TYPE_NUMBER, description="GPS latitude"),
+                'longitude': openapi.Schema(type=openapi.TYPE_NUMBER, description="GPS longitude"),
+            }
+        ),
+        responses={200: "Location updated"}
+    )
+    def post(self, request):
+        phone = request.data.get('phone')
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
+        
+        if not phone or latitude is None or longitude is None:
+            return Response({"error": "phone, latitude, and longitude are required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            worker = Worker.objects.get(phone=phone)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        worker.latitude = float(latitude)
+        worker.longitude = float(longitude)
+        worker.save()
+        
+        return Response({
+            "message": "Location updated successfully",
+            "latitude": worker.latitude,
+            "longitude": worker.longitude,
+        }, status=status.HTTP_200_OK)
+
+
+class WeatherCheckView(views.APIView):
+    """
+    Check real-time weather & AQI at a worker's location.
+    Uses worker's saved GPS or zone name to fetch actual conditions.
+    """
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('phone', openapi.IN_QUERY, description="Worker phone number", type=openapi.TYPE_STRING),
+            openapi.Parameter('lat', openapi.IN_QUERY, description="Override latitude", type=openapi.TYPE_NUMBER, required=False),
+            openapi.Parameter('lng', openapi.IN_QUERY, description="Override longitude", type=openapi.TYPE_NUMBER, required=False),
+        ],
+        responses={200: "Weather data returned"}
+    )
+    def get(self, request):
+        from ai_engine.weather_service import WeatherService
+        
+        phone = request.query_params.get('phone')
+        lat = request.query_params.get('lat')
+        lng = request.query_params.get('lng')
+        
+        # Option 1: Use provided lat/lng
+        if lat and lng:
+            lat, lng = float(lat), float(lng)
+        # Option 2: Use worker's saved location
+        elif phone:
+            try:
+                worker = Worker.objects.get(phone=phone)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            if worker.latitude and worker.longitude:
+                lat, lng = worker.latitude, worker.longitude
+            else:
+                # Fallback: try zone name
+                coords = WeatherService.get_coordinates_for_zone(worker.zone)
+                if coords:
+                    lat, lng = coords
+                else:
+                    return Response({"error": "No location data. Ask worker to share GPS."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Provide 'phone' or 'lat'+'lng' query params"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        conditions = WeatherService.check_disruption_conditions(lat, lng)
+        
+        return Response(conditions, status=status.HTTP_200_OK)
+
+
+class VerifyClaimWeatherView(views.APIView):
+    """
+    Anti-fraud: Verify a worker's claim against REAL weather data.
+    
+    If worker says 'heavy rain' but weather API says clear skies → FRAUD.
+    This is the core parametric insurance verification.
+    """
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['phone', 'claimed_reason'],
+            properties={
+                'phone': openapi.Schema(type=openapi.TYPE_STRING, description="Worker phone number"),
+                'claimed_reason': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Reason for claim: WEATHER, RAIN, HEAT, AQI, POLLUTION, STORM"
+                ),
+            }
+        ),
+        responses={200: "Verification result"}
+    )
+    def post(self, request):
+        from ai_engine.weather_service import WeatherService
+        
+        phone = request.data.get('phone')
+        claimed_reason = request.data.get('claimed_reason', 'WEATHER')
+        
+        if not phone:
+            return Response({"error": "phone is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            worker = Worker.objects.get(phone=phone)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get worker's location
+        lat, lng = worker.latitude, worker.longitude
+        if not lat or not lng:
+            coords = WeatherService.get_coordinates_for_zone(worker.zone)
+            if coords:
+                lat, lng = coords
+            else:
+                return Response({"error": "No location data for this worker"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify claim against real weather
+        result = WeatherService.verify_claim(lat, lng, claimed_reason)
+        
+        return Response({
+            "worker_phone": phone,
+            "worker_zone": worker.zone,
+            "claim_verified": result['claim_verified'],
+            "fraud_flag": result['fraud_flag'],
+            "fraud_reason": result['fraud_reason'],
+            "claimed_reason": result['claimed_reason'],
+            "actual_weather": result['actual_conditions']['weather'],
+            "actual_air_quality": result['actual_conditions']['air_quality'],
+            "disruption_triggers": result['actual_conditions']['triggers'],
+            "verdict": result['actual_conditions']['verdict'],
+        }, status=status.HTTP_200_OK)
+
