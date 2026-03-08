@@ -17,6 +17,29 @@ import SwiggyLogo from "@/assets/Swiggy/Swiggy_id8bItcgXR_0.svg";
 export default function Landing() {
   const navigate = useNavigate();
   const { login } = useUserAuth();
+  const [isOverDark, setIsOverDark] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY + window.innerHeight - 100; // Point where widget sits
+      const darkSections = document.querySelectorAll('#how-it-works, #cta-final, footer');
+      
+      let overDark = false;
+      darkSections.forEach(section => {
+        const rect = (section as HTMLElement).getBoundingClientRect();
+        const absoluteTop = rect.top + window.scrollY;
+        const absoluteBottom = absoluteTop + (section as HTMLElement).offsetHeight;
+        
+        if (scrollY >= absoluteTop && scrollY <= absoluteBottom) {
+          overDark = true;
+        }
+      });
+      setIsOverDark(overDark);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white selection:bg-black selection:text-white overflow-hidden">
@@ -269,7 +292,7 @@ export default function Landing() {
       </section>
 
       {/* CTA Final */}
-      <section className="section-padding py-24 md:py-40 reveal active">
+      <section id="cta-final" className="section-padding py-24 md:py-40 reveal active">
         <div className="max-w-6xl mx-auto bg-black rounded-[2.5rem] md:rounded-[4rem] p-10 md:p-20 lg:p-32 text-center text-white relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-[80%] h-[80%] bg-blue-600/20 blur-[150px] rounded-full group-hover:w-[90%] transition-all duration-1000" />
           <div className="relative z-10 space-y-12">
@@ -296,9 +319,14 @@ export default function Landing() {
       <div className="fixed bottom-10 right-10 z-[100] group">
         <Link
           to="/risk-predictor"
-          className="w-14 h-14 md:w-16 md:h-16 bg-black text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative"
+          className={cn(
+            "w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative ring-1",
+            isOverDark 
+              ? "bg-white text-black ring-white/10" 
+              : "bg-black text-white ring-black/10"
+          )}
         >
-          <Zap className="fill-current text-blue-400" size={24} />
+          <Zap className={cn("fill-current transition-colors", isOverDark ? "text-blue-600" : "text-blue-400")} size={24} />
           <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
         </Link>
       </div>

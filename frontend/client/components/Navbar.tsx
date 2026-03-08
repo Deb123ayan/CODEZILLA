@@ -6,11 +6,32 @@ import { cn } from "@/lib/utils";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      // Set fixed background state
+      setScrolled(window.scrollY > 20);
+
+      // Hide header immediately on scroll
+      setIsVisible(false);
+
+      // Clear the previous timeout
+      clearTimeout(scrollTimeout);
+
+      // Show header after 200ms of no scrolling
+      scrollTimeout = setTimeout(() => {
+        setIsVisible(true);
+      }, 250);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, []);
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -23,8 +44,9 @@ export default function Navbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 py-4 sm:px-6 lg:px-8",
-      scrolled ? "py-3" : "py-6"
+      "fixed top-0 z-50 w-full transition-all duration-700 ease-in-out px-4 py-4 sm:px-6 lg:px-8",
+      scrolled ? "py-3" : "py-6",
+      (!isVisible && scrolled) ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
     )}>
       <div className={cn(
         "max-w-7xl mx-auto rounded-[2rem] transition-all duration-500 border border-transparent",

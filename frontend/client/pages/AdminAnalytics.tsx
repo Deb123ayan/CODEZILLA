@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import DashboardFooter from "@/components/DashboardFooter";
 import { TrendingUp, Users, MapPin, Target, Calendar, Download, Zap, MousePointer2, ArrowUpRight } from "lucide-react";
 import {
   LineChart,
@@ -207,6 +208,7 @@ export default function AdminAnalytics() {
             </div>
           </section>
         </div>
+        <DashboardFooter />
       </main>
     </div>
   );

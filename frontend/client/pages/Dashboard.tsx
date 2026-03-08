@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
-import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone } from "lucide-react";
+import DashboardFooter from "@/components/DashboardFooter";
+import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -163,6 +164,17 @@ export default function Dashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              
+              {/* Internal Footer for Chartboat Section */}
+              <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+                <div className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <Activity size={12} className="text-blue-500" />
+                  <span>Real-time API Data Feed</span>
+                </div>
+                <div className="flex space-x-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">W1 – W7 Overview</span>
+                </div>
+              </div>
             </div>
 
             {/* Sidebar Cards */}
@@ -229,6 +241,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        <DashboardFooter />
       </main>
     </div>
   );
