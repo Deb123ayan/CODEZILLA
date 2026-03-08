@@ -196,6 +196,16 @@ class WeatherService:
             })
             is_disrupted = True
 
+        # Trigger 6: Flood Risk (sustained heavy rain)
+        if weather['rain_3h_mm'] > 80:
+            triggers.append({
+                'type': 'FLOOD_RISK',
+                'severity': 'HIGH',
+                'detail': f"Sustained rain: {weather['rain_3h_mm']}mm in 3h — flood risk",
+                'threshold': '80mm/3h sustained rainfall',
+            })
+            is_disrupted = True
+
         return {
             'is_disrupted': is_disrupted,
             'trigger_count': len(triggers),
@@ -218,12 +228,13 @@ class WeatherService:
 
         # Map claimed reason to expected trigger type
         reason_to_trigger = {
-            'WEATHER': ['HEAVY_RAIN', 'HIGH_WIND', 'STORM'],
+            'WEATHER': ['HEAVY_RAIN', 'HIGH_WIND', 'STORM', 'FLOOD_RISK'],
             'RAIN': ['HEAVY_RAIN'],
             'HEAT': ['EXTREME_HEAT'],
             'AQI': ['SEVERE_POLLUTION'],
             'POLLUTION': ['SEVERE_POLLUTION'],
             'STORM': ['STORM', 'HIGH_WIND', 'HEAVY_RAIN'],
+            'FLOOD': ['FLOOD_RISK', 'HEAVY_RAIN'],
         }
 
         expected_triggers = reason_to_trigger.get(claimed_reason.upper(), [])

@@ -115,6 +115,10 @@ class UpdateWorkDetailsView(views.APIView):
         worker.working_hours = request.data.get('working_hours', worker.working_hours)
         worker.working_days = request.data.get('working_days', worker.working_days)
         worker.vehicle_type = request.data.get('vehicle_type', worker.vehicle_type)
+        
+        # Auto-calculate avg_daily_income from weekly earnings
+        working_days_count = len(worker.working_days) if worker.working_days else 6
+        worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
         worker.save()
         
         return Response({"message": "Work details updated"}, status=status.HTTP_200_OK)
@@ -129,26 +133,55 @@ class FinalizeOnboardingView(views.APIView):
             worker = Worker.objects.get(phone=phone)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
-            
+        
+        # Auto-calculate avg_daily_income from weekly earnings
+        working_days_count = len(worker.working_days) if worker.working_days else 6
+        worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
         worker.onboarding_completed = True
         worker.save()
         
-        # Create Policy
+        # Create Policy with dynamic risk-based premium
         from policies.models import Policy
-        premium = 52 if plan_type == 'STANDARD' else 78
+        from ai_engine.risk_calculator import calculate_risk_and_premium, compute_dynamic_risk
+        
+        weather_risk, pollution_risk = compute_dynamic_risk(
+            zone=worker.zone, lat=worker.latitude, lng=worker.longitude
+        )
+        
+        quote = calculate_risk_and_premium(
+            zone=worker.zone,
+            avg_income=worker.avg_daily_income,
+            weather_risk=weather_risk,
+            pollution_risk=pollution_risk,
+            platform=worker.platform
+        )
+        
+        premium = max(int(quote['premium']), 30)  # Minimum ₹30/week
         if worker.is_verified:
-            premium -= 5 # Verified discount
+            premium = int(premium * 0.9)  # 10% verified discount
+        
+        coverage = max(int(quote['coverage']), 500)  # Minimum ₹500 coverage
+        if plan_type == 'PREMIUM':
+            premium = int(premium * 1.5)
+            coverage = int(coverage * 1.5)
             
         Policy.objects.create(
             worker=worker,
             plan_type=plan_type,
             weekly_premium=premium,
-            coverage_limit=800 if plan_type == 'STANDARD' else 1200,
+            coverage_limit=coverage,
             payment_method=payment_method,
-            end_date=timezone.now().date() + timedelta(days=7)
+            start_date=timezone.now().date(),
+            end_date=timezone.now().date() + timedelta(days=7),
+            next_payment_date=timezone.now().date() + timedelta(days=7),
         )
         
-        return Response({"message": "Onboarding finalized and protection started"}, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Onboarding finalized and protection started",
+            "weekly_premium": premium,
+            "coverage_limit": coverage,
+            "risks_assessed": {"weather": weather_risk, "pollution": pollution_risk},
+        }, status=status.HTTP_200_OK)
 
 class WorkerRegisterView(generics.CreateAPIView):
     queryset = Worker.objects.all()

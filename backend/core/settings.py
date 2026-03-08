@@ -161,6 +161,10 @@ REST_FRAMEWORK = {
 
 STATIC_URL = 'static/'
 
+# Media files (uploaded screenshots, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False, # Disable login redirect
     'SECURITY_DEFINITIONS': {
