@@ -35,7 +35,7 @@ export default function PlatformSelection() {
       logo: ZomatoLogo,
       description: "Food delivery with meal count tracking and zone management",
       color: "border-red-100/50",
-      route: "/profile-setup",
+      route: "/register/zomato",
     },
     {
       id: "blinkit",
@@ -43,7 +43,7 @@ export default function PlatformSelection() {
       logo: BlinkitLogo,
       description: "Quick commerce with hourly order tracking",
       color: "border-yellow-100/50",
-      route: "/profile-setup",
+      route: "/register/blinkit",
     },
     {
       id: "flipkart",
@@ -51,7 +51,7 @@ export default function PlatformSelection() {
       logo: FlipkartLogo,
       description: "Logistics and delivery with package tracking",
       color: "border-blue-100/50",
-      route: "/profile-setup",
+      route: "/register/flipkart",
     },
     {
       id: "amazon",
@@ -59,7 +59,7 @@ export default function PlatformSelection() {
       logo: AmazonLogo,
       description: "Global delivery network with performance tracking",
       color: "border-orange-100/50",
-      route: "/profile-setup",
+      route: "/register/amazon",
     },
     {
       id: "zepto",
@@ -67,7 +67,7 @@ export default function PlatformSelection() {
       logo: ZeptoLogo,
       description: "10-minute delivery with speed and efficiency tracking",
       color: "border-purple-100/50",
-      route: "/profile-setup",
+      route: "/register/zepto",
     },
     {
       id: "swiggy",
@@ -75,16 +75,13 @@ export default function PlatformSelection() {
       logo: SwiggyLogo,
       description: "Comprehensive food and grocery delivery partner network",
       color: "border-orange-100/50",
-      route: "/profile-setup",
+      route: "/register/swiggy",
     },
   ];
 
   const handleSelectPlatform = (platform: Platform) => {
     setSelectedPlatform(platform.id);
-    
-    // Simulate a quick login for demo purposes as requested
-    login(platform.id, "Guest Worker", "guest@gmail.com", "+91 00000 00000", "GUEST-123");
-    
+
     setTimeout(() => {
       navigate(platform.route);
     }, 400);

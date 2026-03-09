@@ -13,6 +13,7 @@ import {
   Pie,
 } from "recharts";
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const stats = [
@@ -45,13 +46,26 @@ export default function AdminDashboard() {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    // History Middleware: Locked Navigation
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+      toast.info("Admin Session Active", {
+        description: "Please use Logout for secure exit."
+      });
+    };
+    window.addEventListener("popstate", handlePopState);
+
     const el = mainRef.current;
     if (!el) return;
     const handleScroll = () => {
       setScrolled(el.scrollTop > 20);
     };
     el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      el.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (

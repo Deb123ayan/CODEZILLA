@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Lock, Hash, CheckCircle2, ArrowRight, Zap, ShieldCheck, Phone, CreditCard } from "lucide-react";
+import { User, Lock, Hash, CheckCircle2, ArrowRight, Zap, ShieldCheck, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,6 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
   const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [payoutType, setPayoutType] = useState<"credit" | "debit">("debit");
   const navigate = useNavigate();
   const { login } = useUserAuth();
 
@@ -58,7 +57,7 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
     const firstName = name.split(" ")[0];
     const formattedUsername = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
-    login(platformId, formattedUsername, phoneNumber);
+    login(platformId, formattedUsername, "worker@gmail.com", phoneNumber, employeeId);
 
     navigate("/profile-setup");
   };
@@ -71,7 +70,7 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
         {/* Decorative Background */}
         <div className="hidden lg:block w-1/2 p-24 relative overflow-hidden flex flex-col justify-center text-white">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-blue-50/50 blur-[120px] rounded-full" />
-          
+
           <div className="relative z-10 space-y-12">
             <div className="w-20 h-20 bg-white/10 backdrop-blur-3xl rounded-[2rem] flex items-center justify-center border border-white/20">
               <ShieldCheck size={48} className="text-blue-400" />
@@ -124,38 +123,6 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
                       className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
                       onChange={(e) => setPhoneNumber(e.target.value)}
                     />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Payout Destination</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setPayoutType("debit")}
-                      className={cn(
-                        "flex items-center justify-center space-x-3 h-16 rounded-2xl border-2 transition-all",
-                        payoutType === "debit" 
-                          ? "bg-black text-white border-black shadow-lg" 
-                          : "bg-gray-50 text-gray-400 border-transparent hover:border-gray-200"
-                      )}
-                    >
-                      <CreditCard size={18} />
-                      <span className="text-xs font-black uppercase">Debit Card</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPayoutType("credit")}
-                      className={cn(
-                        "flex items-center justify-center space-x-3 h-16 rounded-2xl border-2 transition-all",
-                        payoutType === "credit" 
-                          ? "bg-black text-white border-black shadow-lg" 
-                          : "bg-gray-50 text-gray-400 border-transparent hover:border-gray-200"
-                      )}
-                    >
-                      <CreditCard size={18} />
-                      <span className="text-xs font-black uppercase">Credit Card</span>
-                    </button>
                   </div>
                 </div>
 

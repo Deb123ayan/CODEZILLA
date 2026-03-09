@@ -24,6 +24,7 @@ import Payouts from "./pages/Payouts";
 import NotificationsPage from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import ProfileSetup from "./pages/ProfileSetup";
+import DocumentVerification from "./pages/DocumentVerification";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWorkers from "./pages/AdminWorkers";
 import AdminClaims from "./pages/AdminClaims";
@@ -86,6 +87,7 @@ const App = () => (
               <Route path="/notifications" element={<UserGuard><NotificationsPage /></UserGuard>} />
               <Route path="/settings" element={<UserGuard><Settings /></UserGuard>} />
               <Route path="/profile-setup" element={<UserGuard><ProfileSetup /></UserGuard>} />
+              <Route path="/document-verification" element={<UserGuard><DocumentVerification /></UserGuard>} />
               <Route path="/buy-plan" element={<UserGuard><BuyPlan /></UserGuard>} />
 
               {/* Admin Routes */}

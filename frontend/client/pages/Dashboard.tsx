@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import DashboardFooter from "@/components/DashboardFooter";
 import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity } from "lucide-react";
+import { toast } from "sonner";
 import {
   LineChart,
   Line,
@@ -25,13 +26,31 @@ export default function Dashboard() {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    // History Middleware: Prevent 'back' button from exiting the dashboard without explicitly logging out
+    // This pushes a new state to the history stack so a 'back' click just returns here
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      // If user tries to go back, we push them forward again
+      window.history.pushState(null, "", window.location.href);
+      toast.info("Please use the Logout button to exit securely", {
+        description: "Back navigation is disabled for your security."
+      });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
     const el = mainRef.current;
     if (!el) return;
     const handleScroll = () => {
       setScrolled(el.scrollTop > 20);
     };
     el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      el.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const getPlatformColor = (id: string) => {
@@ -178,7 +197,7 @@ export default function Dashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              
+
               {/* Internal Footer for Chartboat Section */}
               <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
                 <div className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-gray-400">

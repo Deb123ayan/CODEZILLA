@@ -19,6 +19,7 @@ export default function Login() {
   const [platformId, setPlatformId] = useState("");
   const [gmail, setGmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [securityKey, setSecurityKey] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const { status, login } = useUserAuth();
@@ -34,7 +35,7 @@ export default function Login() {
       toast.error("Please select a platform to continue");
       return;
     }
-    if (!userName || !platformId || !gmail || !phoneNumber) {
+    if (!userName || !platformId || !gmail || !phoneNumber || !securityKey) {
       toast.error("Please fill in all details");
       return;
     }
@@ -43,7 +44,7 @@ export default function Login() {
     toast.success(`Welcome to ${platform.charAt(0).toUpperCase() + platform.slice(1)} Dashboard!`);
 
     const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
-    navigate(destination);
+    navigate(destination, { replace: true });
   };
 
   return (
@@ -153,6 +154,19 @@ export default function Login() {
                       placeholder="+91 00000 00000"
                       className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
                       onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Security Key</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                    <input
+                      type="password"
+                      placeholder="••••••"
+                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                      onChange={(e) => setSecurityKey(e.target.value)}
                     />
                   </div>
                 </div>

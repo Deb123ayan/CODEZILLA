@@ -10,15 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUserAuth } from "@/context/UserAuthContext";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
+  const { platform, username, phoneNumber } = useUserAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "",
-    phoneNumber: "",
+    fullName: username || "",
+    phoneNumber: phoneNumber || "",
     govtId: "",
-    platform: "",
+    platform: platform ? platform.toLowerCase() : "",
     city: "",
   });
 
@@ -31,7 +33,7 @@ export default function ProfileSetup() {
     if (!formData.govtId) newErrors.govtId = "Government ID is required";
     if (!formData.platform) newErrors.platform = "Platform selection is required";
     if (!formData.city) newErrors.city = "City/Zone is required";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -70,7 +72,7 @@ export default function ProfileSetup() {
     setLoading(false);
 
     toast.success("Profile details saved successfully!");
-    navigate("/buy-plan");
+    navigate("/document-verification");
   };
 
   return (
@@ -167,18 +169,18 @@ export default function ProfileSetup() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Delivery Platform</label>
                 <div className="relative group">
-                  <Select onValueChange={handlePlatformChange} value={formData.platform}>
+                  <Select onValueChange={handlePlatformChange} value={formData.platform} disabled>
                     <SelectTrigger className={cn(
-                      "w-full h-14 bg-white border border-gray-200 rounded-xl pl-12 pr-4 text-sm font-medium focus:ring-2 transition-all",
+                      "w-full h-14 bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 text-sm font-medium focus:ring-2 transition-all opacity-70 cursor-not-allowed",
                       errors.platform ? "border-red-500 focus:ring-red-100" : "focus:ring-[#2563eb]/10"
                     )}>
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#2563eb] transition-colors">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 transition-colors">
                         <Truck size={18} />
                       </div>
-                      <SelectValue placeholder="Select Platform" />
+                      <SelectValue placeholder={platform ? platform : "Select Platform"} />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-gray-100">
-                      {["Zomato", "Blinkit", "Flipkart", "Amazon", "Swiggy"].map(p => (
+                      {["Zomato", "Blinkit", "Flipkart", "Amazon", "Zepto", "Swiggy"].map(p => (
                         <SelectItem key={p} value={p.toLowerCase()} className="rounded-lg font-medium py-3 cursor-pointer">{p}</SelectItem>
                       ))}
                     </SelectContent>
@@ -223,10 +225,10 @@ export default function ProfileSetup() {
                   </>
                 )}
               </button>
-              
+
               <button
                 type="button"
-                onClick={() => navigate("/buy-plan")}
+                onClick={() => navigate("/document-verification")}
                 className="w-full h-12 bg-transparent text-gray-400 hover:text-gray-900 font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
               >
                 Skip for now
