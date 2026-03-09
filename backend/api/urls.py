@@ -10,7 +10,7 @@ from users.views import (
     WeatherCheckView,
     VerifyClaimWeatherView,
 )
-from fraud_detection.views import VerifyScreenshotView
+from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
 from api.admin_views import (
     AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView,
@@ -27,6 +27,7 @@ urlpatterns = [
     path('auth/otp/verify/', VerifyOTPView.as_view(), name='otp-verify'),
     path('auth/platform/connect/', MockPlatformConnectView.as_view(), name='platform-connect'),
     path('auth/screenshot/verify/', VerifyScreenshotView.as_view(), name='screenshot-verify'),
+    path('auth/document/verify/', VerifyDocumentView.as_view(), name='document-verify'),
     path('auth/work-details/', UpdateWorkDetailsView.as_view(), name='update-work-details'),
     path('auth/finalize/', FinalizeOnboardingView.as_view(), name='finalize-onboarding'),
 

@@ -28,6 +28,12 @@ class Worker(models.Model):
     partner_id = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=100)
     zone = models.CharField(max_length=100)
+    security_key = models.CharField(max_length=6, blank=True, null=True)
+    govt_id = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Policy Summary in Worker profile
+    pricing_plan = models.CharField(max_length=20, default='STANDARD')
+    renewal_date = models.DateField(null=True, blank=True)
     
     # Onboarding Data
     weekly_earnings = models.IntegerField(default=0)

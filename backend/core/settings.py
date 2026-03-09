@@ -100,17 +100,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 # Using SQLite for development. Switch to PostgreSQL for production.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # For PostgreSQL setup (uncomment and fill details):
-# DATABASES = {
-#     'default': env.db()
-# }
+DATABASES = {
+    'default': env.db()
+}
 
 
 # Password validation

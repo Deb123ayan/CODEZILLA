@@ -2,6 +2,8 @@ import io
 from PIL import Image
 from exif import Image as ExifImage
 import datetime
+import numpy as np
+from .classifier import DocumentForensicsModel
 
 class ScreenshotForensics:
     @staticmethod
@@ -83,4 +85,35 @@ class ScreenshotForensics:
         except Exception as e:
             findings.append(f"Integrity check error: {str(e)}")
 
-        return score, findings
+
+    @staticmethod
+    def check_ai_and_editing(image_bytes):
+        """
+        Deep forensic analysis for AI-generated or tampered documents.
+        Score: 0-50
+        """
+        findings = []
+        score = 0
+        
+        try:
+            model = DocumentForensicsModel()
+            is_fake, confidence = model.predict(image_bytes)
+            
+            if is_fake:
+                score -= 40
+                findings.append(f"TAMPERING DETECTED: High probability of editing/AI generation ({confidence*100:.1f}%)")
+                findings.append("Artifacts: Error Level Analysis (ELA) shows inconsistent compression layers.")
+            else:
+                score += 20
+                findings.append(f"No significant AI/Editing artifacts found (Authenticity match: {(1-confidence)*100:.1f}%)")
+                
+            # Internal noise consistency check
+            features = model.extract_features(image_bytes)
+            if features[1] < 10: # Very low noise variance
+                findings.append("Warning: Image is suspiciously smooth (Common in AI/Vector generations)")
+                score -= 5
+            
+        except Exception as e:
+            findings.append(f"AI Analytic service error: {str(e)}")
+
+        return max(score, -40), findings
