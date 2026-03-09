@@ -5,16 +5,24 @@ from users.views import (
     VerifyOTPView, 
     MockPlatformConnectView, 
     UpdateWorkDetailsView, 
-    FinalizeOnboardingView
+    FinalizeOnboardingView,
+    UpdateLocationView,
+    WeatherCheckView,
+    VerifyClaimWeatherView,
 )
 from fraud_detection.views import VerifyScreenshotView
-from policies.views import PolicyQuoteView, PolicyPurchaseView
-from api.admin_views import AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView
+from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
+from api.admin_views import (
+    AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView,
+    AdminAnalyticsView, AdminFraudStatsView,
+)
 from payments.views import PayoutProcessView
 from api.risk_views import RealTimeRiskPredictionView
+from claims.views import ClaimSubmitView, ClaimHistoryView
+from events.views import ReportDisruptionView, ListEventsView
 
 urlpatterns = [
-    # Onboarding Flow (Mock OAuth Integration)
+    # ── Onboarding Flow ────────────────────────────────────────────────
     path('auth/otp/generate/', GenerateOTPView.as_view(), name='otp-generate'),
     path('auth/otp/verify/', VerifyOTPView.as_view(), name='otp-verify'),
     path('auth/platform/connect/', MockPlatformConnectView.as_view(), name='platform-connect'),
@@ -22,23 +30,38 @@ urlpatterns = [
     path('auth/work-details/', UpdateWorkDetailsView.as_view(), name='update-work-details'),
     path('auth/finalize/', FinalizeOnboardingView.as_view(), name='finalize-onboarding'),
 
-    # Worker Registration (Legacy/Fallback)
+    # ── Worker ─────────────────────────────────────────────────────────
     path('workers/register/', WorkerRegisterView.as_view(), name='worker-register'),
+    path('workers/location/', UpdateLocationView.as_view(), name='update-location'),
     
-    # Policy Quote (Step 2)
+    # ── Policy Management ──────────────────────────────────────────────
     path('policy/quote/', PolicyQuoteView.as_view(), name='policy-quote'),
-    
-    # Buy Policy (Step 3)
     path('policy/purchase/', PolicyPurchaseView.as_view(), name='policy-purchase'),
+    path('policy/renew/', PolicyRenewView.as_view(), name='policy-renew'),
+    path('policy/status/', PolicyStatusView.as_view(), name='policy-status'),
 
-    # Payout (Step 11)
+    # ── Claims ─────────────────────────────────────────────────────────
+    path('claims/submit/', ClaimSubmitView.as_view(), name='claim-submit'),
+    path('claims/history/', ClaimHistoryView.as_view(), name='claim-history'),
+
+    # ── Weather Verification ───────────────────────────────────────────
+    path('weather/check/', WeatherCheckView.as_view(), name='weather-check'),
+    path('weather/verify-claim/', VerifyClaimWeatherView.as_view(), name='verify-claim-weather'),
+
+    # ── Events / Disruptions ───────────────────────────────────────────
+    path('events/report/', ReportDisruptionView.as_view(), name='report-disruption'),
+    path('events/', ListEventsView.as_view(), name='list-events'),
+
+    # ── Payout ─────────────────────────────────────────────────────────
     path('payout/process/', PayoutProcessView.as_view(), name='payout-process'),
 
-    # Admin Dashboard APIs (Step 12)
+    # ── Admin Dashboard ────────────────────────────────────────────────
     path('admin/workers/', AdminWorkerListView.as_view(), name='admin-workers'),
     path('admin/risk-zones/', AdminRiskHeatmapView.as_view(), name='admin-risk-zones'),
     path('admin/claims/', AdminClaimsMonitoringView.as_view(), name='admin-claims-monitoring'),
+    path('admin/analytics/', AdminAnalyticsView.as_view(), name='admin-analytics'),
+    path('admin/fraud-stats/', AdminFraudStatsView.as_view(), name='admin-fraud-stats'),
 
-    # Real-Time Risk Prediction (Step 15)
+    # ── AI Risk Prediction ─────────────────────────────────────────────
     path('risk/predict/', RealTimeRiskPredictionView.as_view(), name='risk-predict'),
 ]

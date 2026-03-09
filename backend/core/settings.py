@@ -99,18 +99,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# Note: Using SQLite for development. Switch to PostgreSQL for production.
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+# Using SQLite for development. Switch to PostgreSQL for production.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # For PostgreSQL setup (uncomment and fill details):
-DATABASES = {
-    'default': env.db()
-}
+# DATABASES = {
+#     'default': env.db()
+# }
 
 
 # Password validation
@@ -160,6 +160,10 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (uploaded screenshots, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False, # Disable login redirect
