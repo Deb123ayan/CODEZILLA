@@ -17,7 +17,7 @@ import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber, gmail, platformId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
@@ -85,9 +85,23 @@ export default function Dashboard() {
               </h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Welcome back, {username}</p>
               {phoneNumber && (
-                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                  <Phone size={12} className="text-blue-600" />
-                  <span>{phoneNumber}</span>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <Phone size={12} className="text-blue-600" />
+                    <span>{phoneNumber}</span>
+                  </div>
+                  {platformId && (
+                    <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <Shield size={12} className="text-blue-600" />
+                      <span>ID: {platformId}</span>
+                    </div>
+                  )}
+                  {gmail && (
+                    <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <Activity size={12} className="text-blue-600" />
+                      <span>{gmail}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

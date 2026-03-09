@@ -57,9 +57,9 @@ export default function WeatherAI() {
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { label: "Humidity", value: "84%", icon: CloudRain, color: "text-blue-400" },
-                    { label: "Temp", value: "42°C", icon: Sun, color: "text-yellow-400" },
-                    { label: "Wind", value: "12 km/h", icon: Wind, color: "text-emerald-400" },
-                    { label: "Predictor", value: "Storm", icon: AlertCircle, color: "text-red-400" }
+                    { label: "Temp", value: "42°C", icon: Sun, color: "text-blue-400" },
+                    { label: "Wind", value: "12 km/h", icon: Wind, color: "text-blue-400" },
+                    { label: "Predictor", value: "Storm", icon: AlertCircle, color: "text-blue-400" }
                   ].map((stat, i) => (
                     <div key={i} className="bg-white/5 border border-white/5 p-6 rounded-[1.5rem] space-y-4 hover:border-white/10 transition-colors">
                       <stat.icon size={20} className={stat.color} />
@@ -100,16 +100,16 @@ export default function WeatherAI() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "Heavy Rain", desc: "Instantly triggers coverage when localized precipitation exceeds delivery safety limits.", icon: CloudRain, color: "bg-blue-50 text-blue-600" },
-              { title: "Heatwaves", desc: "Detects extreme temperature surges that impact delivery health and speed performance.", icon: Sun, color: "bg-orange-50 text-orange-600" },
-              { title: "Storm conditions", desc: "Hyper-local monitoring for high winds and dust storms that disrupt navigation.", icon: Wind, color: "bg-emerald-50 text-emerald-600" },
-              { title: "Localized disruption", desc: "AI identifies specific zone weather anomalies not caught by generic weather apps.", icon: AlertCircle, color: "bg-red-50 text-red-600" }
+              { title: "Heatwaves", desc: "Detects extreme temperature surges that impact delivery health and speed performance.", icon: Sun, color: "bg-blue-50 text-blue-600" },
+              { title: "Storm conditions", desc: "Hyper-local monitoring for high winds and dust storms that disrupt navigation.", icon: Wind, color: "bg-blue-50 text-blue-600" },
+              { title: "Localized disruption", desc: "AI identifies specific zone weather anomalies not caught by generic weather apps.", icon: AlertCircle, color: "bg-blue-50 text-blue-600" }
             ].map((f, i) => (
-              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 group relative overflow-hidden">
+              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:bg-black transition-all duration-500 group relative overflow-hidden">
                 <div className={cn("inline-flex p-4 rounded-2xl mb-8 group-hover:scale-110 transition-transform", f.color)}>
                   <f.icon size={28} />
                 </div>
-                <h3 className="text-xl font-black tracking-tight mb-4">{f.title}</h3>
-                <p className="text-sm font-bold text-gray-400 leading-relaxed">{f.desc}</p>
+                <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-white">{f.title}</h3>
+                <p className="text-sm font-bold text-gray-400 leading-relaxed group-hover:text-gray-300">{f.desc}</p>
               </div>
             ))}
           </div>

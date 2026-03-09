@@ -83,7 +83,7 @@ export default function PlatformSelection() {
     setSelectedPlatform(platform.id);
     
     // Simulate a quick login for demo purposes as requested
-    login(platform.id, "Guest Worker");
+    login(platform.id, "Guest Worker", "guest@gmail.com", "+91 00000 00000", "GUEST-123");
     
     setTimeout(() => {
       navigate(platform.route);

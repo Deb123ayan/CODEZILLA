@@ -86,7 +86,7 @@ export default function RiskPredictor() {
         {/* Background Gradients */}
         <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-blue-50/50 blur-[160px] rounded-full" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-emerald-50/40 blur-[140px] rounded-full" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-50/40 blur-[140px] rounded-full" />
         </div>
 
         <div className="w-full max-w-3xl mx-auto bg-white rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100 animate-in zoom-in duration-500 relative">
@@ -147,11 +147,11 @@ export default function RiskPredictor() {
                     
                     <div className="flex flex-col md:items-end gap-2 pr-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
                       <p className="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Est. Income Protection</p>
-                      <p className="text-xl md:text-3xl font-black text-emerald-400 tracking-tighter">
+                      <p className="text-xl md:text-3xl font-black text-blue-400 tracking-tighter">
                         {calculateRisk() === "High" ? "₹300 – ₹600" : calculateRisk() === "Medium" ? "₹100 – ₹250" : "No Gap"}
                       </p>
                       <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl mt-1">
-                        <ShieldCheck className="text-emerald-400" size={14} />
+                        <ShieldCheck className="text-blue-400" size={14} />
                         <span className="text-[8px] font-black uppercase tracking-widest whitespace-nowrap">Verified Range</span>
                       </div>
                     </div>
@@ -272,7 +272,7 @@ export default function RiskPredictor() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Link
                     to="/register"
-                    className="group py-6 bg-blue-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] text-center shadow-2xl hover:bg-emerald-600 transition-all duration-500 hover:scale-[1.05] active:scale-95 flex items-center justify-center gap-4"
+                    className="group py-6 bg-blue-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] text-center shadow-2xl hover:bg-black transition-all duration-500 hover:scale-[1.05] active:scale-95 flex items-center justify-center gap-4"
                   >
                     <span>Activate Protection</span>
                     <ArrowRight size={18} />

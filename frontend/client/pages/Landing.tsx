@@ -18,18 +18,19 @@ export default function Landing() {
   const navigate = useNavigate();
   const { login } = useUserAuth();
   const [isOverDark, setIsOverDark] = useState(false);
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY + window.innerHeight - 100; // Point where widget sits
       const darkSections = document.querySelectorAll('#how-it-works, #cta-final, footer');
-      
+
       let overDark = false;
       darkSections.forEach(section => {
         const rect = (section as HTMLElement).getBoundingClientRect();
         const absoluteTop = rect.top + window.scrollY;
         const absoluteBottom = absoluteTop + (section as HTMLElement).offsetHeight;
-        
+
         if (scrollY >= absoluteTop && scrollY <= absoluteBottom) {
           overDark = true;
         }
@@ -50,14 +51,14 @@ export default function Landing() {
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-blue-50/50 blur-[160px] rounded-full animate-pulse" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-emerald-50/40 blur-[140px] rounded-full" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-50/40 blur-[140px] rounded-full" />
         </div>
 
         <div className="max-w-7xl mx-auto w-full text-center">
           <div className="space-y-8 md:space-y-12 reveal active">
 
             <h1 className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black text-gray-900 tracking-tighter leading-[0.9] max-w-[12ch] mx-auto group">
-              Protect your <span className="text-blue-600 group-hover:italic transition-all">Income</span> daily.
+              Protect your <span className="text-blue-600 group-hover:italic transition-all">Income</span>
             </h1>
 
             <p className="max-w-3xl mx-auto text-base md:text-2xl text-gray-500 font-bold leading-normal tracking-tight px-4 sm:px-0">
@@ -97,11 +98,11 @@ export default function Landing() {
               { id: "blinkit", name: "Blinkit", logo: BlinkitLogo },
               { id: "swiggy", name: "Swiggy", logo: SwiggyLogo }
             ].map(p => (
-              <div 
-                key={p.name} 
+              <div
+                key={p.name}
                 className="group cursor-pointer"
                 onClick={() => {
-                  login(p.id, "Demo Worker");
+                  login(p.id, "Demo Worker", "demo@gmail.com", "+91 00000 00000", "DEMO-123");
                   navigate("/dashboard");
                 }}
               >
@@ -116,7 +117,7 @@ export default function Landing() {
       <section className="section-padding py-20 md:py-40 bg-gray-50/50 reveal active">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
           <div className="space-y-12">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">Smart coverage, <br />payouts in <span className="text-emerald-500">seconds.</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">Smart coverage, <br />payouts in <span className="text-blue-600">seconds.</span></h2>
             <div className="space-y-8">
               {[
                 { icon: ShieldCheck, title: "Weather Lock", desc: "Automatic payouts during heat waves or heavy rain." },
@@ -143,7 +144,7 @@ export default function Landing() {
             <div className="bg-white rounded-[40px] p-12 shadow-[0_60px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100/50 transform group-hover:rotate-y-[-5deg] transition-all duration-1000">
               <div className="space-y-12">
                 <div className="flex items-center justify-between">
-                  <span className="px-4 py-2 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">System Monitoring Active</span>
+                  <span className="px-4 py-2 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">System Monitoring Active</span>
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -174,58 +175,59 @@ export default function Landing() {
       <section id="features" className="section-padding py-20 md:py-40 bg-white reveal active border-t border-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24 space-y-6">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tighter">Everything you need <br /><span className="text-blue-600">to earn securely.</span></h2>
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter">Everything you need <br /><span className="text-blue-600">to earn securely</span></h2>
             <p className="text-gray-400 font-bold max-w-2xl mx-auto text-lg md:text-xl">Our intelligent platform handles the risk while you focus on the road.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-orange-50 text-orange-600", route: "/features/tracking" },
-              { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-50 text-blue-600", route: "/features/weather-ai" },
-              { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-red-50 text-red-600", route: "/features/traffic" },
-              { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-emerald-50 text-emerald-600", route: "/features/claims" },
-              { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-purple-50 text-purple-600", route: "/features/fraud" },
-              { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-gray-100 text-gray-900", route: "/features/mobile" }
-            ].map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <Link to={f.route} key={i} className="bg-gray-50/50 border border-gray-50 rounded-[2.5rem] p-10 hover:bg-white hover:shadow-2xl hover:border-transparent transition-all duration-500 group transform hover:-translate-y-2">
-                  <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500", f.color)}>
-                    <Icon size={24} className="group-hover:animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-blue-600 transition-colors uppercase italic leading-none">{f.title}</h3>
-                  <p className="text-sm font-bold text-gray-400 leading-relaxed italic">"{f.desc}"</p>
-                </Link>
-              )
-            })}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">            {[
+            { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-blue-600 text-white", route: "/features/tracking" },
+            { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-600 text-white", route: "/features/weather-ai" },
+            { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-blue-600 text-white", route: "/features/traffic" },
+            { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-blue-600 text-white", route: "/features/claims" },
+            { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-blue-600 text-white", route: "/features/fraud" },
+            { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-blue-600 text-white", route: "/features/mobile" }
+          ].slice(0, showAllFeatures ? 6 : 3).map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <Link to={f.route} key={i} className="bg-white/40 backdrop-blur-xl border border-white/20 rounded-[2.5rem] p-10 hover:bg-black hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 group transform hover:-translate-y-2 shadow-sm">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 group-hover:bg-white transition-all duration-500", f.color)}>
+                  <Icon size={24} className="group-hover:text-black group-hover:animate-pulse" />
+                </div>
+                <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-white transition-colors uppercase italic leading-none">{f.title}</h3>
+                <p className="text-sm font-bold text-gray-400 leading-relaxed italic group-hover:text-gray-300">"{f.desc}"</p>
+              </Link>
+            )
+          })}
           </div>
 
-          <div className="mt-20 text-center">
-            <Link 
-              to="/register"
-              className="inline-flex items-center space-x-4 px-10 py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95"
-            >
-              <span>Explore All Features</span>
-              <ArrowRight size={18} />
-            </Link>
-          </div>
+          {!showAllFeatures && (
+            <div className="mt-20 text-center">
+              <button
+                onClick={() => setShowAllFeatures(true)}
+                className="inline-flex items-center space-x-4 px-10 py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95"
+              >
+                <span>Explore All Features</span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="section-padding py-20 md:py-40 bg-black text-white reveal active overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-[60%] h-[100%] bg-emerald-900/20 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[60%] h-[100%] bg-blue-900/20 blur-[150px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[40%] h-[60%] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row gap-20 items-center">
 
             <div className="lg:w-1/3 space-y-8">
               <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-10 shadow-2xl">
-                <LayoutGrid size={32} className="text-emerald-400" />
+                <LayoutGrid size={32} className="text-blue-400" />
               </div>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">How it <br /><span className="text-emerald-400">Works.</span></h2>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">How it <br /><span className="text-blue-400">Works.</span></h2>
               <p className="text-gray-400 font-bold text-lg leading-relaxed">Three simple steps to absolute peace of mind during your shifts.</p>
-              <Link 
+              <Link
                 to="/register"
                 className="inline-block px-8 py-5 mt-4 bg-white/5 border border-white/10 hover:bg-white hover:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 text-center"
               >
@@ -235,12 +237,12 @@ export default function Landing() {
 
             <div className="lg:w-2/3 grid sm:grid-cols-3 gap-8 relative">
               {/* Connecting line for desktop */}
-              <div className="hidden sm:block absolute top-[4.5rem] left-10 right-10 h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 z-0" />
+              <div className="hidden sm:block absolute top-[4.5rem] left-10 right-10 h-[2px] bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0 z-0" />
 
               {[
                 { step: "01", title: "Connect", desc: "Link your delivery accounts with one secure click to sync data.", icon: ShieldCheck, color: "text-blue-400" },
-                { step: "02", title: "Drive", desc: "Our AI silently monitors weather and traffic in the background.", icon: Zap, color: "text-yellow-400" },
-                { step: "03", title: "Earn", desc: "Instant payouts triggered automatically if conditions breach limits.", icon: Wallet, color: "text-emerald-400" }
+                { step: "02", title: "Drive", desc: "Our AI silently monitors weather and traffic in the background.", icon: Zap, color: "text-blue-400" },
+                { step: "03", title: "Earn", desc: "Instant payouts triggered automatically if conditions breach limits.", icon: Wallet, color: "text-blue-400" }
               ].map((s, i) => {
                 const Icon = s.icon;
                 return (
@@ -275,7 +277,7 @@ export default function Landing() {
             ].map((t, i) => (
               <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
                 <div className="flex gap-1 mb-6">
-                  {[1, 2, 3, 4, 5].map(s => <Zap key={s} size={14} className="text-yellow-400 fill-current" />)}
+                  {[1, 2, 3, 4, 5].map(s => <Zap key={s} size={14} className="text-blue-500 fill-current" />)}
                 </div>
                 <p className="text-lg font-black tracking-tight leading-relaxed mb-8 italic">"{t.q}"</p>
                 <div className="flex items-center gap-4">
@@ -300,7 +302,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link
                 to="/register"
-                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-emerald-400 transition-all duration-500 hover:scale-110"
+                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all duration-500 hover:scale-110"
               >
                 Register Account
               </Link>
@@ -321,13 +323,13 @@ export default function Landing() {
           to="/risk-predictor"
           className={cn(
             "w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative ring-1",
-            isOverDark 
-              ? "bg-white text-black ring-white/10" 
+            isOverDark
+              ? "bg-white text-black ring-white/10"
               : "bg-black text-white ring-black/10"
           )}
         >
           <Zap className={cn("fill-current transition-colors", isOverDark ? "text-blue-600" : "text-blue-400")} size={24} />
-          <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-blue-500 rounded-full border-2 border-white animate-pulse" />
         </Link>
       </div>
 

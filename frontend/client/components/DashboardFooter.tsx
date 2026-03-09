@@ -15,7 +15,7 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
     )}>
       {/* Background Decorative Blob */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/30 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-50/30 rounded-full -ml-24 -mb-24 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-50/30 rounded-full -ml-24 -mb-24 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
         <div className="flex flex-col items-center md:items-start space-y-4">
@@ -52,10 +52,10 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
 
         <div className="flex flex-col items-center md:items-end space-y-4">
           <div className="flex items-center space-x-4">
-            <div className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100/50 rounded-2xl flex items-center space-x-3 shadow-sm hover:shadow-md transition-shadow cursor-default group">
+            <div className="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100/50 rounded-2xl flex items-center space-x-3 shadow-sm hover:shadow-md transition-shadow cursor-default group">
               <div className="relative">
-                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping absolute opacity-75" />
-                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full relative border-2 border-white" />
+                <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping absolute opacity-75" />
+                <div className="w-2.5 h-2.5 bg-blue-500 rounded-full relative border-2 border-white" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest flex items-center">
                 All Systems Operational
@@ -70,7 +70,7 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
       
       {/* Decorative Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-50/50">
-        <div className="h-full bg-gradient-to-r from-blue-500 via-emerald-500 to-indigo-500 w-[45%] rounded-full opacity-30 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+        <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600 w-[45%] rounded-full opacity-30 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
       </div>
     </footer>
   );

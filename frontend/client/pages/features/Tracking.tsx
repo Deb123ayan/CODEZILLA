@@ -12,7 +12,7 @@ export default function Tracking() {
       <section className="section-padding pt-32 pb-20 md:pt-48 md:pb-32 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20">
           <div className="lg:w-1/2 space-y-8 reveal active">
-            <div className="inline-flex items-center space-x-3 px-4 py-2 bg-orange-50 text-orange-600 rounded-2xl">
+            <div className="inline-flex items-center space-x-3 px-4 py-2 bg-blue-50 text-blue-600 rounded-2xl">
               <Activity size={16} />
               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Real-time Technology</span>
             </div>
@@ -53,8 +53,8 @@ export default function Tracking() {
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Syncing...</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 text-emerald-500">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <div className="flex items-center space-x-2 text-blue-500">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-widest leading-none">Healthy</span>
                   </div>
                 </div>
@@ -94,13 +94,13 @@ export default function Tracking() {
               { step: "02", title: "EarnLock monitors data", desc: "Our AI background system tracks your GPS and earnings telemetry live.", icon: Activity },
               { step: "03", title: "AI detects disruptions", desc: "Automatically triggers protection if slowdowns or weather risks occur.", icon: ShieldCheck }
             ].map((s, i) => (
-              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group">
+              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:bg-black transition-all duration-500 group">
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-10 group-hover:scale-110 transition-transform">
                   <s.icon size={32} />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Step {s.step}</p>
-                <h3 className="text-2xl font-black tracking-tight mb-4">{s.title}</h3>
-                <p className="text-sm font-bold text-gray-400 leading-relaxed">{s.desc}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 group-hover:text-gray-300">Step {s.step}</p>
+                <h3 className="text-2xl font-black tracking-tight mb-4 group-hover:text-white">{s.title}</h3>
+                <p className="text-sm font-bold text-gray-400 leading-relaxed group-hover:text-gray-300">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -122,13 +122,13 @@ export default function Tracking() {
                   "Reliable earnings monitoring"
                 ].map((b, i) => (
                   <div key={i} className="flex items-center space-x-4">
-                    <CheckCircle2 size={24} className="text-emerald-400" />
+                    <CheckCircle2 size={24} className="text-blue-400" />
                     <span className="text-sm font-bold text-gray-300 uppercase tracking-widest">{b}</span>
                   </div>
                 ))}
               </div>
               <div className="mt-16 flex justify-center">
-                <Link to="/buy-plan" className="px-10 py-5 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all active:scale-95 shadow-xl">
+                <Link to="/buy-plan" className="px-10 py-5 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-xl">
                   Get Started Flow
                 </Link>
               </div>

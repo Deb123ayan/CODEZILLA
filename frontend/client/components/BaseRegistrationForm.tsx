@@ -69,19 +69,16 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
 
       <main className="flex-1 flex flex-col lg:flex-row items-center justify-center section-padding pt-32 pb-20 relative overflow-hidden">
         {/* Decorative Background */}
-        <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-emerald-50/50 blur-[120px] rounded-full" />
-        </div>
-
-        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-20 items-center">
-          {/* Left Info */}
-          <div className="hidden lg:block space-y-12 reveal active">
-            <div className="w-24 h-24 bg-black text-white rounded-[2.5rem] flex items-center justify-center shadow-2xl overflow-hidden mb-12">
-              <ShieldCheck size={48} className="text-emerald-400" />
+        <div className="hidden lg:block w-1/2 p-24 relative overflow-hidden flex flex-col justify-center text-white">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-blue-50/50 blur-[120px] rounded-full" />
+          
+          <div className="relative z-10 space-y-12">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-3xl rounded-[2rem] flex items-center justify-center border border-white/20">
+              <ShieldCheck size={48} className="text-blue-400" />
             </div>
-            <h1 className="text-7xl font-black tracking-tighter leading-none">Become a <span className="text-emerald-500">Protected</span> Partner.</h1>
-            <p className="text-xl font-bold text-gray-400 max-w-md leading-relaxed">
-              Fast-track your registration for {platformName} and activate your automatic income protection today.
+            <h1 className="text-7xl font-black tracking-tighter leading-none">Become a <span className="text-blue-500">Protected</span> Partner.</h1>
+            <p className="text-xl font-bold text-gray-400 leading-relaxed max-w-md italic">
+              "Join 10,000+ gig workers who have already secured their daily earnings with EarnLock."
             </p>
             <div className="flex items-center space-x-6">
               <div className="flex -space-x-4">
@@ -92,7 +89,9 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
               <p className="text-xs font-black uppercase tracking-widest text-gray-400">Join 4k+ members</p>
             </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-20 items-center">
           {/* Right Form */}
           <div className="w-full max-w-xl mx-auto reveal active" style={{ transitionDelay: "200ms" }}>
             <div className="bg-white rounded-[3rem] border border-gray-100 p-10 md:p-16 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)]">
@@ -205,7 +204,7 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
 
                 <button
                   type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
                 >
                   <span>Activate Member Account</span>
                   <Zap size={16} />

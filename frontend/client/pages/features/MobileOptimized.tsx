@@ -50,11 +50,11 @@ export default function MobileOptimized() {
                 <div className="p-6 pt-12 space-y-6">
                    <div className="bg-white rounded-[1.5rem] p-4 shadow-xl translate-y-2 group-hover:translate-y-0 transition-transform">
                       <div className="flex items-center gap-3 mb-3">
-                         <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                         <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                             <Zap size={16} className="text-white" />
                          </div>
                          <p className="text-[10px] font-black uppercase text-gray-400">EarnLock Protection</p>
-                      </div>
+                       </div>
                       <h5 className="text-sm font-black italic">Payout Complete!</h5>
                       <p className="text-[8px] font-bold text-gray-400 mt-1">₹500 has been added to your EarnLock Wallet.</p>
                    </div>
@@ -76,7 +76,7 @@ export default function MobileOptimized() {
                          <span className="text-[8px] font-black text-gray-500 uppercase">Track</span>
                       </div>
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center">
-                         <Bell size={16} className="text-orange-400 mb-2" />
+                         <Bell size={16} className="text-blue-400 mb-2" />
                          <span className="text-[8px] font-black text-gray-500 uppercase">Alerts</span>
                       </div>
                    </div>
@@ -99,16 +99,16 @@ export default function MobileOptimized() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "One-tap protection activation", desc: "No complex configuration. One tap and you're protected for the day.", icon: Touchpad, color: "bg-blue-50 text-blue-600" },
-              { title: "Quick payout alerts", desc: "Push notifications for every payout, ensuring you're always in the loop.", icon: Bell, color: "bg-orange-50 text-orange-600" },
-              { title: "Real-time notifications", desc: "Get warned about weather risks and traffic surges before they reach you.", icon: MessageSquare, color: "bg-emerald-50 text-emerald-600" },
-              { title: "Smooth mobile navigation", desc: "Designed with large touch targets for easy usage while wearing gloves or on the move.", icon: Smartphone, color: "bg-gray-900 text-white shadow-xl" }
+              { title: "Quick payout alerts", desc: "Push notifications for every payout, ensuring you're always in the loop.", icon: Bell, color: "bg-blue-50 text-blue-600" },
+              { title: "Real-time notifications", desc: "Get warned about weather risks and traffic surges before they reach you.", icon: MessageSquare, color: "bg-blue-50 text-blue-600" },
+              { title: "Smooth mobile navigation", desc: "Designed with large touch targets for easy usage while wearing gloves or on the move.", icon: Smartphone, color: "bg-black text-white shadow-xl" }
             ].map((f, i) => (
-              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 group flex flex-col h-full transform hover:-translate-y-2">
+              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:bg-black transition-all duration-500 group flex flex-col h-full transform hover:-translate-y-2">
                 <div className={cn("inline-flex w-16 h-16 items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform shadow-sm", f.color)}>
                   <f.icon size={24} />
                 </div>
-                <h3 className="text-xl font-black tracking-tighter mb-4 italic leading-none">{f.title}</h3>
-                <p className="text-sm font-bold text-gray-400 leading-relaxed italic">"{f.desc}"</p>
+                <h3 className="text-xl font-black tracking-tighter mb-4 italic leading-none group-hover:text-white">{f.title}</h3>
+                <p className="text-sm font-bold text-gray-400 leading-relaxed italic group-hover:text-gray-300">"{f.desc}"</p>
               </div>
             ))}
           </div>
