@@ -22,6 +22,7 @@ class Claim(models.Model):
         ('CURFEW', 'Curfew'),
         ('STRIKE', 'Strike'),
         ('ZONE_CLOSURE', 'Zone Closure'),
+        ('DELIVERY_CANCELLED', 'Delivery Cancelled'),
     ]
 
     claim_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

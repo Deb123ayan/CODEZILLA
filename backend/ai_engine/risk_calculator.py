@@ -104,11 +104,11 @@ def get_realtime_risk_alert(zone, forecast_rain, forecast_wind, aqi):
     }
 
 
-def audit_claim_for_fraud(lost_hours, compensation, distance_km):
+def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_count=0):
     """
     Returns True if the claim is NOT flagged by the IsolationForest anomaly detector.
     """
-    return not ai_service.is_claim_fraudulent(lost_hours, compensation, distance_km)
+    return not ai_service.is_claim_fraudulent(lost_hours, compensation, distance_km, nearby_workers_count=nearby_workers_count)
 
 
 def compute_gps_distance(lat1, lon1, lat2, lon2):

@@ -11,6 +11,7 @@ class Event(models.Model):
         ('HEAT', 'Extreme Heat'),
         ('STRIKE', 'Strike'),
         ('ZONE_CLOSURE', 'Zone Closure'),
+        ('DELIVERY_CANCELLED', 'Delivery Cancelled'),
     ]
 
     event_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

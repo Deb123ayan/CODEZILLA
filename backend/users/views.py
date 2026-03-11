@@ -103,6 +103,98 @@ class MockPlatformConnectView(views.APIView):
             }
         }, status=status.HTTP_200_OK)
 
+class PlatformLoginView(views.APIView):
+    """
+    Mock direct login via platform (Zomato/Swiggy/etc)
+    If worker exists with partner_id, log them in.
+    Else create new worker and log them in.
+    """
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['platform', 'partner_id', 'name', 'phone', 'email'],
+            properties={
+                'platform': openapi.Schema(type=openapi.TYPE_STRING, description="Zomala, Swiggy, etc."),
+                'partner_id': openapi.Schema(type=openapi.TYPE_STRING, description="The unique ID from the platform"),
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description="Full name of the worker"),
+                'phone': openapi.Schema(type=openapi.TYPE_STRING, description="Phone number"),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description="Email address"),
+            }
+        ),
+        responses={200: "Auth Success"}
+    )
+    def post(self, request):
+        platform = request.data.get('platform', 'Zomato')
+        partner_id = request.data.get('partner_id')
+        name = request.data.get('name')
+        phone = request.data.get('phone')
+        email = request.data.get('email')
+        
+        if not partner_id:
+            return Response({"error": "partner_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        worker = Worker.objects.filter(platform=platform, partner_id=partner_id).first()
+        
+        is_new = False
+        if not worker:
+            is_new = True
+            if not phone:
+                phone = f"9{random.randint(100000000, 999999999)}"
+            
+            # Simulate fetching data from platform and creating account
+            username = f"{platform.lower()}_{partner_id}"
+            user, _ = User.objects.get_or_create(username=username)
+            user.set_password(secrets.token_urlsafe(16))
+            if email:
+                user.email = email
+            user.save()
+            
+            # Check if phone already used by another worker
+            if Worker.objects.filter(phone=phone).exists():
+                phone = f"9{random.randint(100000000, 999999999)}"
+                
+            worker = Worker.objects.create(
+                user=user,
+                phone=phone,
+                email=email,
+                name=name if name else f"Partner {partner_id}",
+                platform=platform,
+                partner_id=partner_id,
+                city="Bangalore",
+                zone="Bellandur, Bangalore",
+                is_verified=True,
+                onboarding_completed=False 
+            )
+        else:
+            # Update info if provided
+            updated = False
+            if name and worker.name != name:
+                worker.name = name
+                updated = True
+            if phone and worker.phone != phone:
+                worker.phone = phone
+                updated = True
+            if email and worker.email != email:
+                worker.email = email
+                updated = True
+            
+            if updated:
+                worker.save()
+        
+        # Issue JWT
+        refresh = RefreshToken.for_user(worker.user)
+        
+        return Response({
+            "message": f"Successfully logged in via {platform}",
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "worker_id": str(worker.id),
+            "phone": worker.phone,
+            "onboarding_completed": worker.onboarding_completed,
+            "is_new_account": is_new
+        }, status=status.HTTP_200_OK)
+
 class UpdateWorkDetailsView(views.APIView):
     def post(self, request):
         phone = request.data.get('phone')

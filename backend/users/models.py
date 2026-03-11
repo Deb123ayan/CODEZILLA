@@ -24,6 +24,7 @@ class Worker(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='worker_profile', null=True, blank=True)
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15, unique=True)
+    email = models.EmailField(max_length=255, unique=True, null=True, blank=True)
     platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
     partner_id = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=100)
@@ -44,12 +45,19 @@ class Worker(models.Model):
     # Status
     is_verified = models.BooleanField(default=False)
     onboarding_completed = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     
     # Location (for real weather verification)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
     avg_daily_income = models.IntegerField(default=0) # Legacy support or calculated
+    
+    # Delivery Stats
+    total_deliveries = models.IntegerField(default=0)
+    total_cancelled = models.IntegerField(default=0)
+    wallet_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

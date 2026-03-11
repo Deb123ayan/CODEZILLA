@@ -9,6 +9,7 @@ from users.views import (
     UpdateLocationView,
     WeatherCheckView,
     VerifyClaimWeatherView,
+    PlatformLoginView,
 )
 from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
@@ -20,11 +21,18 @@ from payments.views import PayoutProcessView
 from api.risk_views import RealTimeRiskPredictionView
 from claims.views import ClaimSubmitView, ClaimHistoryView
 from events.views import ReportDisruptionView, ListEventsView
+from deliveries.views import CreateDeliveryView, DeliveryActionView, ListDeliveriesView
 
 urlpatterns = [
+    # ── Deliveries ─────────────────────────────────────────────────────
+    path('deliveries/', ListDeliveriesView.as_view(), name='list-deliveries'),
+    path('deliveries/create/', CreateDeliveryView.as_view(), name='create-delivery'),
+    path('deliveries/<uuid:pk>/<str:action>/', DeliveryActionView.as_view(), name='delivery-action'),
+
     # ── Onboarding Flow ────────────────────────────────────────────────
     path('auth/otp/generate/', GenerateOTPView.as_view(), name='otp-generate'),
     path('auth/otp/verify/', VerifyOTPView.as_view(), name='otp-verify'),
+    path('auth/platform/login/', PlatformLoginView.as_view(), name='platform-login'),
     path('auth/platform/connect/', MockPlatformConnectView.as_view(), name='platform-connect'),
     path('auth/screenshot/verify/', VerifyScreenshotView.as_view(), name='screenshot-verify'),
     path('auth/document/verify/', VerifyDocumentView.as_view(), name='document-verify'),

@@ -199,10 +199,24 @@ class ClaimSubmitView(views.APIView):
         else:
             distance_km = 0.0
 
+        # Curfew specific vicinity check: if other workers are nearby (1km), curfew claim is suspicious
+        nearby_workers_count = 0
+        if claim_reason == 'CURFEW' and worker.latitude and worker.longitude:
+            other_workers = Worker.objects.exclude(id=worker.id).filter(
+                latitude__isnull=False,
+                longitude__isnull=False,
+                is_active=True # Only check workers who are currently active/working
+            )
+            for other in other_workers:
+                dist = compute_gps_distance(worker.latitude, worker.longitude, other.latitude, other.longitude)
+                if dist <= 1.0:
+                    nearby_workers_count += 1
+
         passed_fraud = audit_claim_for_fraud(
             lost_hours=lost_hours,
             compensation=compensation,
-            distance_km=distance_km
+            distance_km=distance_km,
+            nearby_workers_count=nearby_workers_count
         )
 
         fraud_score = 0.0 if passed_fraud else 0.85
@@ -225,6 +239,7 @@ class ClaimSubmitView(views.APIView):
                     'air_quality': conditions['air_quality'],
                     'triggers': conditions['triggers'],
                     'distance_from_zone_km': round(distance_km, 2),
+                    'nearby_workers_in_1km': nearby_workers_count,
                     'fraud_check_passed': passed_fraud,
                 }
             )

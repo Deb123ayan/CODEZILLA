@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'ai_engine',
     'api',
     'celery_tasks',
+    'deliveries',
 ]
 
 MIDDLEWARE = [
