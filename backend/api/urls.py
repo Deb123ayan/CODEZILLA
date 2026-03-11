@@ -10,6 +10,7 @@ from users.views import (
     WeatherCheckView,
     VerifyClaimWeatherView,
     PlatformLoginView,
+    MeView,
 )
 from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
@@ -41,6 +42,7 @@ urlpatterns = [
 
     # ── Worker ─────────────────────────────────────────────────────────
     path('workers/register/', WorkerRegisterView.as_view(), name='worker-register'),
+    path('workers/me/', MeView.as_view(), name='worker-me'),
     path('workers/location/', UpdateLocationView.as_view(), name='update-location'),
     
     # ── Policy Management ──────────────────────────────────────────────

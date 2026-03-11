@@ -143,6 +143,7 @@ class PolicyPurchaseView(APIView):
 
         policy = Policy.objects.create(
             worker=worker,
+            platform=worker.platform,
             weekly_premium=quote['premium'],
             coverage_limit=quote['coverage'],
             start_date=date.today(),
@@ -231,6 +232,7 @@ class PolicyRenewView(APIView):
 
         new_policy = Policy.objects.create(
             worker=worker,
+            platform=worker.platform,
             weekly_premium=quote['premium'],
             coverage_limit=quote['coverage'],
             start_date=date.today(),

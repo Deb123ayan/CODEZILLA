@@ -203,6 +203,11 @@ class UpdateWorkDetailsView(views.APIView):
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
             
+        worker.name = request.data.get('name', worker.name)
+        worker.govt_id = request.data.get('govt_id', worker.govt_id)
+        worker.city = request.data.get('city', worker.city)
+        worker.zone = request.data.get('city', worker.zone) # Use city as zone for simplicity
+        
         worker.weekly_earnings = request.data.get('weekly_earnings', worker.weekly_earnings)
         worker.working_hours = request.data.get('working_hours', worker.working_hours)
         worker.working_days = request.data.get('working_days', worker.working_days)
@@ -213,7 +218,7 @@ class UpdateWorkDetailsView(views.APIView):
         worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
         worker.save()
         
-        return Response({"message": "Work details updated"}, status=status.HTTP_200_OK)
+        return Response({"message": "Work details updated", "worker": WorkerSerializer(worker).data}, status=status.HTTP_200_OK)
 
 class FinalizeOnboardingView(views.APIView):
     def post(self, request):
@@ -229,6 +234,7 @@ class FinalizeOnboardingView(views.APIView):
         # Auto-calculate avg_daily_income from weekly earnings
         working_days_count = len(worker.working_days) if worker.working_days else 6
         worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
+        worker.pricing_plan = plan_type
         worker.onboarding_completed = True
         worker.save()
         
@@ -259,6 +265,7 @@ class FinalizeOnboardingView(views.APIView):
             
         Policy.objects.create(
             worker=worker,
+            platform=worker.platform,
             plan_type=plan_type,
             weekly_premium=premium,
             coverage_limit=coverage,
@@ -451,4 +458,17 @@ class VerifyClaimWeatherView(views.APIView):
             "disruption_triggers": result['actual_conditions']['triggers'],
             "verdict": result['actual_conditions']['verdict'],
         }, status=status.HTTP_200_OK)
+
+
+class MeView(views.APIView):
+    def get(self, request):
+        phone = request.query_params.get('phone')
+        if not phone:
+             return Response({"error": "Phone is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            worker = Worker.objects.get(phone=phone)
+            return Response(WorkerSerializer(worker).data)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 

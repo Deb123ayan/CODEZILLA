@@ -15,15 +15,16 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useUserAuth();
+  const { login, status } = useUserAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !employeeId || !password || !confirmPassword) {
+    if (!name || !employeeId || !password || !confirmPassword || !email || !phoneNumber) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -57,9 +58,12 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
     const firstName = name.split(" ")[0];
     const formattedUsername = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
-    login(platformId, formattedUsername, "worker@gmail.com", phoneNumber, employeeId);
-
-    navigate("/profile-setup");
+    try {
+      await login(platformId, formattedUsername, email, phoneNumber, employeeId);
+      navigate("/profile-setup");
+    } catch (err) {
+      // Error handled by toast in context
+    }
   };
 
   return (
@@ -127,6 +131,19 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
                 </div>
 
                 <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Gmail Address</label>
+                  <div className="relative group">
+                    <Zap className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                    <input
+                      type="email"
+                      placeholder="john@gmail.com"
+                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform Partner ID</label>
                   <div className="relative group">
                     <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
@@ -171,9 +188,10 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
 
                 <button
                   type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                  disabled={status === "loading"}
+                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span>Activate Member Account</span>
+                  <span>{status === "loading" ? "Activating Vault..." : "Activate Member Account"}</span>
                   <Zap size={16} />
                 </button>
               </form>

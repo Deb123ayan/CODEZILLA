@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Phone, IdCard, MapPin, Truck, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -11,10 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUserAuth } from "@/context/UserAuthContext";
+import { authApi } from "@/lib/api";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
-  const { platform, username, phoneNumber } = useUserAuth();
+  const { platform, username, phoneNumber, updateUserInfo } = useUserAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: username || "",
@@ -62,17 +63,53 @@ export default function ProfileSetup() {
     }
   };
 
+  useEffect(() => {
+    const prefillData = async () => {
+      if (!phoneNumber) return;
+      try {
+        const data = await authApi.getMe(phoneNumber);
+        setFormData({
+          fullName: data.name || username || "",
+          phoneNumber: data.phone || phoneNumber || "",
+          govtId: data.govt_id || "",
+          platform: data.platform ? data.platform.toLowerCase() : (platform ? platform.toLowerCase() : ""),
+          city: data.city || "",
+        });
+      } catch (err) {
+        console.error("Failed to prefill data", err);
+      }
+    };
+    prefillData();
+  }, [phoneNumber, username, platform]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
+    try {
+      const apiData = {
+        name: formData.fullName,
+        govt_id: formData.govtId,
+        city: formData.city,
+        // Add defaults or more fields if needed by backend
+        weekly_earnings: 5000, 
+        working_hours: 8,
+        working_days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      };
 
-    toast.success("Profile details saved successfully!");
-    navigate("/document-verification");
+      await authApi.updateProfile(phoneNumber, apiData);
+      
+      // Update local context to reflect the new name
+      updateUserInfo({ username: formData.fullName });
+
+      toast.success("Profile details saved successfully!");
+      navigate("/document-verification");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,11 +1,33 @@
 import Navbar from "@/components/Navbar";
-import { Link } from "react-router-dom";
-import { Check, Shield, Zap, ArrowRight, ShieldCheck, Heart, Star, LayoutGrid } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Check, Shield, Zap, ArrowRight, ShieldCheck, Heart, Star, LayoutGrid, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useUserAuth } from "@/context/UserAuthContext";
+import { authApi } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function BuyPlan() {
   const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("weekly");
+  const [loading, setLoading] = useState<string | null>(null);
+  const { phoneNumber } = useUserAuth();
+  const navigate = useNavigate();
+
+  const handlePlanSelect = async (planId: string) => {
+    setLoading(planId);
+    try {
+      await authApi.finalizeOnboarding(phoneNumber, {
+        plan_type: planId.toUpperCase(),
+        payment_method: "MANUAL"
+      });
+      toast.success("Onboarding complete! Your protection is now active.");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to activate plan");
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const plans = [
     {
@@ -126,15 +148,20 @@ export default function BuyPlan() {
                 ))}
               </div>
 
-              <Link
-                to="/dashboard"
+              <button
+                onClick={() => handlePlanSelect(plan.id)}
+                disabled={!!loading}
                 className={cn(
-                  "w-full h-16 rounded-2xl flex items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95",
+                  "w-full h-16 rounded-2xl flex items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed",
                   plan.popular ? "bg-black text-white hover:bg-blue-700 shadow-xl" : "bg-gray-50 text-gray-900 border border-gray-100 hover:bg-black hover:text-white"
                 )}
               >
-                Choose {plan.name} Plan
-              </Link>
+                {loading === plan.id ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <span>Choose {plan.name} Plan</span>
+                )}
+              </button>
             </div>
           ))}
         </div>

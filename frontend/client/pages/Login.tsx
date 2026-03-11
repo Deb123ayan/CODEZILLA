@@ -29,7 +29,7 @@ export default function Login() {
     return <Navigate to={destination} replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!platform) {
       toast.error("Please select a platform to continue");
@@ -40,11 +40,13 @@ export default function Login() {
       return;
     }
 
-    login(platform, userName, gmail, phoneNumber, platformId);
-    toast.success(`Welcome to ${platform.charAt(0).toUpperCase() + platform.slice(1)} Dashboard!`);
-
-    const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
-    navigate(destination, { replace: true });
+    try {
+      await login(platform, userName, gmail, phoneNumber, platformId);
+      const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
+      navigate(destination, { replace: true });
+    } catch (err) {
+      // Error handled by context toast
+    }
   };
 
   return (
@@ -173,9 +175,10 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                  disabled={status === "loading"}
+                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span>Enter Dashboard</span>
+                  <span>{status === "loading" ? "Entering Vault..." : "Enter Dashboard"}</span>
                   <ArrowRight size={16} />
                 </button>
               </form>

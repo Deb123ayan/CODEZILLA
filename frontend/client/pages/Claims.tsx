@@ -1,17 +1,16 @@
 import Sidebar from "@/components/Sidebar";
-import { Plus, Clock, CheckCircle, AlertCircle, ExternalLink, Filter, Search, Phone } from "lucide-react";
+import { Plus, Clock, CheckCircle, AlertCircle, ExternalLink, Filter, Search, Phone, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
-
-const claims = [
-  { id: "CLM-12345", type: "Weather Impact", date: "May 12, 2024", amount: "₹800", status: "Processed", platform: "Zomato" },
-  { id: "CLM-12346", type: "Traffic Delay", date: "May 14, 2024", amount: "₹1,200", status: "Pending", platform: "Blinkit" },
-  { id: "CLM-12347", type: "Platform Outage", date: "May 15, 2024", amount: "₹500", status: "Processing", platform: "Zomato" },
-];
+import { claimApi } from "@/lib/api";
+import { format } from "date-fns";
 
 export default function Claims() {
   const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const [realClaims, setRealClaims] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
@@ -19,6 +18,17 @@ export default function Claims() {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const history = await claimApi.getHistory();
+        setRealClaims(history);
+      } catch (err) {
+        console.error("Failed to fetch claims", err);
+      } finally {
+         setLoading(false);
+      }
+    };
+    fetchHistory();
     const el = mainRef.current;
     if (!el) return;
     const handleScroll = () => {
@@ -123,27 +133,46 @@ export default function Claims() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {claims.map((claim) => (
-                    <tr key={claim.id} className="group hover:bg-gray-50/80 transition-all cursor-pointer">
-                      <td className="px-8 py-6 font-black text-gray-900 group-hover:translate-x-1 transition-transform">{claim.id}</td>
-                      <td className="px-8 py-6 font-bold text-gray-500">{claim.type}</td>
-                      <td className="px-8 py-6">
-                        <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">{claim.platform}</span>
-                      </td>
-                      <td className="px-8 py-6 text-gray-400 text-xs font-bold">{claim.date}</td>
-                      <td className="px-8 py-6 font-black text-gray-900">{claim.amount}</td>
-                      <td className="px-8 py-6 text-right">
-                        <span className={cn(
-                          "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                          claim.status === "Processed" ? "bg-green-100 text-green-700" :
-                            claim.status === "Pending" ? "bg-orange-100 text-orange-700" :
-                              "bg-blue-100 text-blue-700"
-                        )}>
-                          {claim.status}
-                        </span>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-8 py-20 text-center">
+                        <Loader2 className="animate-spin mx-auto text-blue-600" size={32} />
+                        <p className="mt-4 text-xs font-black uppercase text-gray-400">Syncing with Secure Vault...</p>
                       </td>
                     </tr>
-                  ))}
+                  ) : realClaims.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-8 py-20 text-center text-gray-400 font-bold uppercase text-xs">No claims found in your history.</td>
+                    </tr>
+                  ) : (
+                    realClaims.map((claim) => (
+                      <tr key={claim.claim_id} className="group hover:bg-gray-50/80 transition-all cursor-pointer">
+                        <td className="px-8 py-6 font-black text-gray-900 group-hover:translate-x-1 transition-transform truncate max-w-[120px]">
+                          {claim.claim_id.substring(0, 8).toUpperCase()}
+                        </td>
+                        <td className="px-8 py-6 font-bold text-gray-500">{claim.claim_reason.replace('_', ' ')}</td>
+                        <td className="px-8 py-6">
+                          <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                            {claim.verification_data?.platform || "PLATFORM"}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-gray-400 text-xs font-bold">
+                          {format(new Date(claim.claim_date), "MMM dd, yyyy")}
+                        </td>
+                        <td className="px-8 py-6 font-black text-gray-900">₹{claim.compensation}</td>
+                        <td className="px-8 py-6 text-right">
+                          <span className={cn(
+                            "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            claim.status === 'APPROVED' || claim.status === 'AUTO_APPROVED' ? "bg-green-100 text-green-700" :
+                              claim.status === 'REJECTED' ? "bg-red-100 text-red-700" :
+                                "bg-blue-100 text-blue-700"
+                          )}>
+                            {claim.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

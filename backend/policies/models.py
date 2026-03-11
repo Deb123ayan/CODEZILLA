@@ -24,6 +24,14 @@ class Policy(models.Model):
     policy_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     policy_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     worker = models.ForeignKey('users.Worker', on_delete=models.CASCADE, related_name='policies')
+    platform = models.CharField(max_length=20, choices=[
+        ('Zomato', 'Zomato'),
+        ('Swiggy', 'Swiggy'),
+        ('Blinkit', 'Blinkit'),
+        ('Amazon', 'Amazon'),
+        ('Flipkart', 'Flipkart'),
+        ('Zepto', 'Zepto'),
+    ], null=True, blank=True)
     
     plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='STANDARD')
     weekly_premium = models.IntegerField()

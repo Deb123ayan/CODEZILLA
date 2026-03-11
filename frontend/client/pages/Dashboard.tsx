@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import DashboardFooter from "@/components/DashboardFooter";
-import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity } from "lucide-react";
+import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import {
   LineChart,
@@ -16,16 +16,32 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
+import { authApi } from "@/lib/api";
 
 export default function Dashboard() {
   const { platform: userPlatform, username: userUsername, phoneNumber, gmail, platformId } = useUserAuth();
-  const platform = userPlatform || "general";
-  const username = userUsername || "Worker";
+  const [workerData, setWorkerData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const platform = workerData?.platform || userPlatform || "general";
+  const username = workerData?.name || userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    const fetchWorker = async () => {
+      if (!phoneNumber) return;
+      try {
+        const data = await authApi.getMe(phoneNumber);
+        setWorkerData(data);
+      } catch (err) {
+        console.error("Failed to fetch worker data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWorker();
     // History Middleware: Prevent 'back' button from exiting the dashboard without explicitly logging out
     // This pushes a new state to the history stack so a 'back' click just returns here
     window.history.pushState(null, "", window.location.href);
@@ -77,10 +93,10 @@ export default function Dashboard() {
   ];
 
   const metrics = [
-    { label: "Active Policy", value: "Premium", subtext: "Protection Active", icon: Shield, color: "bg-blue-50/50", iconColor: "text-blue-600" },
-    { label: "Weekly Premium", value: "₹35", subtext: "Next billing Monday", icon: TrendingUp, color: "bg-green-50/50", iconColor: "text-green-600" },
-    { label: "Coverage", value: "₹2000", subtext: "Per event limit", icon: Shield, color: "bg-purple-50/50", iconColor: "text-purple-600" },
-    { label: "Risk Factor", value: "Medium", subtext: "7/10 score", icon: AlertCircle, color: "bg-orange-50/50", iconColor: "text-orange-600" },
+    { label: "Wallet Savings", value: `₹${workerData?.wallet_savings || "0.00"}`, subtext: "Available for payout", icon: Wallet, color: "bg-emerald-50/50", iconColor: "text-emerald-600" },
+    { label: "Completion Rate", value: `${workerData?.total_deliveries ? Math.round((workerData.total_deliveries / (workerData.total_deliveries + workerData.total_cancelled)) * 100) : 0}%`, subtext: "Performance Score", icon: TrendingUp, color: "bg-blue-50/50", iconColor: "text-blue-600" },
+    { label: "Total Deliveries", value: workerData?.total_deliveries || 0, subtext: "Lifetime completed", icon: Activity, color: "bg-purple-50/50", iconColor: "text-purple-600" },
+    { label: "Active Policy", value: workerData?.pricing_plan ? `${workerData.platform} ${workerData.pricing_plan.charAt(0) + workerData.pricing_plan.slice(1).toLowerCase()}` : "None", subtext: workerData?.onboarding_completed ? "Protection Active" : "Incomplete Setup", icon: Shield, color: "bg-orange-50/50", iconColor: "text-orange-600" },
   ];
 
   const notifications = [
