@@ -74,6 +74,17 @@ By analyzing live weather, traffic, and platform telemetry, EarnLock detects unp
 ---
 
 ## � 5. Current Implementation Checkmarks
+- ✅ Full OTP passwordless authentication flow with GenerateOTPView and VerifyOTPView generating JWT tokens.
+- ✅ Worker model with comprehensive fields: platform choice (Zomato/Swiggy/etc), zone, pricing_plan, wallet_savings, total_deliveries, govt_id, is_verified.
+- ✅ Real-time WeatherService integrating OpenWeatherMap API for claim verification (heavy rain fraud detection) with simulation fallback.
+- ✅ InsuranceAI ML service loading joblib models: fraud_model, disruption_model, premium_model for predictions.
+- ✅ Risk calculator computing dynamic premiums and realtime risk alerts based on zone/weather/AQI/platform.
+- ✅ Celery background tasks: process_claims_for_event, run_fraud_check, ingest_external_data, expire_policies.
+- ✅ Claims model with status tracking (PENDING/APPROVED/REJECTED/FRAUD) and compensation tracking.
+- ✅ Admin API views: AdminWorkerListView (24k workers), AdminRiskHeatmapView, AdminClaimsMonitoringView, AdminAnalyticsView.
+- ✅ Frontend UserAuthContext and AdminAuthContext with sessionStorage and guards preventing unauthorized access.
+- ✅ Admin dashboards: AdminAnalytics.tsx with stats/charts, AdminAlerts.tsx with event log and zone broadcasts.
+- ✅ TanStack Query integration for efficient data fetching across dashboard components.
 - ✅ Complete edge-to-edge UI restructuring for mobile-view responsiveness across standard pages and deep admin dashboards.
 - ✅ Table data-wrapping `whitespace-nowrap` optimizations to preserve grid integrity on small mobile layouts. 
 - ✅ Active separation of authentication states (Worker Dashboard tracking strictly apart from the Admin portal layout tracking).
