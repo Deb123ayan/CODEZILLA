@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import DashboardFooter from "@/components/DashboardFooter";
-import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity } from "lucide-react";
+import { AlertCircle, TrendingUp, Shield, Cloud, Bell, Phone, Activity, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   LineChart,
@@ -16,14 +16,44 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api-client";
 
 export default function Dashboard() {
-  const { platform: userPlatform, username: userUsername, phoneNumber, gmail, platformId } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber, gmail, platformId, workerId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
+
+  const fetchDashboardData = async () => {
+    if (!workerId) return;
+    setLoading(true);
+    try {
+      const [policyRes, claimsRes, riskRes] = await Promise.all([
+        api.get<any>(`/policy/status/?worker_id=${workerId}`),
+        api.get<any>(`/claims/history/?worker_id=${workerId}`),
+        api.get<any>(`/risk/predict/?city=${platformId || "Delhi"}`) // Fallback to platformId or city if platformId is city-like
+      ]);
+
+      setDashboardData({
+        policy: policyRes,
+        claims: claimsRes,
+        risk: riskRes
+      });
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+      toast.error("Failed to sync dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [workerId]);
 
   useEffect(() => {
     // History Middleware: Prevent 'back' button from exiting the dashboard without explicitly logging out
@@ -54,7 +84,7 @@ export default function Dashboard() {
   }, []);
 
   const getPlatformColor = (id: string) => {
-    switch (id) {
+    switch (id?.toLowerCase()) {
       case "zomato": return "text-red-600";
       case "blinkit": return "text-yellow-600";
       case "flipkart": return "text-blue-600";
@@ -66,6 +96,51 @@ export default function Dashboard() {
 
   const platformColor = getPlatformColor(platform);
 
+  // Derive metrics from backend data
+  const metrics = [
+    { 
+      label: "Active Policy", 
+      value: dashboardData?.policy?.has_active_policy ? "Premium" : "None", 
+      subtext: dashboardData?.policy?.has_active_policy ? "Protection Active" : "No Coverage", 
+      icon: Shield, color: "bg-blue-50/50", iconColor: "text-blue-600" 
+    },
+    { 
+      label: "Weekly Premium", 
+      value: dashboardData?.policy?.active_policy ? `₹${dashboardData.policy.active_policy.weekly_premium}` : "₹0", 
+      subtext: dashboardData?.policy?.active_policy ? `Valid until ${new Date(dashboardData.policy.active_policy.valid_until).toLocaleDateString()}` : "Not subscribed", 
+      icon: TrendingUp, color: "bg-green-50/50", iconColor: "text-green-600" 
+    },
+    { 
+      label: "Coverage", 
+      value: dashboardData?.policy?.active_policy ? `₹${dashboardData.policy.active_policy.coverage_limit}` : "₹0", 
+      subtext: "Per event limit", icon: Shield, color: "bg-purple-50/50", iconColor: "text-purple-600" 
+    },
+    { 
+      label: "Risk Factor", 
+      value: dashboardData?.risk?.ai_analysis?.disruption_probability > 0.7 ? "High" : 
+             dashboardData?.risk?.ai_analysis?.disruption_probability > 0.3 ? "Medium" : "Low", 
+      subtext: `${Math.round((dashboardData?.risk?.ai_analysis?.disruption_probability || 0) * 10)}/10 score`, 
+      icon: AlertCircle, color: "bg-orange-50/50", iconColor: "text-orange-600" 
+    },
+  ];
+
+  const notifications = [
+    { 
+      title: dashboardData?.risk?.forecast_data?.description || "Weather Monitoring", 
+      description: `Zone AQI: ${dashboardData?.risk?.forecast_data?.aqi || '---'} | Temp: ${dashboardData?.risk?.forecast_data?.temperature_c || '---'}°C`, 
+      time: "Live", icon: Cloud, color: "bg-blue-50" 
+    },
+    { 
+      title: "Latest Claim", 
+      description: dashboardData?.claims?.claims?.length > 0 ? 
+        `${dashboardData.claims.claims[0].claim_reason} - ${dashboardData.claims.claims[0].status}` : 
+        "No recent claims", 
+      time: dashboardData?.claims?.claims?.length > 0 ? 
+        new Date(dashboardData.claims.claims[0].created_at).toLocaleDateString() : 
+        "N/A", icon: Activity, color: "bg-green-50" 
+    },
+  ];
+
   const chartData = [
     { week: "W1", earnings: 2000, protected: 1800 },
     { week: "W2", earnings: 2500, protected: 2000 },
@@ -76,18 +151,14 @@ export default function Dashboard() {
     { week: "W7", earnings: 2900, protected: 2400 },
   ];
 
-  const metrics = [
-    { label: "Active Policy", value: "Premium", subtext: "Protection Active", icon: Shield, color: "bg-blue-50/50", iconColor: "text-blue-600" },
-    { label: "Weekly Premium", value: "₹35", subtext: "Next billing Monday", icon: TrendingUp, color: "bg-green-50/50", iconColor: "text-green-600" },
-    { label: "Coverage", value: "₹2000", subtext: "Per event limit", icon: Shield, color: "bg-purple-50/50", iconColor: "text-purple-600" },
-    { label: "Risk Factor", value: "Medium", subtext: "7/10 score", icon: AlertCircle, color: "bg-orange-50/50", iconColor: "text-orange-600" },
-  ];
-
-  const notifications = [
-    { title: "Heavy Rain Warning", description: "Expected in your zone tomorrow", time: "2h ago", icon: Cloud, color: "bg-blue-50" },
-    { title: "Traffic Update", description: "Congestion in Sector 5", time: "1h ago", icon: AlertCircle, color: "bg-orange-50" },
-    { title: "Payout Processed", description: "₹500 credited to wallet", time: "30m ago", icon: TrendingUp, color: "bg-green-50" },
-  ];
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400 font-mono">Syncing Partner Hub...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -103,26 +174,18 @@ export default function Dashboard() {
                 {platformName} Platform
               </h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Welcome back, {username}</p>
-              {phoneNumber && (
-                <div className="flex flex-wrap gap-4 mt-2">
-                  <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <Phone size={12} className="text-blue-600" />
-                    <span>{phoneNumber}</span>
-                  </div>
-                  {platformId && (
-                    <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <Shield size={12} className="text-blue-600" />
-                      <span>ID: {platformId}</span>
-                    </div>
-                  )}
-                  {gmail && (
-                    <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <Activity size={12} className="text-blue-600" />
-                      <span>{gmail}</span>
-                    </div>
-                  )}
+              <div className="flex flex-wrap gap-4 mt-2">
+                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <Phone size={12} className="text-blue-600" />
+                  <span>{phoneNumber}</span>
                 </div>
-              )}
+                {platformId && (
+                  <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <Shield size={12} className="text-blue-600" />
+                    <span>ID: {platformId}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <button className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all shadow-sm group">
               <Bell size={18} className="text-gray-400 group-hover:text-black transition-colors" />

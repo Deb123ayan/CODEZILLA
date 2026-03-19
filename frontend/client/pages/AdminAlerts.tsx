@@ -1,27 +1,81 @@
 import Sidebar from "@/components/Sidebar";
-import { AlertTriangle, Shield, Bell, Send, Trash2, CheckCircle, Info, Filter, ArrowRight, Zap, Target } from "lucide-react";
+import { AlertTriangle, Shield, Bell, Send, Trash2, CheckCircle, Info, Filter, ArrowRight, Zap, Target, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-
-const activeAlerts = [
-  { id: 1, type: "fraud", severity: "high", title: "Suspicious Payout Pattern", msg: "Multiple claims detected from Sector 5 with identical evidence images.", time: "10m ago" },
-  { id: 2, type: "system", severity: "medium", title: "API Latency", msg: "Weather data provider 'SkyCast' responding slowly (>2s).", time: "25m ago" },
-  { id: 3, type: "operation", severity: "low", title: "Heavy Rain Broadcast", msg: "Rain alert sent to 4,200 workers in North Delhi.", time: "1h ago" },
-];
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function AdminAlerts() {
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<any[]>([]);
+  const [heatmap, setHeatmap] = useState<any[]>([]);
+  const [dispatching, setDispatching] = useState(false);
+  const [formData, setFormData] = useState({
+    type: "STRIKE",
+    zone: "North Delhi",
+    severity: "7",
+    description: ""
+  });
   const mainRef = useRef<HTMLElement>(null);
 
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const [evs, rks] = await Promise.all([
+        api.get<any[]>("/events/"),
+        api.get<any[]>("/admin/risk-zones/")
+      ]);
+      setEvents(evs);
+      setHeatmap(rks);
+    } catch (error) {
+      toast.error("Failed to sync Command Center");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDispatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.description) return toast.error("Write a message first!");
+    setDispatching(true);
+    try {
+      await api.post("/events/report/", {
+        type: formData.type,
+        zone: formData.zone,
+        severity: parseInt(formData.severity),
+        description: formData.description
+      });
+      toast.success("Broadcast Dispatched!");
+      setFormData(f => ({ ...f, description: "" }));
+      fetchAlerts();
+    } catch (error) {
+      toast.error("Dispatch failed");
+    } finally {
+      setDispatching(false);
+    }
+  };
+
   useEffect(() => {
+    fetchAlerts();
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-red-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Command Center...</h2>
+      </div>
+    );
+  }
+
+  const criticalEvents = events.filter(e => e.severity >= 8).length;
+  const warnings = events.filter(e => e.severity < 8 && e.severity >= 5).length;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -36,10 +90,6 @@ export default function AdminAlerts() {
               <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Command Center</h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Real-time system health and broadcasts</p>
             </div>
-            <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-2xl hover:bg-black transition-all shadow-lg active:scale-95 group">
-              <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              <span className="text-sm font-bold">New Broadcast</span>
-            </button>
           </div>
         </header>
 
@@ -47,9 +97,9 @@ export default function AdminAlerts() {
           {/* Severity Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { label: "Critical", value: "1", icon: AlertTriangle, color: "bg-red-50/50", textColor: "text-red-900", iconColor: "text-red-600", desc: "Immediate action required" },
-              { label: "Warnings", value: "4", icon: Info, color: "bg-orange-50/50", textColor: "text-orange-900", iconColor: "text-orange-600", desc: "Non-critical optimizations" },
-              { label: "Active Broadcasts", value: "12", icon: Bell, color: "bg-blue-50/50", textColor: "text-blue-900", iconColor: "text-blue-600", desc: "Live zone notifications" },
+              { label: "Critical", value: criticalEvents, icon: AlertTriangle, color: "bg-red-50/50", textColor: "text-red-900", iconColor: "text-red-600", desc: "Severity 8+ disruption" },
+              { label: "Alerts", value: warnings, icon: Info, color: "bg-orange-50/50", textColor: "text-orange-900", iconColor: "text-orange-600", desc: "Parametric detections" },
+              { label: "Risk Zones", value: heatmap.length, icon: Target, color: "bg-blue-50/50", textColor: "text-blue-900", iconColor: "text-blue-600", desc: "Active monitoring sectors" },
             ].map((stat, i) => {
               const Icon = stat.icon;
               return (
@@ -80,35 +130,41 @@ export default function AdminAlerts() {
               </div>
               <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="divide-y divide-gray-50 px-2 pb-2">
-                  {activeAlerts.map((alert, i) => (
-                    <div key={alert.id} className="p-8 flex flex-col md:flex-row gap-6 hover:bg-gray-50/80 transition-all duration-300 rounded-[2rem] group cursor-pointer relative">
-                      <div className={cn(
-                        "p-4 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:bg-black group-hover:text-white",
-                        alert.severity === "high" ? "bg-red-50 text-red-600" :
-                          alert.severity === "medium" ? "bg-orange-50 text-orange-600" :
-                            "bg-blue-50 text-blue-600"
-                      )}>
-                        {alert.type === "fraud" ? <Shield size={26} /> : <Zap size={26} />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                          <h3 className="text-lg font-black tracking-tight text-gray-900 group-hover:translate-x-1 transition-transform">{alert.title}</h3>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{alert.time}</span>
-                        </div>
-                        <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
-                          {alert.msg}
-                        </p>
-                        <div className="flex items-center space-x-4">
-                          <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-black hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                            Investigate
-                          </button>
-                          <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                            Resolve
-                          </button>
-                        </div>
-                      </div>
+                  {events.length === 0 ? (
+                    <div className="p-20 text-center">
+                      <p className="text-gray-400 font-bold uppercase tracking-widest">No active events</p>
                     </div>
-                  ))}
+                  ) : (
+                    events.map((alert, i) => (
+                      <div key={alert.event_id} className="p-8 flex flex-col md:flex-row gap-6 hover:bg-gray-50/80 transition-all duration-300 rounded-[2rem] group cursor-pointer relative">
+                        <div className={cn(
+                          "p-4 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:bg-black group-hover:text-white",
+                          alert.severity >= 8 ? "bg-red-50 text-red-600" :
+                            alert.severity >= 5 ? "bg-orange-50 text-orange-600" :
+                              "bg-blue-50 text-blue-600"
+                        )}>
+                          {alert.type === "CURFEW" || alert.type === "STRIKE" ? <Shield size={26} /> : <Zap size={26} />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <h3 className="text-lg font-black tracking-tight text-gray-900 group-hover:translate-x-1 transition-transform">{alert.type} - {alert.zone}</h3>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
+                            {alert.description || "Disruption automatically detected by parametric triggers."}
+                          </p>
+                          <div className="flex items-center space-x-4">
+                            <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-black hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                              Investigate
+                            </button>
+                            <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                              Archive
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -122,23 +178,45 @@ export default function AdminAlerts() {
                   <p className="text-gray-400 font-medium text-sm leading-relaxed mb-10">
                     Deploy manual notifications to all active workers in a specific radius.
                   </p>
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
-                        <option className="bg-gray-900">Select Target Zone...</option>
-                        <option className="bg-gray-900">North Delhi (Central)</option>
-                        <option className="bg-gray-900">Gurgaon Sector 21</option>
+                  <form onSubmit={handleDispatch} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <select 
+                        value={formData.type}
+                        onChange={e => setFormData(f => ({...f, type: e.target.value}))}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-[10px] font-black text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
+                        <option value="STRIKE">STRIKE</option>
+                        <option value="CURFEW">CURFEW</option>
+                        <option value="ZONE_CLOSURE">CLOSURE</option>
+                        <option value="WEATHER">WEATHER</option>
+                      </select>
+                      <select 
+                        value={formData.severity}
+                        onChange={e => setFormData(f => ({...f, severity: e.target.value}))}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-[10px] font-black text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
+                        {[5,6,7,8,9,10].map(s => <option key={s} value={s}>SEV {s}</option>)}
                       </select>
                     </div>
+                    <input 
+                      type="text" 
+                      placeholder="Target Zone Name..."
+                      value={formData.zone}
+                      onChange={e => setFormData(f => ({...f, zone: e.target.value}))}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all outline-none placeholder:text-gray-600"
+                    />
                     <textarea
-                      placeholder="Type message here..."
+                      placeholder="Broadcast details..."
+                      value={formData.description}
+                      onChange={e => setFormData(f => ({...f, description: e.target.value}))}
                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-gray-300 h-32 focus:ring-2 focus:ring-blue-500 transition-all outline-none resize-none placeholder:text-gray-600"
                     />
-                    <button className="w-full h-14 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl flex items-center justify-center space-x-3">
-                      <Send size={16} />
+                    <button 
+                      type="submit"
+                      disabled={dispatching}
+                      className="w-full h-14 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl flex items-center justify-center space-x-3 disabled:bg-gray-700">
+                      {dispatching ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                       <span>Dispatch Alert</span>
                     </button>
-                  </div>
+                  </form>
                 </div>
               </div>
 

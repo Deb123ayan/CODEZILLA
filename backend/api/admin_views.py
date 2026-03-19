@@ -178,3 +178,53 @@ class AdminFraudStatsView(APIView):
                 ).order_by('-count')
             ),
         })
+
+
+class AdminClaimListView(APIView):
+    """
+    GET /api/admin/claims/list/
+    Lists all claims for admin review.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # We need more details like worker name
+        claims = Claim.objects.all().values(
+            'claim_id', 'claim_reason', 'claim_date', 'lost_hours',
+            'compensation', 'status', 'fraud_score', 'created_at',
+            'worker__name', 'worker__platform', 'worker__partner_id',
+            'policy__policy_number', 'policy__plan_type'
+        ).order_by('-created_at')
+        return Response(list(claims))
+
+
+class AdminClaimActionView(APIView):
+    """
+    POST /api/admin/claims/<uuid:claim_id>/action/
+    { "action": "APPROVE" | "REJECT" }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, claim_id):
+        action = request.data.get('action')
+        if action not in ['APPROVE', 'REJECT']:
+            return Response({"error": "Invalid action. Use APPROVE or REJECT."}, status=400)
+
+        try:
+            claim = Claim.objects.get(claim_id=claim_id)
+        except Claim.DoesNotExist:
+            return Response({"error": "Claim not found."}, status=404)
+
+        if action == 'APPROVE':
+            claim.status = 'PAID'
+            if claim.compensation == 0 and claim.lost_hours > 0:
+                worker = claim.worker
+                active_policy = claim.policy
+                # Re-calc: average daily / hours
+                hourly_income = (worker.weekly_earnings / max(len(worker.working_days), 1)) / max(worker.working_hours, 1)
+                claim.compensation = min(int(hourly_income * claim.lost_hours), active_policy.coverage_limit)
+        else:
+            claim.status = 'REJECTED'
+
+        claim.save()
+        return Response({"message": f"Claim {action.lower()}ed successfully.", "status": claim.status})

@@ -1,20 +1,10 @@
 import Sidebar from "@/components/Sidebar";
-import { Shield, Plus, CheckCircle, Calendar, ArrowRight, Phone } from "lucide-react";
+import { Shield, Plus, CheckCircle, Calendar, ArrowRight, Phone, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
-
-const policies = [
-  {
-    id: "POL-12345",
-    type: "Premium Plan",
-    status: "Active",
-    coverage: "₹2,000 / disruption",
-    premium: "₹35 / week",
-    expiry: "Oct 15, 2024",
-    platform: "Zomato",
-  },
-];
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 const availablePlans = [
   {
@@ -60,25 +50,53 @@ const availablePlans = [
 ];
 
 export default function Policies() {
-  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber, workerId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [policyData, setPolicyData] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
 
+  const fetchPolicy = async () => {
+    if (!workerId) {
+      setLoading(false); // If no workerId, stop loading and show no policy
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.get<any>(`/policy/status/?worker_id=${workerId}`);
+      setPolicyData(res.data);
+    } catch (error) {
+      console.error("Failed to fetch policy:", error);
+      toast.error("Error loading policy details");
+      setPolicyData(null); // Ensure policyData is null on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchPolicy();
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [workerId]);
 
-  const getPlatformColor = (id: string) => {
-    switch (id) {
+  const handleSelectPlan = async (planName: string) => {
+    if (!workerId) {
+      toast.error("Sign in to choose a plan");
+      return;
+    }
+    toast.success(`Redirecting to payment for ${planName}...`);
+    // Future: Connect to /api/policy/purchase/ after payment simulation
+  };
+
+  const getPlatformColor = (id?: string) => {
+    switch (id?.toLowerCase()) {
       case "zomato": return "text-red-600";
       case "blinkit": return "text-yellow-600";
       case "flipkart": return "text-blue-600";
@@ -89,6 +107,17 @@ export default function Policies() {
   };
 
   const platformColor = getPlatformColor(platform);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Policies...</h2>
+      </div>
+    );
+  }
+
+  const activePolicy = policyData?.active_policy;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -123,8 +152,14 @@ export default function Policies() {
           <section className="reveal active">
             <h2 className="text-lg font-black uppercase tracking-widest text-gray-400 mb-8">Active Coverage</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {policies.map((policy) => (
-                <div key={policy.id} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden group">
+              {!activePolicy ? (
+                <div className="col-span-full bg-white rounded-[2.5rem] border border-gray-100 p-12 text-center shadow-sm">
+                  <Shield size={40} className="mx-auto text-gray-200 mb-6" />
+                  <p className="text-gray-400 font-bold uppercase tracking-widest">No active policy found</p>
+                  <p className="text-xs text-gray-300 mt-2">Select a plan below to start your protection</p>
+                </div>
+              ) : (
+                <div key={activePolicy.policy_id} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
                   <div className="relative z-10">
                     <div className="flex items-start justify-between mb-8">
@@ -133,37 +168,38 @@ export default function Policies() {
                           <Shield size={28} />
                         </div>
                         <div>
-                          <h3 className="text-xl font-black text-gray-900 leading-none mb-1">{policy.type}</h3>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">ID: {policy.id}</p>
+                          <h3 className="text-xl font-black text-gray-900 leading-none mb-1">{activePolicy.plan_type || 'Standard Plan'}</h3>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">ID: {activePolicy.policy_number}</p>
                         </div>
                       </div>
                       <span className="px-4 py-1.5 bg-green-100 text-green-800 text-[10px] font-black uppercase tracking-widest rounded-full">
-                        {policy.status}
+                        ACTIVE
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8 mb-10">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Coverage</p>
-                        <p className="text-lg font-black text-gray-900">{policy.coverage}</p>
+                        <p className="text-lg font-black text-gray-900">₹{activePolicy.coverage_limit}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Premium</p>
-                        <p className="text-lg font-black text-gray-900">{policy.premium}</p>
+                        <p className="text-lg font-black text-gray-900">₹{activePolicy.weekly_premium}</p>
                       </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <button className="w-full sm:flex-1 h-12 border border-gray-200 text-gray-500 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-all">
-                        Details
-                      </button>
-                      <button className="w-full sm:flex-1 h-12 bg-black text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-gray-800 transition-all shadow-md active:scale-95">
-                        Renew Now
-                      </button>
+                      <div className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <span className="flex items-center">
+                          <Calendar size={14} className="mr-2 text-blue-600" />
+                          Expires: {new Date(activePolicy.valid_until).toLocaleDateString()}
+                        </span>
+                        <span className="text-blue-600">{activePolicy.days_remaining} days left</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </section>
 

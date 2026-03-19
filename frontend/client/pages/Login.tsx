@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Mail, Lock, Globe, ArrowRight, ShieldCheck, Zap, Phone, User } from "lucide-react";
+import { Mail, Lock, Globe, ArrowRight, ShieldCheck, Zap, Phone, User, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -20,31 +20,51 @@ export default function Login() {
   const [gmail, setGmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [securityKey, setSecurityKey] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1); // 1: Details, 2: OTP
+  const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
-  const { status, login } = useUserAuth();
+  const { status, login, generateOTP, verifyOTP } = useUserAuth();
 
   if (status === "authenticated") {
     const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
     return <Navigate to={destination} replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!platform) {
-      toast.error("Please select a platform to continue");
+    if (!platform || !userName || !phoneNumber) {
+      toast.error("Please fill in basic details first");
       return;
     }
-    if (!userName || !platformId || !gmail || !phoneNumber || !securityKey) {
-      toast.error("Please fill in all details");
+    setLoading(true);
+    const res = await generateOTP(phoneNumber);
+    setLoading(false);
+    if (res.success) {
+      setStep(2);
+      toast.success("OTP sent to your phone!");
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp) {
+      toast.error("Please enter the OTP");
       return;
     }
-
-    login(platform, userName, gmail, phoneNumber, platformId);
-    toast.success(`Welcome to ${platform.charAt(0).toUpperCase() + platform.slice(1)} Dashboard!`);
-
-    const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
-    navigate(destination, { replace: true });
+    setLoading(true);
+    const res = await verifyOTP(phoneNumber, otp);
+    setLoading(false);
+    if (res.success) {
+      // Use workerId from backend if available, else fallback to platformId
+      const wId = res.data?.worker?.id || platformId;
+      login(platform, userName, gmail, phoneNumber, platformId, wId);
+      toast.success(`Welcome back to ${platform}!`);
+      const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
+      navigate(destination, { replace: true });
+    }
   };
 
   return (
@@ -91,93 +111,111 @@ export default function Login() {
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Your platform security portal</p>
               </div>
 
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">User Name</label>
-                  <div className="relative group">
-                    <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="text"
-                      placeholder="Your full name"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setUserName(e.target.value)}
-                    />
-                  </div>
-                </div>
+              <form className="space-y-6" onSubmit={step === 1 ? handleSendOTP : handleVerifyOTP}>
+                {step === 1 ? (
+                  <>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">User Name</label>
+                      <div className="relative group">
+                        <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                        <input
+                          type="text"
+                          placeholder="Your full name"
+                          required
+                          className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Work Platform</label>
-                  <Select onValueChange={setPlatform} value={platform}>
-                    <SelectTrigger className="w-full h-14 bg-gray-50 border-none rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all">
-                      <SelectValue placeholder="Select active platform" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-gray-100 p-2">
-                      {["Amazon", "Flipkart", "Zomato", "Blinkit", "Zepto", "Swiggy"].map(p => (
-                        <SelectItem key={p} value={p.toLowerCase()} className="rounded-xl font-bold py-3 text-sm">{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Work Platform</label>
+                      <Select onValueChange={setPlatform} value={platform}>
+                        <SelectTrigger className="w-full h-14 bg-gray-50 border-none rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all">
+                          <SelectValue placeholder="Select active platform" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-gray-100 p-2">
+                          {["Amazon", "Flipkart", "Zomato", "Blinkit", "Zepto", "Swiggy"].map(p => (
+                            <SelectItem key={p} value={p.toLowerCase()} className="rounded-xl font-bold py-3 text-sm">{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform ID</label>
-                  <div className="relative group">
-                    <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="text"
-                      placeholder="Worker ID / Driver ID"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setPlatformId(e.target.value)}
-                    />
-                  </div>
-                </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform ID</label>
+                      <div className="relative group">
+                        <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                        <input
+                          type="text"
+                          placeholder="Worker ID / Driver ID"
+                          required
+                          className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                          onChange={(e) => setPlatformId(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Gmail Address</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="email"
-                      placeholder="example@gmail.com"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setGmail(e.target.value)}
-                    />
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Phone Number</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                        <input
+                          type="tel"
+                          placeholder="+91 00000 00000"
+                          required
+                          className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-6 py-10 text-center animate-in zoom-in-95 duration-500">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Enter 6-Digit OTP</label>
+                      <div className="relative group max-w-[240px] mx-auto">
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="******"
+                          required
+                          className="w-full bg-gray-50 border-none rounded-2xl h-20 pl-16 pr-6 text-3xl font-black tracking-[0.5em] focus:ring-2 focus:ring-black transition-all placeholder:text-gray-200"
+                          onChange={(e) => setOtp(e.target.value)}
+                        />
+                      </div>
+                      <p className="text-[10px] font-bold text-gray-400 mt-4 uppercase tracking-widest leading-loose">
+                        We've sent a code to <br />{phoneNumber}
+                      </p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Phone Number</label>
-                  <div className="relative group">
-                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="tel"
-                      placeholder="+91 00000 00000"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Security Key</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="password"
-                      placeholder="••••••"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-14 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setSecurityKey(e.target.value)}
-                    />
-                  </div>
-                </div>
+                )}
 
                 <button
                   type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                  disabled={loading}
+                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 disabled:bg-gray-400 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
                 >
-                  <span>Enter Dashboard</span>
-                  <ArrowRight size={16} />
+                  {loading ? (
+                    <Loader2 size={18} className="animate-spin text-white" />
+                  ) : (
+                    <>
+                      <span>{step === 1 ? "Send Verification OTP" : "Verify & Access Wallet"}</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
+
+                {step === 2 && (
+                  <button 
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black transition-colors"
+                  >
+                    Back to Details
+                  </button>
+                )}
               </form>
             </div>
           </div>

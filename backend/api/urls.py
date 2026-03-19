@@ -15,7 +15,8 @@ from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
 from api.admin_views import (
     AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView,
-    AdminAnalyticsView, AdminFraudStatsView,
+    AdminAnalyticsView, AdminFraudStatsView, AdminClaimListView,
+    AdminClaimActionView,
 )
 from payments.views import PayoutProcessView
 from api.risk_views import RealTimeRiskPredictionView
@@ -70,6 +71,8 @@ urlpatterns = [
     path('admin/claims/', AdminClaimsMonitoringView.as_view(), name='admin-claims-monitoring'),
     path('admin/analytics/', AdminAnalyticsView.as_view(), name='admin-analytics'),
     path('admin/fraud-stats/', AdminFraudStatsView.as_view(), name='admin-fraud-stats'),
+    path('admin/claims/list/', AdminClaimListView.as_view(), name='admin-claims-list'),
+    path('admin/claims/<uuid:claim_id>/action/', AdminClaimActionView.as_view(), name='admin-claim-action'),
 
     # ── AI Risk Prediction ─────────────────────────────────────────────
     path('risk/predict/', RealTimeRiskPredictionView.as_view(), name='risk-predict'),

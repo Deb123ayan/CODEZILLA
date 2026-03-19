@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import DashboardFooter from "@/components/DashboardFooter";
-import { TrendingUp, Users, MapPin, Target, Calendar, Download, Zap, MousePointer2, ArrowUpRight } from "lucide-react";
+import { TrendingUp, Users, MapPin, Target, Calendar, Download, Zap, MousePointer2, ArrowUpRight, Loader2 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -17,37 +17,52 @@ import {
 } from "recharts";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-
-const data = [
-  { month: "Jan", claims: 400, payouts: 320, loss: 120 },
-  { month: "Feb", claims: 600, payouts: 480, loss: 150 },
-  { month: "Mar", claims: 800, payouts: 640, loss: 200 },
-  { month: "Apr", claims: 1000, payouts: 850, loss: 180 },
-  { month: "May", claims: 1200, payouts: 980, loss: 220 },
-  { month: "Jun", claims: 1500, payouts: 1250, loss: 250 },
-];
-
-const zoneData = [
-  { name: "North Delhi", risk: 8.5, workers: 4500 },
-  { name: "South Delhi", risk: 6.2, workers: 5200 },
-  { name: "West Delhi", risk: 4.8, workers: 3800 },
-  { name: "East Delhi", risk: 7.4, workers: 4100 },
-  { name: "Gurgaon", risk: 9.1, workers: 6800 },
-];
+import { api } from "@/lib/api-client";
 
 export default function AdminAnalytics() {
   const [scrolled, setScrolled] = useState(false);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [heatmap, setHeatmap] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const mainRef = useRef<HTMLElement>(null);
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [stats, zones] = await Promise.all([
+        api.get<any>("/admin/analytics/"),
+        api.get<any[]>("/admin/risk-zones/")
+      ]);
+      setAnalytics(stats);
+      setHeatmap(zones.map(z => ({
+        name: z.zone,
+        risk: z.avg_severity || 0,
+        events: z.event_count || 0
+      })));
+    } catch (error) {
+      console.error("Failed to fetch analytics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchData();
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Loading Intelligence...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -62,16 +77,6 @@ export default function AdminAnalytics() {
               <h1 className="text-2xl md:text-3xl font-black tracking-tighter">System Analytics</h1>
               <p className="text-gray-500 text-sm font-medium mt-0.5">Statistical insights into platform risk</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-white border border-gray-200 text-gray-400 hover:text-black hover:border-black rounded-2xl transition-all shadow-sm">
-                <Calendar size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Select Range</span>
-              </button>
-              <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
-                <Download size={18} />
-                <span className="text-sm font-bold">Export Report</span>
-              </button>
-            </div>
           </div>
         </header>
 
@@ -84,10 +89,12 @@ export default function AdminAnalytics() {
                 <div className="p-4 bg-white/10 rounded-2xl w-14 h-14 flex items-center justify-center mb-8 border border-white/10">
                   <Target size={28} className="text-white" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 mb-2">Model Accuracy</p>
-                <h3 className="text-5xl font-black tracking-tighter">94.2%</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 mb-2">Net Revenue</p>
+                <h3 className="text-5xl font-black tracking-tighter">₹{(analytics?.revenue?.net_revenue / 100000).toFixed(1)}L</h3>
                 <div className="mt-8 flex items-center space-x-3">
-                  <span className="px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full">v4.2 Production</span>
+                  <span className="px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full">
+                    {analytics?.revenue?.loss_ratio_percent}% Loss Ratio
+                  </span>
                 </div>
               </div>
             </div>
@@ -96,13 +103,13 @@ export default function AdminAnalytics() {
               <div className="p-4 bg-green-50 text-green-600 rounded-2xl w-14 h-14 flex items-center justify-center mb-8 group-hover:bg-black group-hover:text-white transition-colors">
                 <TrendingUp size={28} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-500 transition-colors mb-2">Ecosystem Value</p>
-              <h3 className="text-5xl font-black tracking-tighter text-gray-900 group-hover:text-black transition-colors">₹2.4 Cr</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-500 transition-colors mb-2">Active Policies</p>
+              <h3 className="text-5xl font-black tracking-tighter text-gray-900 group-hover:text-black transition-colors">{analytics?.policies?.active}</h3>
               <div className="mt-8 flex items-center space-x-3">
                 <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 w-[78%] group-hover:w-full transition-all duration-1000" />
                 </div>
-                <span className="text-xs font-black text-gray-400">78%</span>
+                <span className="text-xs font-black text-gray-400">{Math.round((analytics?.policies?.active / analytics?.policies?.total) * 100)}%</span>
               </div>
             </div>
 
@@ -110,12 +117,12 @@ export default function AdminAnalytics() {
               <div className="p-4 bg-purple-50 text-purple-600 rounded-2xl w-14 h-14 flex items-center justify-center mb-8 group-hover:bg-black group-hover:text-white transition-colors">
                 <Users size={28} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-500 transition-colors mb-2">Worker Satisfaction</p>
-              <h3 className="text-5xl font-black tracking-tighter text-gray-900 group-hover:text-black transition-colors">88%</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-500 transition-colors mb-2">Partner Network</p>
+              <h3 className="text-5xl font-black tracking-tighter text-gray-900 group-hover:text-black transition-colors">{analytics?.workers?.total}</h3>
               <div className="mt-8 flex items-center space-x-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center">
                   <ArrowUpRight size={14} className="mr-1" />
-                  +5% Since Q1
+                  +{analytics?.workers?.new_this_week} New This Week
                 </span>
               </div>
             </div>
@@ -126,41 +133,26 @@ export default function AdminAnalytics() {
             <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm hover:shadow-xl transition-all duration-500 reveal active" style={{ transitionDelay: "300ms" }}>
               <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h2 className="text-xl font-black tracking-tight">Financial Trends</h2>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Payout vs Claim throughput</p>
-                </div>
-                <div className="flex space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                    <span className="text-[10px] font-black uppercase text-gray-400">Claims</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span className="text-[10px] font-black uppercase text-gray-400">Payouts</span>
-                  </div>
+                  <h2 className="text-xl font-black tracking-tight">Platform Breakdown</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Worker distribution by platform</p>
                 </div>
               </div>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data}>
+                  <AreaChart data={analytics?.platform_breakdown || []}>
                     <defs>
-                      <linearGradient id="colorClaims" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
                         <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                       </linearGradient>
-                      <linearGradient id="colorPayouts" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f9f9f9" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 800 }} dy={10} />
+                    <XAxis dataKey="platform" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 800 }} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 800 }} dx={-10} />
                     <Tooltip
                       contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '1.5rem' }}
                     />
-                    <Area type="monotone" dataKey="claims" stroke="#3b82f6" fillOpacity={1} fill="url(#colorClaims)" strokeWidth={4} />
-                    <Area type="monotone" dataKey="payouts" stroke="#10b981" fillOpacity={1} fill="url(#colorPayouts)" strokeWidth={4} />
+                    <Area type="monotone" dataKey="count" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCount)" strokeWidth={4} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -174,7 +166,7 @@ export default function AdminAnalytics() {
               </div>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={zoneData} layout="vertical">
+                  <BarChart data={heatmap} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f9f9f9" />
                     <XAxis type="number" hide />
                     <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 10, fontWeight: 800 }} dx={-10} />

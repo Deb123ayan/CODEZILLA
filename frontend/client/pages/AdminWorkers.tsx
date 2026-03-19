@@ -1,19 +1,53 @@
 import Sidebar from "@/components/Sidebar";
-import { Search, Filter, MoreVertical, Shield, Smartphone, Globe, UserCheck, UserX, ArrowRight, UserPlus } from "lucide-react";
+import { Search, Filter, MoreVertical, Shield, Smartphone, Globe, UserCheck, UserX, ArrowRight, UserPlus, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
-const workers = [
-  { id: "WRK001", name: "Rajesh Kumar", platform: "Zomato", joined: "Oct 12, 2023", risk: "Low", status: "Active" },
-  { id: "WRK002", name: "Sunita Sharma", platform: "Blinkit", joined: "Nov 05, 2023", risk: "Medium", status: "Active" },
-  { id: "WRK003", name: "Amit Patel", platform: "Zomato", joined: "Dec 01, 2023", risk: "Low", status: "Suspended" },
-  { id: "WRK004", name: "Priya Singh", platform: "Amazon", joined: "Jan 10, 2024", risk: "High", status: "Active" },
-  { id: "WRK005", name: "Rahul Verma", platform: "Flipkart", joined: "Feb 15, 2024", risk: "Low", status: "Active" },
-];
+interface Worker {
+  id: string;
+  name: string;
+  platform: string;
+  partner_id: string;
+  city: string;
+  zone: string;
+  avg_daily_income: number;
+  is_verified: boolean;
+  onboarding_completed: boolean;
+  created_at: string;
+  status?: string; // Derived or extra field
+  risk?: string;   // Derived or extra field
+}
 
 export default function AdminWorkers() {
   const [scrolled, setScrolled] = useState(false);
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [loading, setLoading] = useState(true);
   const mainRef = useRef<HTMLElement>(null);
+
+  const fetchWorkers = async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<Worker[]>("/admin/workers/");
+      // Add mock fields for UI if they don't exist in backend response
+      const enhancedWorkers = data.map(w => ({
+        ...w,
+        status: w.onboarding_completed ? "Active" : "Pending",
+        risk: w.is_verified ? "Low" : "High"
+      }));
+      setWorkers(enhancedWorkers);
+    } catch (error: any) {
+      console.error("Failed to fetch workers:", error);
+      toast.error("Failed to load worker registry");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkers();
+  }, []);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -68,65 +102,81 @@ export default function AdminWorkers() {
               </div>
             </div>
 
-            <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full text-left whitespace-nowrap">
-                <thead>
-                  <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
-                    <th className="px-10 py-6">Worker Profile</th>
-                    <th className="px-10 py-6">Platform</th>
-                    <th className="px-10 py-6">Risk Index</th>
-                    <th className="px-10 py-6">Active Since</th>
-                    <th className="px-10 py-6">Status</th>
-                    <th className="px-10 py-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {workers.map((worker) => (
-                    <tr key={worker.id} className="group hover:bg-gray-50/50 transition-all cursor-pointer">
-                      <td className="px-10 py-7">
-                        <div className="flex items-center space-x-5">
-                          <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center font-black text-gray-400 group-hover:bg-black group-hover:text-white transition-all transform group-hover:rotate-6">
-                            {worker.name.split(" ").map(n => n[0]).join("")}
-                          </div>
-                          <div>
-                            <p className="text-base font-black text-gray-900 group-hover:translate-x-1 transition-transform">{worker.name}</p>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{worker.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-10 py-7">
-                        <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">{worker.platform}</span>
-                      </td>
-                      <td className="px-10 py-7">
-                        <div className="flex items-center space-x-2">
-                          <div className={cn("w-1.5 h-1.5 rounded-full",
-                            worker.risk === "Low" ? "bg-green-500" :
-                              worker.risk === "Medium" ? "bg-orange-500" : "bg-red-500"
-                          )} />
-                          <span className={cn("text-xs font-black uppercase tracking-widest",
-                            worker.risk === "Low" ? "text-green-600" :
-                              worker.risk === "Medium" ? "text-orange-600" : "text-red-600"
-                          )}>
-                            {worker.risk}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-10 py-7 text-xs font-bold text-gray-400">{worker.joined}</td>
-                      <td className="px-10 py-7">
-                        <div className={cn("flex items-center space-x-2", worker.status === "Active" ? "text-green-600" : "text-red-500")}>
-                          {worker.status === "Active" ? <UserCheck size={16} /> : <UserX size={16} />}
-                          <span className="text-xs font-black uppercase tracking-widest">{worker.status}</span>
-                        </div>
-                      </td>
-                      <td className="px-10 py-7 text-right">
-                        <button className="p-3 bg-gray-50 text-gray-300 hover:bg-black hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0">
-                          <ArrowRight size={18} />
-                        </button>
-                      </td>
+            <div className="overflow-x-auto no-scrollbar min-h-[400px] flex flex-col">
+              {loading ? (
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                  <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Syncing Worker Data...</p>
+                </div>
+              ) : (
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead>
+                    <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
+                      <th className="px-10 py-6">Worker Profile</th>
+                      <th className="px-10 py-6">Platform</th>
+                      <th className="px-10 py-6">Risk Index</th>
+                      <th className="px-10 py-6">Active Since</th>
+                      <th className="px-10 py-6">Status</th>
+                      <th className="px-10 py-6 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {workers.map((worker) => (
+                      <tr key={worker.id} className="group hover:bg-gray-50/50 transition-all cursor-pointer">
+                        <td className="px-10 py-7">
+                          <div className="flex items-center space-x-5">
+                            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center font-black text-gray-400 group-hover:bg-black group-hover:text-white transition-all transform group-hover:rotate-6">
+                              {worker.name.split(" ").map(n => n[0]).join("")}
+                            </div>
+                            <div>
+                              <p className="text-base font-black text-gray-900 group-hover:translate-x-1 transition-transform">{worker.name}</p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{worker.partner_id || worker.id}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-10 py-7">
+                          <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">{worker.platform}</span>
+                        </td>
+                        <td className="px-10 py-7">
+                          <div className="flex items-center space-x-2">
+                            <div className={cn("w-1.5 h-1.5 rounded-full",
+                              worker.risk === "Low" ? "bg-green-500" :
+                                worker.risk === "Medium" ? "bg-orange-500" : "bg-red-500"
+                            )} />
+                            <span className={cn("text-xs font-black uppercase tracking-widest",
+                              worker.risk === "Low" ? "text-green-600" :
+                                worker.risk === "Medium" ? "text-orange-600" : "text-red-600"
+                            )}>
+                              {worker.risk}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-10 py-7 text-xs font-bold text-gray-400">
+                          {new Date(worker.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-10 py-7">
+                          <div className={cn("flex items-center space-x-2", worker.status === "Active" ? "text-green-600" : "text-red-500")}>
+                            {worker.status === "Active" ? <UserCheck size={16} /> : <UserX size={16} />}
+                            <span className="text-xs font-black uppercase tracking-widest">{worker.status}</span>
+                          </div>
+                        </td>
+                        <td className="px-10 py-7 text-right">
+                          <button className="p-3 bg-gray-50 text-gray-300 hover:bg-black hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0">
+                            <ArrowRight size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {workers.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-10 py-20 text-center">
+                          <p className="text-sm font-bold text-gray-400 italic">No workers found in registry.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">

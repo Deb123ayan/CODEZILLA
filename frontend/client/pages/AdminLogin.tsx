@@ -9,6 +9,7 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { status, login } = useAdminAuth();
@@ -19,26 +20,22 @@ export default function AdminLogin() {
         return <Navigate to={destination} replace />;
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email || !password) {
             toast.error("Please enter both administrator credentials");
             return;
         }
 
-        // Simple validation for demo
-        if (password.length < 6) {
-            toast.error("Invalid security key format");
-            return;
+        setLoading(true);
+        const success = await login(email, password);
+        setLoading(false);
+
+        if (success) {
+            toast.success("Administrator access granted");
+            const destination = (location.state as any)?.from?.pathname ?? "/admin/analytics";
+            navigate(destination);
         }
-
-        // Update auth context (also stamps sessionStorage)
-        login();
-        toast.success("Administrator access granted");
-
-        // Redirect to originally-requested page, or /admin by default
-        const destination = (location.state as any)?.from?.pathname ?? "/admin";
-        navigate(destination);
     };
 
     return (
@@ -115,10 +112,17 @@ export default function AdminLogin() {
 
                                 <button
                                     type="submit"
-                                    className="w-full h-14 md:h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-red-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
+                                    disabled={loading}
+                                    className="w-full h-14 md:h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-red-600 disabled:bg-gray-400 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
                                 >
-                                    <span>Authorize Access</span>
-                                    <ArrowRight size={16} />
+                                    {loading ? (
+                                        <Zap className="animate-spin text-white" size={18} />
+                                    ) : (
+                                        <>
+                                            <span>Authorize Access</span>
+                                            <ArrowRight size={16} />
+                                        </>
+                                    )}
                                 </button>
                             </form>
 

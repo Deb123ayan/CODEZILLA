@@ -1,35 +1,77 @@
 import Sidebar from "@/components/Sidebar";
-import { DollarSign, ArrowUpRight, ArrowDownRight, Download, Calendar, ArrowRight, Zap, Target, Phone } from "lucide-react";
+import { DollarSign, ArrowUpRight, ArrowDownRight, Download, Calendar, ArrowRight, Zap, Target, Phone, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
-
-const transactions = [
-  { id: "TXN-98765", amount: "₹800", date: "May 12, 2024", type: "Claim Payout", status: "Success", bank: "HDFC ****1234" },
-  { id: "TXN-98764", amount: "₹1,200", date: "May 10, 2024", type: "Claim Payout", status: "Success", bank: "SBI ****5678" },
-  { id: "TXN-98763", amount: "₹500", date: "May 08, 2024", type: "Claim Payout", status: "Success", bank: "ICICI ****9012" },
-];
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function Payouts() {
-  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber, workerId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    available: 0,
+    totalEarned: 0,
+    pending: 0
+  });
   const mainRef = useRef<HTMLElement>(null);
+
+  const fetchPayouts = async () => {
+    if (!workerId) return;
+    setLoading(true);
+    try {
+      const response = await api.get<any>(`/claims/history/?worker_id=${workerId}`);
+      const claims = response.claims || [];
+      
+      const txns = claims.map((c: any) => ({
+        id: `TXN-${c.claim_id.split('-')[0].toUpperCase()}`,
+        amount: `₹${c.compensation}`,
+        date: new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        type: c.claim_reason,
+        status: c.status === 'PAID' ? 'Success' : c.status,
+        bank: "UPI Settlement"
+      }));
+
+      const totalEarned = claims
+        .filter((c: any) => c.status === 'PAID' || c.status === 'AUTO_APPROVED')
+        .reduce((acc: number, c: any) => acc + parseFloat(c.compensation), 0);
+      
+      const pending = claims
+        .filter((c: any) => c.status === 'PENDING' || c.status === 'FRAUD_FLAGGED')
+        .reduce((acc: number, c: any) => acc + parseFloat(c.compensation), 0);
+
+      setTransactions(txns);
+      setStats({
+        available: totalEarned * 0.2, // Mock available for demo
+        totalEarned,
+        pending
+      });
+    } catch (error) {
+      toast.error("Failed to sync payouts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayouts();
+  }, [workerId]);
 
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
   const getPlatformColor = (id: string) => {
-    switch (id) {
+    switch (id?.toLowerCase()) {
       case "zomato": return "text-red-600";
       case "blinkit": return "text-yellow-600";
       case "flipkart": return "text-blue-600";
@@ -40,6 +82,15 @@ export default function Payouts() {
   };
 
   const platformColor = getPlatformColor(platform);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Payout Hub...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -67,7 +118,9 @@ export default function Payouts() {
                 <Download size={18} />
                 <span className="text-xs font-black uppercase tracking-widest">History</span>
               </button>
-              <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
+              <button 
+                onClick={() => toast.success("Settlement request sent!")}
+                className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
                 <Target size={18} />
                 <span className="text-sm font-bold">Withdraw</span>
               </button>
@@ -79,9 +132,9 @@ export default function Payouts() {
           {/* Dashboard Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { label: "Available for Withdrawal", value: "₹4,200", icon: Zap, color: "bg-blue-600", textColor: "text-white" },
-              { label: "Total Earned", value: "₹45,200", icon: DollarSign, color: "bg-white", textColor: "text-gray-900" },
-              { label: "Pending Payouts", value: "₹1,200", icon: Calendar, color: "bg-white", textColor: "text-gray-900" },
+              { label: "Available for Withdrawal", value: `₹${stats.available.toFixed(0)}`, icon: Zap, color: "bg-blue-600", textColor: "text-white" },
+              { label: "Total Earned", value: `₹${stats.totalEarned.toFixed(0)}`, icon: DollarSign, color: "bg-white", textColor: "text-gray-900" },
+              { label: "Pending Payouts", value: `₹${stats.pending.toFixed(0)}`, icon: Calendar, color: "bg-white", textColor: "text-gray-900" },
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -106,7 +159,7 @@ export default function Payouts() {
                       stat.color === "bg-white" ? "text-green-600 group-hover:text-green-400" : "text-white/80"
                     )}>
                       <ArrowUpRight size={14} className="mr-1" />
-                      +12% vs last month
+                      Protected by EarnLock
                     </div>
                   </div>
                 </div>
@@ -135,20 +188,31 @@ export default function Payouts() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {transactions.map((txn, i) => (
-                      <tr key={txn.id} className="group hover:bg-gray-50/80 transition-all cursor-pointer">
-                        <td className="px-8 py-7">
-                          <p className="font-black text-gray-900 group-hover:translate-x-1 transition-transform">{txn.id}</p>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">{txn.type}</p>
-                        </td>
-                        <td className="px-8 py-7 text-xs font-bold text-gray-500">{txn.date}</td>
-                        <td className="px-8 py-7 text-xs font-bold text-gray-400">{txn.bank}</td>
-                        <td className="px-8 py-7 text-right">
-                          <p className="font-black text-gray-900 text-lg">{txn.amount}</p>
-                          <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[8px] font-black uppercase tracking-widest rounded">Completed</span>
+                    {transactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-8 py-20 text-center">
+                          <p className="text-gray-400 font-bold uppercase tracking-widest">No transfers yet</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      transactions.map((txn, i) => (
+                        <tr key={txn.id} className="group hover:bg-gray-50/80 transition-all cursor-pointer">
+                          <td className="px-8 py-7">
+                            <p className="font-black text-gray-900 group-hover:translate-x-1 transition-transform">{txn.id}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">{txn.type}</p>
+                          </td>
+                          <td className="px-8 py-7 text-xs font-bold text-gray-500">{txn.date}</td>
+                          <td className="px-8 py-7 text-xs font-bold text-gray-400">{txn.bank}</td>
+                          <td className="px-8 py-7 text-right">
+                            <p className="font-black text-gray-900 text-lg">{txn.amount}</p>
+                            <span className={cn(
+                              "px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded",
+                              txn.status === 'Success' ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"
+                            )}>{txn.status}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

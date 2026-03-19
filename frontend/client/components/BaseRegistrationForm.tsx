@@ -18,9 +18,9 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useUserAuth();
+  const { platformLogin } = useUserAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !employeeId || !password || !confirmPassword) {
@@ -51,15 +51,18 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
       return;
     }
 
-    toast.success(`Registration for ${platformName} successful!`);
-
-    // Extract first name for dashboard
-    const firstName = name.split(" ")[0];
-    const formattedUsername = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-
-    login(platformId, formattedUsername, "worker@gmail.com", phoneNumber, employeeId);
-
-    navigate("/profile-setup");
+    const promise = platformLogin(platformId, employeeId, name, phoneNumber, "worker@gmail.com");
+    toast.promise(promise, {
+      loading: 'Syncing with platform...',
+      success: (success) => {
+        if (success) {
+          navigate("/profile-setup");
+          return 'Registration successful!';
+        }
+        throw new Error('Sync failed');
+      },
+      error: 'Platform synchronization failed'
+    });
   };
 
   return (

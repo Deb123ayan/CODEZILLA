@@ -1,71 +1,94 @@
 import Sidebar from "@/components/Sidebar";
-import { Bell, Cloud, AlertCircle, TrendingUp, Info, Trash2, CheckCircle2, Phone } from "lucide-react";
+import { Bell, Cloud, AlertCircle, TrendingUp, Info, Trash2, CheckCircle2, Phone, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
-
-const initialNotifications = [
-  {
-    id: 1,
-    type: "weather",
-    title: "Heavy Rain Warning",
-    description: "Heavy rain expected in your zone (South Delhi) tomorrow between 8:00 AM and 11:00 AM. Higher coverage rates active.",
-    time: "2h ago",
-    icon: Cloud,
-    color: "bg-blue-50/50",
-    iconColor: "text-blue-600",
-    isRead: false,
-  },
-  {
-    id: 2,
-    type: "payout",
-    title: "Payout Disbursed",
-    description: "₹500 for claim #CLM-98765 has been successfully credited to your HDFC bank account.",
-    time: "5h ago",
-    icon: TrendingUp,
-    color: "bg-green-50/50",
-    iconColor: "text-green-600",
-    isRead: true,
-  },
-  {
-    id: 3,
-    type: "system",
-    title: "Policy Renewal Reminder",
-    description: "Your 'Premium Plan' is expiring in 3 days. Renew now to maintain continuous protection.",
-    time: "1d ago",
-    icon: Info,
-    color: "bg-purple-50/50",
-    iconColor: "text-purple-600",
-    isRead: true,
-  },
-  {
-    id: 4,
-    type: "disruption",
-    title: "Major Traffic Alert",
-    description: "Accident reported on Highway 44. Expect significant delays. Stay safe and drive carefully.",
-    time: "1d ago",
-    icon: AlertCircle,
-    color: "bg-orange-50/50",
-    iconColor: "text-orange-600",
-    isRead: true,
-  },
-];
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function NotificationsPage() {
-  const { platform: userPlatform, username: userUsername, phoneNumber } = useUserAuth();
+  const { platform: userPlatform, username: userUsername, phoneNumber, workerId, platformId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const [scrolled, setScrolled] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const mainRef = useRef<HTMLElement>(null);
+
+  const fetchNotifications = async () => {
+    if (!workerId) return;
+    setLoading(true);
+    try {
+      const [weather, claims, policy] = await Promise.all([
+        api.get<any>(`/risk/predict/?city=${platformId || "Delhi"}`),
+        api.get<any>(`/claims/history/?worker_id=${workerId}`),
+        api.get<any>(`/policy/status/?worker_id=${workerId}`)
+      ]);
+
+      const alerts: any[] = [];
+
+      // Weather Alert
+      if (weather?.forecast_data) {
+        alerts.push({
+          id: 'w1',
+          type: "weather",
+          title: weather.forecast_data.description,
+          description: `AQI: ${weather.forecast_data.aqi}. High risk of disruption. Pre-approved claims active.`,
+          time: "Live",
+          icon: Cloud,
+          color: "bg-blue-50/50",
+          iconColor: "text-blue-600",
+          isRead: false,
+        });
+      }
+
+      // Claim Alerts
+      claims.claims?.slice(0, 2).forEach((c: any, i: number) => {
+        alerts.push({
+          id: `cl-${i}`,
+          type: "payout",
+          title: `Claim ${c.status}`,
+          description: `Your claim for ${c.claim_reason} (₹${c.compensation}) is now ${c.status.toLowerCase()}.`,
+          time: new Date(c.created_at).toLocaleDateString(),
+          icon: TrendingUp,
+          color: "bg-green-50/50",
+          iconColor: "text-green-600",
+          isRead: true,
+        });
+      });
+
+      // Policy Alert
+      if (policy?.has_active_policy) {
+        alerts.push({
+          id: 'p1',
+          type: "system",
+          title: "Safety Net Active",
+          description: `Your ${policy.active_policy.plan_type} plan is active until ${new Date(policy.active_policy.valid_until).toLocaleDateString()}.`,
+          time: "Now",
+          icon: Info,
+          color: "bg-purple-50/50",
+          iconColor: "text-purple-600",
+          isRead: true,
+        });
+      }
+
+      setNotifications(alerts);
+    } catch (error) {
+      toast.error("Failed to sync notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [workerId]);
 
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
@@ -83,9 +106,14 @@ export default function NotificationsPage() {
 
   const platformColor = getPlatformColor(platform);
 
-  const markAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-  };
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Alerts...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -108,69 +136,55 @@ export default function NotificationsPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={markAllRead}
-                className="flex items-center space-x-2 px-5 py-3 bg-white border border-gray-200 text-xs font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-colors rounded-2xl shadow-sm"
-              >
-                <CheckCircle2 size={16} />
-                <span>Mark All Read</span>
-              </button>
-              <button className="p-3.5 bg-white border border-gray-200 text-gray-400 hover:text-red-500 transition-colors rounded-2xl shadow-sm">
-                <Trash2 size={20} />
-              </button>
-            </div>
           </div>
         </header>
 
         <div className="section-padding max-w-5xl mx-auto space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden reveal active">
             <div className="divide-y divide-gray-50 px-2 pb-2">
-              {notifications.map((notification, i) => {
-                const Icon = notification.icon;
-                return (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      "p-8 flex flex-col md:flex-row md:items-center gap-6 hover:bg-gray-50/50 transition-all duration-500 rounded-[2rem] group cursor-pointer relative",
-                      !notification.isRead ? "bg-blue-50/20" : ""
-                    )}
-                    style={{ transitionDelay: `${i * 100}ms` }}
-                  >
-                    {!notification.isRead && (
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse shadow-glow shadow-blue-500/50" />
-                    )}
-                    <div className={cn(
-                      "p-4 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300",
-                      notification.color, notification.iconColor
-                    )}>
-                      <Icon size={26} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                        <h3 className={cn(
-                          "text-lg font-black tracking-tight",
-                          notification.isRead ? "text-gray-900" : "text-blue-900"
-                        )}>
-                          {notification.title}
-                        </h3>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{notification.time}</span>
+              {notifications.length === 0 ? (
+                <div className="p-20 text-center">
+                  <p className="text-gray-400 font-bold uppercase tracking-widest">No notifications yet</p>
+                </div>
+              ) : (
+                notifications.map((notification, i) => {
+                  const Icon = notification.icon;
+                  return (
+                    <div
+                      key={notification.id}
+                      className={cn(
+                        "p-8 flex flex-col md:flex-row md:items-center gap-6 hover:bg-gray-50/50 transition-all duration-500 rounded-[2rem] group cursor-pointer relative",
+                        !notification.isRead ? "bg-blue-50/20" : ""
+                      )}
+                      style={{ transitionDelay: `${i * 100}ms` }}
+                    >
+                      {!notification.isRead && (
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse shadow-glow shadow-blue-500/50" />
+                      )}
+                      <div className={cn(
+                        "p-4 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300",
+                        notification.color, notification.iconColor
+                      )}>
+                        <Icon size={26} />
                       </div>
-                      <p className="text-sm font-medium text-gray-500 leading-relaxed max-w-3xl">
-                        {notification.description}
-                      </p>
-                      <div className="mt-6 flex items-center space-x-6">
-                        <button className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 hover:underline">
-                          View Details
-                        </button>
-                        <button className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-gray-600">
-                          Dismiss
-                        </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                          <h3 className={cn(
+                            "text-lg font-black tracking-tight",
+                            notification.isRead ? "text-gray-900" : "text-blue-900"
+                          )}>
+                            {notification.title}
+                          </h3>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{notification.time}</span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-500 leading-relaxed max-w-3xl">
+                          {notification.description}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 

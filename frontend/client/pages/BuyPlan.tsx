@@ -1,11 +1,44 @@
 import Navbar from "@/components/Navbar";
-import { Link } from "react-router-dom";
-import { Check, Shield, Zap, ArrowRight, ShieldCheck, Heart, Star, LayoutGrid } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Check, Shield, Zap, ArrowRight, ShieldCheck, Heart, Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useUserAuth } from "@/context/UserAuthContext";
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function BuyPlan() {
   const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("weekly");
+  const [loading, setLoading] = useState(false);
+  const { phoneNumber: workerPhone } = useUserAuth();
+  const navigate = useNavigate();
+
+  const handleSelectPlan = async (planId: string) => {
+    if (!workerPhone) {
+      toast.error("User session mismatch. Please login again.");
+      return;
+    }
+
+    setLoading(true);
+    const promise = api.post<any>("/auth/finalize/", {
+      phone: workerPhone,
+      plan_type: planId.toUpperCase(),
+      payment_method: "MOCK_GATEWAY"
+    });
+
+    toast.promise(promise, {
+      loading: 'Activating protection plan...',
+      success: (data) => {
+        setLoading(false);
+        navigate("/dashboard");
+        return `Shield Activated! Weekly Premium: ₹${data.weekly_premium}`;
+      },
+      error: (err) => {
+        setLoading(false);
+        return err.message || "Failed to start coverage";
+      }
+    });
+  };
 
   const plans = [
     {
@@ -61,6 +94,13 @@ export default function BuyPlan() {
   return (
     <div className="min-h-screen bg-[#f8fafc] selection:bg-black selection:text-white font-inter">
       <Navbar />
+
+      {loading && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center space-y-6">
+          <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+          <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400 italic">Deploying Smart Policy...</h2>
+        </div>
+      )}
 
       <main className="section-padding pt-40 pb-32 max-w-7xl mx-auto">
         <div className="text-center mb-24 reveal active">
@@ -126,15 +166,15 @@ export default function BuyPlan() {
                 ))}
               </div>
 
-              <Link
-                to="/dashboard"
+              <button
+                onClick={() => handleSelectPlan(plan.id)}
                 className={cn(
                   "w-full h-16 rounded-2xl flex items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95",
                   plan.popular ? "bg-black text-white hover:bg-blue-700 shadow-xl" : "bg-gray-50 text-gray-900 border border-gray-100 hover:bg-black hover:text-white"
                 )}
               >
                 Choose {plan.name} Plan
-              </Link>
+              </button>
             </div>
           ))}
         </div>

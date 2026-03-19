@@ -1,28 +1,61 @@
 import Sidebar from "@/components/Sidebar";
-import { Check, X, Eye, Clock, AlertTriangle, FileText, Download, Filter, Search, ArrowRight } from "lucide-react";
+import { Check, X, Eye, Clock, AlertTriangle, FileText, Download, Filter, Search, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-
-const claims = [
-  { id: "CLM-98766", worker: "Sunita Sharma", type: "Weather Impact", date: "May 14, 2024", amount: "₹800", status: "Pending", evidence: "Verified" },
-  { id: "CLM-98767", worker: "Rajesh Kumar", type: "Traffic Delay", date: "May 15, 2024", amount: "₹1,200", status: "Reviewing", evidence: "Pending" },
-  { id: "CLM-98768", worker: "Amit Patel", type: "Disruption", date: "May 15, 2024", amount: "₹500", status: "Pending", evidence: "Verified" },
-  { id: "CLM-98769", worker: "Priya Singh", type: "Weather Impact", date: "May 16, 2024", amount: "₹2,000", status: "Pending", evidence: "Under Review" },
-];
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function AdminClaims() {
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [claims, setClaims] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [claimsRes, statsRes] = await Promise.all([
+        api.get<any[]>("/admin/claims/list/"),
+        api.get<any>("/admin/claims/")
+      ]);
+      setClaims(claimsRes);
+      setStats(statsRes);
+    } catch (error) {
+      console.error("AdminClaims fetch error:", error);
+      toast.error("Failed to sync claims queue");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAction = async (claimId: string, action: "APPROVE" | "REJECT") => {
+    try {
+      await api.post(`/admin/claims/${claimId}/action/`, { action });
+      toast.success(`Claim ${action === 'APPROVE' ? 'Approved' : 'Rejected'}`);
+      fetchData(); // Refresh
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
   useEffect(() => {
+    fetchData();
     const el = mainRef.current;
     if (!el) return;
-    const handleScroll = () => {
-      setScrolled(el.scrollTop > 20);
-    };
+    const handleScroll = () => setScrolled(el.scrollTop > 20);
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Claims Queue...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
@@ -48,9 +81,9 @@ export default function AdminClaims() {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { label: "Pending Approval", value: "42", icon: Clock, color: "bg-blue-50/50", iconColor: "text-blue-600" },
-              { label: "Flagged Claims", value: "8", icon: AlertTriangle, color: "bg-orange-50/50", iconColor: "text-orange-600" },
-              { label: "Auto-Processed Today", value: "156", icon: Check, color: "bg-green-50/50", iconColor: "text-green-600" },
+              { label: "Pending Approval", value: stats?.pending_claims || 0, icon: Clock, color: "bg-blue-50/50", iconColor: "text-blue-600" },
+              { label: "Flagged Claims", value: stats?.fraud_flagged_claims || 0, icon: AlertTriangle, color: "bg-orange-50/50", iconColor: "text-orange-600" },
+              { label: "Auto-Processed Today", value: stats?.auto_approved_claims || 0, icon: Check, color: "bg-green-50/50", iconColor: "text-green-600" },
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -93,47 +126,66 @@ export default function AdminClaims() {
                     <th className="px-10 py-6">Type</th>
                     <th className="px-10 py-6">Date</th>
                     <th className="px-10 py-6">Amount</th>
-                    <th className="px-10 py-6">Verify Status</th>
+                    <th className="px-10 py-6">Status</th>
                     <th className="px-10 py-6 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {claims.map((claim) => (
-                    <tr key={claim.id} className="group hover:bg-gray-50/50 transition-all cursor-pointer">
-                      <td className="px-10 py-7">
-                        <div>
-                          <p className="text-base font-black text-gray-900 group-hover:translate-x-1 transition-transform">{claim.id}</p>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{claim.worker}</p>
-                        </div>
-                      </td>
-                      <td className="px-10 py-7">
-                        <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">{claim.type}</span>
-                      </td>
-                      <td className="px-10 py-7 text-xs font-bold text-gray-400">{claim.date}</td>
-                      <td className="px-10 py-7 font-black text-gray-900">{claim.amount}</td>
-                      <td className="px-10 py-7">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${claim.evidence === "Verified" ? "bg-green-50 text-green-700" :
-                          claim.evidence === "Pending" ? "bg-yellow-50 text-yellow-700" :
-                            "bg-blue-50 text-blue-700"
-                          }`}>
-                          {claim.evidence}
-                        </span>
-                      </td>
-                      <td className="px-10 py-7 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="Approve">
-                            <Check size={18} />
-                          </button>
-                          <button className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="Reject" style={{ transitionDelay: '50ms' }}>
-                            <X size={18} />
-                          </button>
-                          <button className="p-3 bg-gray-100 text-gray-400 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="View Details" style={{ transitionDelay: '100ms' }}>
-                            <ArrowRight size={18} />
-                          </button>
-                        </div>
+                  {claims.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-10 py-20 text-center">
+                        <p className="text-gray-400 font-bold uppercase tracking-widest">No claims in queue</p>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    claims.map((claim) => (
+                      <tr key={claim.claim_id} className="group hover:bg-gray-50/50 transition-all cursor-pointer">
+                        <td className="px-10 py-7">
+                          <div>
+                            <p className="text-base font-black text-gray-900 group-hover:translate-x-1 transition-transform">#{claim.claim_id.split('-')[0]}</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{claim.worker__name} ({claim.worker__platform})</p>
+                          </div>
+                        </td>
+                        <td className="px-10 py-7">
+                          <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">{claim.claim_reason}</span>
+                        </td>
+                        <td className="px-10 py-7 text-xs font-bold text-gray-400">{new Date(claim.created_at).toLocaleDateString()}</td>
+                        <td className="px-10 py-7 font-black text-gray-900">₹{claim.compensation}</td>
+                        <td className="px-10 py-7">
+                          <span className={cn(
+                            "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            claim.status === "PAID" || claim.status === "AUTO_APPROVED" ? "bg-green-50 text-green-700" :
+                              claim.status === "FRAUD_FLAGGED" ? "bg-red-50 text-red-700" :
+                                claim.status === "REJECTED" ? "bg-gray-50 text-gray-400" :
+                                  "bg-blue-50 text-blue-700"
+                          )}>
+                            {claim.status}
+                          </span>
+                        </td>
+                        <td className="px-10 py-7 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            { (claim.status === 'PENDING' || claim.status === 'FRAUD_FLAGGED') && (
+                              <>
+                                <button 
+                                  onClick={() => handleAction(claim.claim_id, 'APPROVE')}
+                                  className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="Approve">
+                                  <Check size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => handleAction(claim.claim_id, 'REJECT')}
+                                  className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="Reject">
+                                  <X size={18} />
+                                </button>
+                              </>
+                            )}
+                            <button className="p-3 bg-gray-100 text-gray-400 rounded-xl hover:bg-black hover:text-white transition-all transform group-hover:-translate-x-1" title="View Details">
+                              <Eye size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

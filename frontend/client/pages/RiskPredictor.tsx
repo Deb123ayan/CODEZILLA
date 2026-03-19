@@ -1,7 +1,8 @@
 import Navbar from "@/components/Navbar";
 import { Link } from "react-router-dom";
-import { Zap, X, ArrowRight, ShieldCheck, MapPin, Activity, MessageSquare, Send, Sparkles } from "lucide-react";
+import { Zap, X, ArrowRight, ShieldCheck, MapPin, Activity, MessageSquare, Send, Sparkles, Loader2 } from "lucide-react";
 import DashboardFooter from "@/components/DashboardFooter";
+import { api } from "@/lib/api-client";
 import {
   AreaChart,
   Area,
@@ -11,11 +12,24 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface RiskData {
+  zone: string;
+  forecast_data: any;
+  ai_analysis: {
+    disruption_probability: number;
+    risk_level: string;
+    alert: string;
+  };
+}
 
 export default function RiskPredictor() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [riskData, setRiskData] = useState<RiskData | null>(null);
   const [selections, setSelections] = useState({
     city: "",
     weather: "",
@@ -44,7 +58,34 @@ export default function RiskPredictor() {
     }
   ];
 
+  const fetchBackendRisk = async (city: string) => {
+    setLoading(true);
+    try {
+      const data = await api.get<RiskData>(`/risk/predict/?zone=${city}`);
+      setRiskData(data);
+      
+      const aiResponse = `Based on the latest data for ${city}, here is the breakdown: 
+      - Probability: ${(data.ai_analysis.disruption_probability * 100).toFixed(1)}%
+      - Risk Level: ${data.ai_analysis.risk_level}
+      - Forecast: ${data.ai_analysis.alert}`;
+      
+      setChatMessages(prev => [...prev, { role: "ai", text: aiResponse }]);
+    } catch (error) {
+      console.error("Risk prediction failed:", error);
+      toast.error("Failed to fetch real-time AI risk data. Using simulation.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === steps.length && selections.city) {
+      fetchBackendRisk(selections.city);
+    }
+  }, [currentStep, selections.city]);
+
   const calculateRisk = () => {
+    if (riskData) return riskData.ai_analysis.risk_level;
     const { weather, traffic } = selections;
     if (weather === "Rain" || traffic === "Heavy") return "High";
     if (weather !== "Normal" || traffic === "Moderate") return "Medium";
@@ -53,22 +94,29 @@ export default function RiskPredictor() {
 
   const resetPredictor = () => {
     setCurrentStep(0);
+    setRiskData(null);
     setSelections({ city: "", weather: "", traffic: "" });
     setChatMessages([{ role: "ai", text: "Hello! I'm EarnLock AI. I can explain your risk factors. Ask me anything!" }]);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     const userMsg = { role: "user", text: inputValue };
-    setChatMessages([...chatMessages, userMsg]);
+    const newMessages = [...chatMessages, userMsg];
+    setChatMessages(newMessages);
+    const question = inputValue;
     setInputValue("");
     
-    // Simulate AI response
+    // In a real app, this would call a LLM/AI Chat backend.
+    // For now we simulate an intelligent response based on the current risk data.
     setTimeout(() => {
       const risk = calculateRisk();
       let aiResponse = "I'm analyzing your situation...";
-      if (risk === "High") {
-        aiResponse = "Based on the heavy rain and traffic in your city, the risk of income loss is significant. Our platform can protect up to ₹600 for this shift.";
+      
+      if (question.toLowerCase().includes("how") || question.toLowerCase().includes("payout")) {
+        aiResponse = `Since the risk in ${selections.city} is currently ${risk}, your potential payout gap is ₹${risk === "High" ? "600" : risk === "Medium" ? "250" : "0"}. Our AI detects anomalies in ${selections.weather} levels.`;
+      } else if (risk === "High") {
+        aiResponse = riskData?.ai_analysis.alert || "Based on the severe conditions in your city, the risk of income loss is significant.";
       } else if (risk === "Medium") {
         aiResponse = "There's a moderate risk today due to current conditions. We recommend active monitoring through the EarnLock app.";
       } else {
@@ -120,7 +168,8 @@ export default function RiskPredictor() {
                     <button
                       key={opt}
                       onClick={() => {
-                        setSelections({ ...selections, [steps[currentStep].key]: opt });
+                        const newSelections = { ...selections, [steps[currentStep].key]: opt };
+                        setSelections(newSelections);
                         setCurrentStep(currentStep + 1);
                       }}
                       className="group p-8 text-left border-2 border-gray-50 rounded-[2rem] bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all duration-500 flex flex-col justify-between h-40"
@@ -132,6 +181,11 @@ export default function RiskPredictor() {
                     </button>
                   ))}
                 </div>
+              </div>
+            ) : loading ? (
+              <div className="h-64 flex flex-col items-center justify-center space-y-4">
+                <Loader2 size={48} className="text-blue-600 animate-spin" />
+                <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Consulting AI Engine...</p>
               </div>
             ) : (
               <div className="space-y-10 animate-in slide-in-from-bottom duration-700">
