@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   X,
+  Package,
 } from "lucide-react";
 import { useState } from "react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
@@ -40,6 +41,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
 
   const workerLinks = [
     { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { label: "My Deliveries", path: "/deliveries", icon: Package },
     { label: "My Policies", path: "/policies", icon: Shield },
     { label: "Claims", path: "/claims", icon: AlertCircle },
     { label: "Payouts", path: "/payouts", icon: DollarSign },
@@ -89,7 +91,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
             <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center transform transition-transform group-hover:rotate-12 group-hover:scale-110 duration-300">
               <Shield className="text-white" size={22} />
             </div>
-            <span className="font-black text-2xl text-gray-900 tracking-tighter">EarnLock</span>
+            <span className="font-black text-2xl text-gray-900 tracking-tighter">Zafby</span>
           </Link>
         </div>
 

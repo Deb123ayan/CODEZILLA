@@ -51,13 +51,25 @@ class VerifyOTPView(views.APIView):
         otp.is_verified = True
         otp.save()
         
-        # Check if user exists, if not create a partial one or just return success
-        user, created = User.objects.get_or_create(username=phone)
-        if created:
-            user.set_password(secrets.token_urlsafe(16))
-            user.save()
+        # 1. First, check if a worker with this phone already exists
+        worker = Worker.objects.filter(phone=phone).first()
         
-        worker, _ = Worker.objects.get_or_create(phone=phone, user=user)
+        if worker:
+            # Existing worker found, use their existing user
+            user = worker.user
+            created = False
+        else:
+            # 2. No worker found, check for User or create one
+            user, created = User.objects.get_or_create(username=phone)
+            if created:
+                user.set_password(secrets.token_urlsafe(16))
+                user.save()
+            
+            # 3. Create the worker record
+            worker, _ = Worker.objects.get_or_create(phone=phone, defaults={'user': user})
+            if worker.user != user:
+                worker.user = user
+                worker.save(update_fields=['user'])
         
         refresh = RefreshToken.for_user(user)
         
@@ -66,7 +78,15 @@ class VerifyOTPView(views.APIView):
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "is_new_user": created,
-            "onboarding_completed": worker.onboarding_completed
+            "onboarding_completed": worker.onboarding_completed,
+            "worker_id": str(worker.id),
+            "worker": {
+                "id": str(worker.id),
+                "name": worker.name,
+                "platform": worker.platform,
+                "email": worker.email,
+                "partner_id": worker.partner_id
+            }
         }, status=status.HTTP_200_OK)
 
 class MockPlatformConnectView(views.APIView):
@@ -439,6 +459,26 @@ class VerifyClaimWeatherView(views.APIView):
         # Verify claim against real weather
         result = WeatherService.verify_claim(lat, lng, claimed_reason)
         
+        # Override for strictly Social Proof based disruption (TRAFFIC)
+        if claimed_reason == 'TRAFFIC':
+            from deliveries.models import Delivery
+            from django.utils import timezone
+            recent_zone_cancels = Delivery.objects.filter(
+                worker__zone=worker.zone,
+                status='CANCELLED',
+                cancellation_type='TRAFFIC',
+                updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+            ).count()
+            
+            if recent_zone_cancels > 0:
+                result['claim_verified'] = True
+                result['fraud_flag'] = False
+                result['actual_conditions']['weather'] = {'description': f'severe traffic ({recent_zone_cancels} reports in zone)'}
+            else:
+                result['claim_verified'] = False
+                result['fraud_flag'] = False  # Traffic lack of proof isn't strictly 'fraud' for radar
+                result['actual_conditions']['weather'] = {'description': 'normal traffic flow (no zone reports)'}
+        
         return Response({
             "worker_phone": phone,
             "worker_zone": worker.zone,
@@ -446,9 +486,9 @@ class VerifyClaimWeatherView(views.APIView):
             "fraud_flag": result['fraud_flag'],
             "fraud_reason": result['fraud_reason'],
             "claimed_reason": result['claimed_reason'],
-            "actual_weather": result['actual_conditions']['weather'],
-            "actual_air_quality": result['actual_conditions']['air_quality'],
-            "disruption_triggers": result['actual_conditions']['triggers'],
+            "actual_weather": result.get('actual_conditions', {}).get('weather', {}),
+            "actual_air_quality": result.get('actual_conditions', {}).get('air_quality', {}),
+            "disruption_triggers": result.get('actual_conditions', {}).get('triggers', []),
             "verdict": result['actual_conditions']['verdict'],
         }, status=status.HTTP_200_OK)
 

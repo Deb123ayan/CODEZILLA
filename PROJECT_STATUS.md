@@ -1,20 +1,20 @@
-# EarnLock: Complete Platform Documentation & Status
+# Zafby: Complete Platform Documentation & Status
 
-## � 1. What is EarnLock?
-EarnLock is an AI-driven income protection and security layer built specifically for the modern gig economy. It provides automated insurance for drivers operating on platforms like Zomato, Swiggy, Zepto, Blinkit, Amazon, and Flipkart. 
+## � 1. What is Zafby?
+Zafby is an AI-driven income protection and security layer built specifically for the modern gig economy. It provides automated insurance for drivers operating on platforms like Zomato, Swiggy, Zepto, Blinkit, Amazon, and Flipkart. 
 
-By analyzing live weather, traffic, and platform telemetry, EarnLock detects unpreventable disruptions (e.g., severe storms or platform outages) and triggers instant, automated payouts—ensuring drivers never lose a day's wage to circumstances beyond their control.
+By analyzing live weather, traffic, and platform telemetry, Zafby detects unpreventable disruptions (e.g., severe storms or platform outages) and triggers instant, automated payouts—ensuring drivers never lose a day's wage to circumstances beyond their control.
 
 ---
 
 ## ✨ 2. Comprehensive Core Features
 
 ### 🛡️ AI Verification & Fraud Detection Engine
-- **Screenshot Forensics**: Workers verify their platform identity by uploading profile screenshots. EarnLock's AI scrutinizes the image metadata (EXIF data) and tests integrity to ensure the screenshot isn't tampered with or downloaded from the internet.
+- **Screenshot Forensics**: Workers verify their platform identity by uploading profile screenshots. Zafby's AI scrutinizes the image metadata (EXIF data) and tests integrity to ensure the screenshot isn't tampered with or downloaded from the internet.
 - **Auto-Approval Pipeline**: Images reaching a threshold integrity score of `20` are automatically moved to a `VERIFIED` status without human intervention, activating the worker's account instantly.
 
 ### 💸 Automated Smart Payouts
-- **Zero-Friction Claims**: When a disruption occurs in a verified worker's zone, EarnLock cross-references the event securely via an orchestrated AI service.
+- **Zero-Friction Claims**: When a disruption occurs in a verified worker's zone, Zafby cross-references the event securely via an orchestrated AI service.
 - **Immediate Crediting**: 85% of standard weather/traffic claims are automatically processed and credited to the worker's wallet within hours.
 
 ### 📱 Dedicated Member (Worker) Portal
@@ -33,7 +33,7 @@ By analyzing live weather, traffic, and platform telemetry, EarnLock detects unp
 ## 🧭 3. How It Works (End-to-End User Journey)
 
 ### Step 1: Password-less Enrollment (The Worker)
-1. A gig worker navigates to the EarnLock Landing Page.
+1. A gig worker navigates to the Zafby Landing Page.
 2. They initiate registration, supplying their phone number. 
 3. The Django backend fires the **Generate OTP View**, returning a 6-digit secure token.
 4. The worker submits the token via the **Verify OTP View**. Upon validation, the system instantly logs them in, generating a JWT Access token and sealing their active frontend session under `UserGuard`.

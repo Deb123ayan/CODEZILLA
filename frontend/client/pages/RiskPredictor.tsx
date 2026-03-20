@@ -36,7 +36,7 @@ export default function RiskPredictor() {
     traffic: ""
   });
   const [chatMessages, setChatMessages] = useState([
-    { role: "ai", text: "Hello! I'm EarnLock AI. I can explain your risk factors. Ask me anything!" }
+    { role: "ai", text: "Hello! I'm Zafby AI. I can explain your risk factors. Ask me anything!" }
   ]);
   const [inputValue, setInputValue] = useState("");
 
@@ -63,12 +63,12 @@ export default function RiskPredictor() {
     try {
       const data = await api.get<RiskData>(`/risk/predict/?zone=${city}`);
       setRiskData(data);
-      
+
       const aiResponse = `Based on the latest data for ${city}, here is the breakdown: 
       - Probability: ${(data.ai_analysis.disruption_probability * 100).toFixed(1)}%
       - Risk Level: ${data.ai_analysis.risk_level}
       - Forecast: ${data.ai_analysis.alert}`;
-      
+
       setChatMessages(prev => [...prev, { role: "ai", text: aiResponse }]);
     } catch (error) {
       console.error("Risk prediction failed:", error);
@@ -96,7 +96,7 @@ export default function RiskPredictor() {
     setCurrentStep(0);
     setRiskData(null);
     setSelections({ city: "", weather: "", traffic: "" });
-    setChatMessages([{ role: "ai", text: "Hello! I'm EarnLock AI. I can explain your risk factors. Ask me anything!" }]);
+    setChatMessages([{ role: "ai", text: "Hello! I'm Zafby AI. I can explain your risk factors. Ask me anything!" }]);
   };
 
   const handleSendMessage = async () => {
@@ -106,19 +106,19 @@ export default function RiskPredictor() {
     setChatMessages(newMessages);
     const question = inputValue;
     setInputValue("");
-    
+
     // In a real app, this would call a LLM/AI Chat backend.
     // For now we simulate an intelligent response based on the current risk data.
     setTimeout(() => {
       const risk = calculateRisk();
       let aiResponse = "I'm analyzing your situation...";
-      
+
       if (question.toLowerCase().includes("how") || question.toLowerCase().includes("payout")) {
         aiResponse = `Since the risk in ${selections.city} is currently ${risk}, your potential payout gap is ₹${risk === "High" ? "600" : risk === "Medium" ? "250" : "0"}. Our AI detects anomalies in ${selections.weather} levels.`;
       } else if (risk === "High") {
         aiResponse = riskData?.ai_analysis.alert || "Based on the severe conditions in your city, the risk of income loss is significant.";
       } else if (risk === "Medium") {
-        aiResponse = "There's a moderate risk today due to current conditions. We recommend active monitoring through the EarnLock app.";
+        aiResponse = "There's a moderate risk today due to current conditions. We recommend active monitoring through the Zafby app.";
       } else {
         aiResponse = "Looks like a smooth day ahead! But remember, conditions can change rapidly in the gig economy.";
       }
@@ -155,12 +155,12 @@ export default function RiskPredictor() {
             {currentStep < steps.length ? (
               <div className="space-y-10 reveal active">
                 <div className="flex items-center justify-between">
-                   <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">Step {currentStep + 1} of 3</p>
-                   <div className="flex gap-2">
-                      {steps.map((_, i) => (
-                        <div key={i} className={cn("w-8 h-1 rounded-full transition-all duration-500", i <= currentStep ? "bg-blue-600" : "bg-gray-100")} />
-                      ))}
-                   </div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">Step {currentStep + 1} of 3</p>
+                  <div className="flex gap-2">
+                    {steps.map((_, i) => (
+                      <div key={i} className={cn("w-8 h-1 rounded-full transition-all duration-500", i <= currentStep ? "bg-blue-600" : "bg-gray-100")} />
+                    ))}
+                  </div>
                 </div>
                 <h4 className="text-2xl md:text-3xl font-black tracking-tight leading-none italic">"{steps[currentStep].question}"</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -175,7 +175,7 @@ export default function RiskPredictor() {
                       className="group p-8 text-left border-2 border-gray-50 rounded-[2rem] bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all duration-500 flex flex-col justify-between h-40"
                     >
                       <div className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/20 transition-all">
-                         <Activity size={18} className="text-blue-600 group-hover:text-white" />
+                        <Activity size={18} className="text-blue-600 group-hover:text-white" />
                       </div>
                       <span className="font-black text-lg uppercase tracking-tight italic">{opt}</span>
                     </button>
@@ -198,7 +198,7 @@ export default function RiskPredictor() {
                         {calculateRisk()} Risk <br className="hidden md:block" />Detected
                       </h4>
                     </div>
-                    
+
                     <div className="flex flex-col md:items-end gap-2 pr-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
                       <p className="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Est. Income Protection</p>
                       <p className="text-xl md:text-3xl font-black text-blue-400 tracking-tighter">
@@ -210,14 +210,14 @@ export default function RiskPredictor() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Internal Footer for the Result Section */}
                   <div className="relative z-10 pt-3 md:pt-4 mt-2 md:mt-4 border-t border-white/5 flex items-center justify-between opacity-40">
                     <p className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em]">AI-Model v4.2.0-Production</p>
                     <div className="flex gap-2">
-                       <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
-                       <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-75" />
-                       <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-150" />
+                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
+                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-75" />
+                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-150" />
                     </div>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export default function RiskPredictor() {
                       </div>
                       <h2 className="text-xl font-black tracking-tighter italic uppercase text-gray-900">Disruption Variance</h2>
                     </div>
-                    
+
                     <div className="h-[200px] w-full bg-black rounded-[2rem] p-6 border border-white/5 shadow-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 blur-[60px] -mr-16 -mt-16" />
                       <ResponsiveContainer width="100%" height="100%">
@@ -250,20 +250,20 @@ export default function RiskPredictor() {
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#222" />
-                          <XAxis 
-                            dataKey="time" 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fontSize: 10, fontWeight: 900, fill: '#fff', opacity: 0.8 }} 
+                          <XAxis
+                            dataKey="time"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 10, fontWeight: 900, fill: '#fff', opacity: 0.8 }}
                           />
                           <YAxis hide />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#000', 
-                              borderRadius: '1rem', 
-                              border: '1px solid #333', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#000',
+                              borderRadius: '1rem',
+                              border: '1px solid #333',
                               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.3)',
-                              padding: '1rem' 
+                              padding: '1rem'
                             }}
                             labelStyle={{ fontWeight: 900, color: '#fff' }}
                             itemStyle={{ color: '#3b82f6', fontWeight: 800 }}
@@ -281,7 +281,7 @@ export default function RiskPredictor() {
                       </div>
                       <h2 className="text-xl font-black tracking-tighter italic uppercase text-gray-900">AI Analytics</h2>
                     </div>
-                    
+
                     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-lg overflow-hidden flex flex-col h-[300px]">
                       <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar bg-gray-50/30">
                         {chatMessages.map((msg, i) => (
@@ -291,8 +291,8 @@ export default function RiskPredictor() {
                           )}>
                             <div className={cn(
                               "max-w-[85%] p-4 rounded-2xl text-[10px] font-bold leading-relaxed",
-                              msg.role === "user" 
-                                ? "bg-blue-600 text-white rounded-tr-none shadow-md" 
+                              msg.role === "user"
+                                ? "bg-blue-600 text-white rounded-tr-none shadow-md"
                                 : "bg-white text-gray-900 rounded-tl-none border border-gray-100 shadow-sm"
                             )}>
                               {msg.text}
@@ -300,18 +300,18 @@ export default function RiskPredictor() {
                           </div>
                         ))}
                       </div>
-                      
+
                       <div className="p-4 bg-white border-t border-gray-100">
                         <div className="relative">
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                             placeholder="Explain this risk score..."
                             className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 pr-12 text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 transition-all text-gray-900"
                           />
-                          <button 
+                          <button
                             onClick={handleSendMessage}
                             className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center hover:bg-blue-600 transition-all active:scale-90"
                           >

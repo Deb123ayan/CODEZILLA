@@ -20,7 +20,7 @@ export default function Tracking() {
               Real-time Earnings <span className="text-blue-600">Tracking.</span>
             </h1>
             <p className="text-lg md:text-xl font-bold text-gray-400 leading-relaxed max-w-lg">
-              Track your deliveries, earnings and disruptions in real time. EarnLock integrates with delivery platforms to monitor activity and detect disruption risks instantly.
+              Track your deliveries, earnings and disruptions in real time. Zafby integrates with delivery platforms to monitor activity and detect disruption risks instantly.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
               <Link
@@ -58,7 +58,7 @@ export default function Tracking() {
                     <span className="text-[10px] font-black uppercase tracking-widest leading-none">Healthy</span>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   {[
                     { label: "Active Dash", value: "Sector 14, Gurgaon", icon: Activity },
@@ -87,11 +87,11 @@ export default function Tracking() {
             <h2 className="text-3xl md:text-5xl font-black tracking-tighter">How It Works.</h2>
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Simple integration, absolute visibility</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { step: "01", title: "Connect Delivery Platform", desc: "Link your partner accounts securely with one-click OAuth integration.", icon: Database },
-              { step: "02", title: "EarnLock monitors data", desc: "Our AI background system tracks your GPS and earnings telemetry live.", icon: Activity },
+              { step: "02", title: "Zafby monitors data", desc: "Our AI background system tracks your GPS and earnings telemetry live.", icon: Activity },
               { step: "03", title: "AI detects disruptions", desc: "Automatically triggers protection if slowdowns or weather risks occur.", icon: ShieldCheck }
             ].map((s, i) => (
               <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:bg-black transition-all duration-500 group">

@@ -11,8 +11,9 @@ class Policy(models.Model):
     ]
     
     PLAN_CHOICES = [
-        ('STANDARD', 'Standard Protection'),
-        ('PREMIUM', 'Premium Protection'),
+        ('BASIC', 'Basic Plan'),
+        ('PRO', 'Pro Plan'),
+        ('PREMIUM_PLUS', 'Premium Plus'),
     ]
     
     PAYMENT_CHOICES = [
@@ -25,7 +26,7 @@ class Policy(models.Model):
     policy_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     worker = models.ForeignKey('users.Worker', on_delete=models.CASCADE, related_name='policies')
     
-    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='STANDARD')
+    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='BASIC')
     weekly_premium = models.IntegerField()
     coverage_limit = models.IntegerField()
     

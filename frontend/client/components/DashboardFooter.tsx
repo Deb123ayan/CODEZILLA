@@ -7,7 +7,7 @@ interface DashboardFooterProps {
 
 export default function DashboardFooter({ className }: DashboardFooterProps) {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <footer className={cn(
       "relative mt-auto py-12 px-8 border-t border-gray-100 bg-white/40 backdrop-blur-md rounded-[3rem] mb-8 mx-6 overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] reveal active",
@@ -24,7 +24,7 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
               <Shield className="text-white fill-current opacity-20" size={20} />
               <Zap className="text-white absolute scale-75" size={18} />
             </div>
-            <span className="font-black text-2xl tracking-tighter text-gray-900">EarnLock.</span>
+            <span className="font-black text-2xl tracking-tighter text-gray-900">Zafby.</span>
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             Secure Platform Protection &bull; Since 2024
@@ -39,9 +39,9 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
             { label: "API Status", path: "#" },
             { label: "Whitepaper", path: "#" },
           ].map((link) => (
-            <a 
-              key={link.label} 
-              href={link.path} 
+            <a
+              key={link.label}
+              href={link.path}
               className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black hover:translate-x-1 transition-all flex items-center"
             >
               <div className="w-1 h-1 bg-gray-200 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -63,11 +63,11 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
             </div>
           </div>
           <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center">
-            &copy; {currentYear} EARNLOCK INC. &bull; BUILT FOR DELIVERY HEROES
+            &copy; {currentYear} Zafby INC. &bull; BUILT FOR DELIVERY HEROES
           </p>
         </div>
       </div>
-      
+
       {/* Decorative Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-50/50">
         <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600 w-[45%] rounded-full opacity-30 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />

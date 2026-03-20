@@ -114,7 +114,7 @@ export default function Claims() {
       <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
         <header className={cn(
           "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
+          scrolled ? "bg-white border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
             <div>

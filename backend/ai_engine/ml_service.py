@@ -48,13 +48,15 @@ class InsuranceAI:
         joblib.dump(risk_model, self.risk_model_path)
 
         # 2. Fraud Detection (IsolationForest)
-        # Features: [lost_hours, compensation, distance_km, active_days, nearby_workers_count]
-        X_fraud = np.random.rand(200, 5) * [8, 1000, 20, 30, 5]
+        # Features: [lost_hours, compensation, distance_km, active_days, nearby_workers_count, neighborhood_score, loc_dup_count]
+        X_fraud = np.random.rand(200, 7) * [8, 1000, 20, 30, 5, 0.3, 0]
         
         # Inject "curfew fraud" anomalies: High compensation + many nearby workers
         # Let's say indices 180-200 are outliers
         X_fraud[180:, 4] = np.random.randint(10, 50, 20) # 10-50 workers nearby is an anomaly for a "curfew"
         X_fraud[180:, 1] = 500 # High compensation claim
+        X_fraud[180:, 5] = 0.9 # Neighborhood consensus shows others are working fine
+        X_fraud[190:, 6] = 5   # GPS duplication (5 agents at exactly same coord) - Bot farm!
 
         fraud_model = IsolationForest(contamination=0.1, random_state=42)
         fraud_model.fit(X_fraud)
@@ -87,16 +89,18 @@ class InsuranceAI:
         premium = model.predict(input_data)[0]
         return round(float(premium), 2)
 
-    def is_claim_fraudulent(self, lost_hours, compensation, distance_km, active_days=15, nearby_workers_count=0):
+    def is_claim_fraudulent(self, lost_hours, compensation, distance_km, active_days=15, nearby_workers_count=0, neighborhood_score=0.0, loc_dup_count=0):
         model = self._get_model('_fraud_model', self.fraud_model_path)
         
         if model is None:
             # Default fallback: flag if distance is extreme OR if too many workers nearby during curfew
             if distance_km > 25.0: return True
             if nearby_workers_count > 2: return True # Rule of thumb: if > 2 workers nearby, curfew is suspicious
+            if neighborhood_score > 0.7: return True # Others are working fine
+            if loc_dup_count > 1: return True # Multiple agents at same coord
             return False
 
-        input_data = np.array([[lost_hours, compensation, distance_km, active_days, nearby_workers_count]])
+        input_data = np.array([[lost_hours, compensation, distance_km, active_days, nearby_workers_count, neighborhood_score, loc_dup_count]])
         prediction = model.predict(input_data)[0]
         return prediction == -1
 

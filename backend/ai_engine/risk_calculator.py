@@ -104,11 +104,71 @@ def get_realtime_risk_alert(zone, forecast_rain, forecast_wind, aqi):
     }
 
 
-def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_count=0):
+def check_neighborhood_consensus(zone, worker_id, claim_reason):
+    """
+    Anti-fraud: Checks if other agents in the same zone are actually working.
+    """
+    from deliveries.models import Delivery
+    from users.models import Worker
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    worker = Worker.objects.filter(id=worker_id).first()
+    recent_time = timezone.now() - timedelta(minutes=45)
+    
+    # 1. Base check on Location/Zone name
+    others_completed = Delivery.objects.filter(
+        status='COMPLETED',
+        updated_at__gte=recent_time
+    ).exclude(worker_id=worker_id)
+    
+    zone_count = others_completed.filter(location__icontains=zone.split(',')[0].strip()).count()
+    
+    # 2. Advanced GPS-based radius check (if worker has coordinates)
+    radius_count = 0
+    if worker and worker.latitude and worker.longitude:
+        # Check all ACTIVE workers in 2km radius
+        active_nearby = Worker.objects.filter(is_active=True).exclude(id=worker_id)
+        for other in active_nearby:
+            if other.latitude and other.longitude:
+                dist = compute_gps_distance(worker.latitude, worker.longitude, other.latitude, other.longitude)
+                if dist <= 2.0:
+                    radius_count += 1
+    
+    total_active = max(zone_count, radius_count)
+    
+    # Verdict logic for TRAFFIC specially
+    if claim_reason == 'TRAFFIC':
+        # If > 5 other people are completing tasks nearby, its 100% fraud
+        fraud_score = 1.0 if total_active >= 5 else (total_active / 5.0)
+    else:
+        # Weather/Rain: if 3+ others work, its suspicious
+        fraud_score = 1.0 if total_active >= 3 else (total_active / 3.0)
+    
+    return {
+        "active_others": total_active,
+        "fraud_risk_score": round(fraud_score, 2),
+        "verdict": "SUSPICIOUS" if fraud_score >= 0.7 else "CONSENSUS_OK"
+    }
+
+
+def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_count=0, neighborhood_score=0.0):
     """
     Returns True if the claim is NOT flagged by the IsolationForest anomaly detector.
+    Incorporates neighborhood consensus into the AI verdict.
     """
-    return not ai_service.is_claim_fraudulent(lost_hours, compensation, distance_km, nearby_workers_count=nearby_workers_count)
+    # If neighborhood says others are working, it's a very high weight for isolation forest
+    # or a hard override for this demo.
+    if neighborhood_score > 0.8:
+        return False # Hard flag as fraud
+        
+    return not ai_service.is_claim_fraudulent(
+        lost_hours, 
+        compensation, 
+        distance_km, 
+        nearby_workers_count=nearby_workers_count,
+        neighborhood_score=neighborhood_score
+    )
 
 
 def compute_gps_distance(lat1, lon1, lat2, lon2):

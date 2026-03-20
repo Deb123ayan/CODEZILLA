@@ -8,6 +8,7 @@ class Delivery(models.Model):
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('ASSIGNED', 'Assigned'),
+        ('ONGOING', 'In Progress'),
         ('RETRYING', 'Retrying (3-day window)'),
         ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
@@ -20,8 +21,15 @@ class Delivery(models.Model):
         ('OTHER', 'Other (View custom reason)'),
     ]
 
+    CATEGORY_CHOICES = [
+        ('QUICK_COMMERCE', 'Quick Commerce (Food/Instant)'),
+        ('GROCERY', 'Grocery'),
+        ('PARCEL', 'Parcel (Ecommerce)'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     worker = models.ForeignKey(Worker, on_delete=models.SET_NULL, null=True, blank=True, related_name='deliveries')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='FOOD')
     products = models.JSONField(default=list)
     city = models.CharField(max_length=100)
     location = models.CharField(max_length=255) # Nearest location name or address
@@ -40,10 +48,12 @@ class Delivery(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
         old_status = None
-        if not is_new:
-            old_status = Delivery.objects.get(pk=self.pk).status
+        if not self._state.adding:
+            try:
+                old_status = Delivery.objects.get(pk=self.pk).status
+            except Delivery.DoesNotExist:
+                pass
         
         super().save(*args, **kwargs)
 

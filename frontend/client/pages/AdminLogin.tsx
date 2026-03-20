@@ -56,7 +56,7 @@ export default function AdminLogin() {
                         </div>
                         <h1 className="text-7xl font-black tracking-tighter leading-none">High-level <span className="text-red-600">Oversight</span> Control.</h1>
                         <p className="text-xl font-bold text-gray-400 max-w-md leading-relaxed">
-                            Restricted access for system administrators and platform managers. Monitor the entire EarnLock ecosystem in real-time.
+                            Restricted access for system administrators and platform managers. Monitor the entire Zafby ecosystem in real-time.
                         </p>
                         <div className="space-y-6 text-gray-900">
                             {[

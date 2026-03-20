@@ -67,7 +67,7 @@ export default function Policies() {
     setLoading(true);
     try {
       const res = await api.get<any>(`/policy/status/?worker_id=${workerId}`);
-      setPolicyData(res.data);
+      setPolicyData(res);
     } catch (error) {
       console.error("Failed to fetch policy:", error);
       toast.error("Error loading policy details");
@@ -86,13 +86,40 @@ export default function Policies() {
     return () => el.removeEventListener("scroll", handleScroll);
   }, [workerId]);
 
-  const handleSelectPlan = async (planName: string) => {
+  const handleSelectPlan = async (plan: typeof availablePlans[0]) => {
     if (!workerId) {
       toast.error("Sign in to choose a plan");
       return;
     }
-    toast.success(`Redirecting to payment for ${planName}...`);
-    // Future: Connect to /api/policy/purchase/ after payment simulation
+
+    const planMap: Record<string, string> = {
+      "Basic Plan": "BASIC",
+      "Pro Plan": "PRO",
+      "Premium Plus": "PREMIUM_PLUS",
+    };
+
+    const planType = planMap[plan.name] || "BASIC";
+    const premiumValue = parseInt(plan.price.replace("₹", ""));
+    const coverageValue = parseInt(plan.coverage.split(" ")[0].replace("₹", "").replace(",", ""));
+
+    toast.loading(`Processing payment for ${plan.name}...`);
+    
+    try {
+      await api.post("/policy/purchase/", {
+        worker_id: workerId,
+        payment_status: "SUCCESS",
+        plan_type: planType,
+        premium: premiumValue,
+        coverage: coverageValue,
+      });
+      
+      toast.dismiss();
+      toast.success(`${plan.name} activated successfully!`);
+      fetchPolicy(); // Refresh status
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error.message || "Failed to purchase plan");
+    }
   };
 
   const getPlatformColor = (id?: string) => {
@@ -125,7 +152,7 @@ export default function Policies() {
       <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
         <header className={cn(
           "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
+          scrolled ? "bg-white border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
             <div>
@@ -245,10 +272,13 @@ export default function Policies() {
                     ))}
                   </ul>
 
-                  <button className={cn(
-                    "w-full h-14 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg active:scale-95 group-hover:bg-white group-hover:text-black",
-                    plan.buttonColor
-                  )}>
+                  <button 
+                    onClick={() => handleSelectPlan(plan)}
+                    className={cn(
+                      "w-full h-14 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg active:scale-95 group-hover:bg-white group-hover:text-black",
+                      plan.buttonColor
+                    )}
+                  >
                     Select Plan
                   </button>
                 </div>

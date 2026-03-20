@@ -80,7 +80,7 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
             </div>
             <h1 className="text-7xl font-black tracking-tighter leading-none">Become a <span className="text-blue-500">Protected</span> Partner.</h1>
             <p className="text-xl font-bold text-gray-400 leading-relaxed max-w-md italic">
-              "Join 10,000+ gig workers who have already secured their daily earnings with EarnLock."
+              "Join 10,000+ gig workers who have already secured their daily earnings with Zafby."
             </p>
             <div className="flex items-center space-x-6">
               <div className="flex -space-x-4">

@@ -21,7 +21,7 @@ export default function MobileOptimized() {
               Built for Workers <br /><span className="text-blue-600 not-italic">on Mobile.</span>
             </h1>
             <p className="text-lg md:text-xl font-bold text-gray-400 leading-relaxed max-w-lg italic">
-              "A fast and simple mobile experience designed for workers on the move." EarnLock's interface is optimized for mobile devices, ensuring easy navigation while working.
+              "A fast and simple mobile experience designed for workers on the move." Zafby's interface is optimized for mobile devices, ensuring easy navigation while working.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
               <Link
@@ -41,49 +41,49 @@ export default function MobileOptimized() {
           </div>
 
           <div className="lg:w-1/2 flex justify-center">
-             <div className="relative w-full max-w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-[8px] border-gray-900 shadow-2xl relative overflow-hidden group">
-                {/* Mobile Notification Mockup */}
-                <div className="absolute top-0 w-full h-8 bg-black flex justify-center items-end pb-2">
-                   <div className="w-20 h-4 bg-gray-900 rounded-full" />
+            <div className="relative w-full max-w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-[8px] border-gray-900 shadow-2xl relative overflow-hidden group">
+              {/* Mobile Notification Mockup */}
+              <div className="absolute top-0 w-full h-8 bg-black flex justify-center items-end pb-2">
+                <div className="w-20 h-4 bg-gray-900 rounded-full" />
+              </div>
+
+              <div className="p-6 pt-12 space-y-6">
+                <div className="bg-white rounded-[1.5rem] p-4 shadow-xl translate-y-2 group-hover:translate-y-0 transition-transform">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Zap size={16} className="text-white" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase text-gray-400">Zafby Protection</p>
+                  </div>
+                  <h5 className="text-sm font-black italic">Payout Complete!</h5>
+                  <p className="text-[8px] font-bold text-gray-400 mt-1">₹500 has been added to your Zafby Wallet.</p>
                 </div>
-                
-                <div className="p-6 pt-12 space-y-6">
-                   <div className="bg-white rounded-[1.5rem] p-4 shadow-xl translate-y-2 group-hover:translate-y-0 transition-transform">
-                      <div className="flex items-center gap-3 mb-3">
-                         <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <Zap size={16} className="text-white" />
-                         </div>
-                         <p className="text-[10px] font-black uppercase text-gray-400">EarnLock Protection</p>
-                       </div>
-                      <h5 className="text-sm font-black italic">Payout Complete!</h5>
-                      <p className="text-[8px] font-bold text-gray-400 mt-1">₹500 has been added to your EarnLock Wallet.</p>
-                   </div>
-                   
-                   <div className="bg-blue-600 rounded-[1.5rem] p-6 text-white space-y-4">
-                      <div className="flex justify-between items-start">
-                         <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Status</p>
-                         <ShieldCheck size={16} />
-                      </div>
-                      <div>
-                         <p className="text-xs font-bold leading-none mb-1">Protection Active</p>
-                         <h4 className="text-2xl font-black tracking-tighter">PREMIUM</h4>
-                      </div>
-                   </div>
-                   
-                   <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center">
-                         <Navigation size={16} className="text-blue-400 mb-2" />
-                         <span className="text-[8px] font-black text-gray-500 uppercase">Track</span>
-                      </div>
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center">
-                         <Bell size={16} className="text-blue-400 mb-2" />
-                         <span className="text-[8px] font-black text-gray-500 uppercase">Alerts</span>
-                      </div>
-                   </div>
+
+                <div className="bg-blue-600 rounded-[1.5rem] p-6 text-white space-y-4">
+                  <div className="flex justify-between items-start">
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Status</p>
+                    <ShieldCheck size={16} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold leading-none mb-1">Protection Active</p>
+                    <h4 className="text-2xl font-black tracking-tighter">PREMIUM</h4>
+                  </div>
                 </div>
-                
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gray-800 rounded-full" />
-             </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center">
+                    <Navigation size={16} className="text-blue-400 mb-2" />
+                    <span className="text-[8px] font-black text-gray-500 uppercase">Track</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center">
+                    <Bell size={16} className="text-blue-400 mb-2" />
+                    <span className="text-[8px] font-black text-gray-500 uppercase">Alerts</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gray-800 rounded-full" />
+            </div>
           </div>
         </div>
       </section>
@@ -92,10 +92,10 @@ export default function MobileOptimized() {
       <section className="section-padding py-24 bg-[#f8fafc]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24 space-y-4">
-              <h2 className="text-3xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">The Mobile-First <br /><span className="text-blue-600 not-italic">Edge.</span></h2>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Optimized for the speed of your workday</p>
+            <h2 className="text-3xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">The Mobile-First <br /><span className="text-blue-600 not-italic">Edge.</span></h2>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Optimized for the speed of your workday</p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "One-tap protection activation", desc: "No complex configuration. One tap and you're protected for the day.", icon: Touchpad, color: "bg-blue-50 text-blue-600" },
@@ -118,24 +118,24 @@ export default function MobileOptimized() {
       {/* Footer CTA */}
       <section className="section-padding py-24 bg-white border-t border-gray-100">
         <div className="max-w-5xl mx-auto bg-black rounded-[4rem] p-12 md:p-24 text-center text-white relative overflow-hidden group">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-[120px] -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-1000" />
-           <div className="relative z-10 space-y-12">
-              <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.9]">Start Earning <br /><span className="text-blue-600 not-italic">Without Fear.</span></h2>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                 <Link 
-                   to="/buy-plan"
-                   className="w-full sm:w-auto px-14 py-7 bg-white text-black rounded-3xl font-black text-[12px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all duration-500 shadow-2xl"
-                 >
-                   Become a Member
-                 </Link>
-                 <Link 
-                   to="/register"
-                   className="w-full sm:w-auto px-14 py-7 bg-white/5 border border-white/10 rounded-3xl font-black text-[12px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all"
-                 >
-                   Select Platform
-                 </Link>
-              </div>
-           </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-[120px] -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-1000" />
+          <div className="relative z-10 space-y-12">
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.9]">Start Earning <br /><span className="text-blue-600 not-italic">Without Fear.</span></h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <Link
+                to="/buy-plan"
+                className="w-full sm:w-auto px-14 py-7 bg-white text-black rounded-3xl font-black text-[12px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all duration-500 shadow-2xl"
+              >
+                Become a Member
+              </Link>
+              <Link
+                to="/register"
+                className="w-full sm:w-auto px-14 py-7 bg-white/5 border border-white/10 rounded-3xl font-black text-[12px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all"
+              >
+                Select Platform
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

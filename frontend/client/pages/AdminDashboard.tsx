@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pl-20 md:pl-0">
             <div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Platform Overview</h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">Live EarnLock ecosystem monitoring</p>
+              <p className="text-gray-500 text-sm font-medium mt-0.5">Live Zafby ecosystem monitoring</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center px-4 py-2 bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-green-100">

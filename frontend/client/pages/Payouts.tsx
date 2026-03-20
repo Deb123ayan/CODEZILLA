@@ -27,7 +27,7 @@ export default function Payouts() {
     try {
       const response = await api.get<any>(`/claims/history/?worker_id=${workerId}`);
       const claims = response.claims || [];
-      
+
       const txns = claims.map((c: any) => ({
         id: `TXN-${c.claim_id.split('-')[0].toUpperCase()}`,
         amount: `₹${c.compensation}`,
@@ -40,7 +40,7 @@ export default function Payouts() {
       const totalEarned = claims
         .filter((c: any) => c.status === 'PAID' || c.status === 'AUTO_APPROVED')
         .reduce((acc: number, c: any) => acc + parseFloat(c.compensation), 0);
-      
+
       const pending = claims
         .filter((c: any) => c.status === 'PENDING' || c.status === 'FRAUD_FLAGGED')
         .reduce((acc: number, c: any) => acc + parseFloat(c.compensation), 0);
@@ -98,7 +98,7 @@ export default function Payouts() {
       <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
         <header className={cn(
           "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
+          scrolled ? "bg-white border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
             <div>
@@ -118,7 +118,7 @@ export default function Payouts() {
                 <Download size={18} />
                 <span className="text-xs font-black uppercase tracking-widest">History</span>
               </button>
-              <button 
+              <button
                 onClick={() => toast.success("Settlement request sent!")}
                 className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
                 <Target size={18} />
@@ -159,7 +159,7 @@ export default function Payouts() {
                       stat.color === "bg-white" ? "text-green-600 group-hover:text-green-400" : "text-white/80"
                     )}>
                       <ArrowUpRight size={14} className="mr-1" />
-                      Protected by EarnLock
+                      Protected by Zafby
                     </div>
                   </div>
                 </div>

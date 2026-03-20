@@ -21,7 +21,7 @@ export default function FraudProtection() {
               Advanced <br /><span className="text-blue-600 not-italic">Fraud Protection.</span>
             </h1>
             <p className="text-lg md:text-xl font-bold text-gray-400 leading-relaxed max-w-lg italic">
-              Secure payouts with AI-powered verification. EarnLock uses advanced AI models and location verification to prevent fraudulent claims.
+              Secure payouts with AI-powered verification. Zafby uses advanced AI models and location verification to prevent fraudulent claims.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
               <Link
@@ -42,44 +42,44 @@ export default function FraudProtection() {
 
           <div className="lg:w-1/2 relative group">
             <div className="bg-white rounded-[3rem] border border-gray-100 p-10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] relative z-10 overflow-hidden transform group-hover:rotate-1 transition-all duration-700">
-               <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
-                       <Fingerprint size={28} className="text-blue-600" />
-                    </div>
-                    <div>
-                       <h4 className="text-sm font-black italic uppercase italic">Biometry AI</h4>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Verifying Identity...</p>
-                    </div>
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
+                    <Fingerprint size={28} className="text-blue-600" />
                   </div>
-                  <Lock size={20} className="text-blue-400" />
-               </div>
-               
-               <div className="space-y-4">
-                  {[
-                    { label: "IP ADDRESS", value: "192.168.1.XX", icon: Cpu, status: "Verified" },
-                    { label: "GPS COORDS", value: "28.6139° N, 77.2090° E", icon: Search, status: "Matching" },
-                    { label: "IMAGE FORENSICS", value: "Metadata Match", icon: Eye, status: "Passed" }
-                  ].map((scan, i) => (
-                    <div key={i} className="flex items-center justify-between p-5 bg-gray-50/50 rounded-2xl border border-gray-50 transition-colors hover:bg-white hover:shadow-lg">
-                       <div className="flex items-center gap-4">
-                          <scan.icon size={18} className="text-blue-600" />
-                          <div>
-                             <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{scan.label}</p>
-                             <p className="text-xs font-black">{scan.value}</p>
-                          </div>
-                       </div>
-                       <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[8px] font-black uppercase tracking-widest rounded-full">{scan.status}</span>
-                    </div>
-                  ))}
-               </div>
-               
-               <div className="mt-10 pt-10 border-t border-gray-50 flex items-center justify-center">
-                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-600 rounded-full">
-                     <ShieldCheck size={16} />
-                     <span className="text-[10px] font-black uppercase tracking-widest tracking-tighter">Secure Session #1283-F</span>
+                  <div>
+                    <h4 className="text-sm font-black italic uppercase italic">Biometry AI</h4>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Verifying Identity...</p>
                   </div>
-               </div>
+                </div>
+                <Lock size={20} className="text-blue-400" />
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { label: "IP ADDRESS", value: "192.168.1.XX", icon: Cpu, status: "Verified" },
+                  { label: "GPS COORDS", value: "28.6139° N, 77.2090° E", icon: Search, status: "Matching" },
+                  { label: "IMAGE FORENSICS", value: "Metadata Match", icon: Eye, status: "Passed" }
+                ].map((scan, i) => (
+                  <div key={i} className="flex items-center justify-between p-5 bg-gray-50/50 rounded-2xl border border-gray-50 transition-colors hover:bg-white hover:shadow-lg">
+                    <div className="flex items-center gap-4">
+                      <scan.icon size={18} className="text-blue-600" />
+                      <div>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{scan.label}</p>
+                        <p className="text-xs font-black">{scan.value}</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[8px] font-black uppercase tracking-widest rounded-full">{scan.status}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 pt-10 border-t border-gray-50 flex items-center justify-center">
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-600 rounded-full">
+                  <ShieldCheck size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest tracking-tighter">Secure Session #1283-F</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -89,10 +89,10 @@ export default function FraudProtection() {
       <section className="section-padding py-24 bg-[#f8fafc]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24 space-y-4">
-              <h2 className="text-3xl md:text-6xl font-black tracking-tighter uppercase italic">Security <span className="text-blue-600 not-italic">Infrastructure.</span></h2>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">How we protect the platform from misuse</p>
+            <h2 className="text-3xl md:text-6xl font-black tracking-tighter uppercase italic">Security <span className="text-blue-600 not-italic">Infrastructure.</span></h2>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">How we protect the platform from misuse</p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "AI claim validation", desc: "Proprietary models cross-calculate telemetry data with disruption reports to validate legality.", icon: Cpu, color: "bg-blue-50 text-blue-600" },
@@ -114,27 +114,27 @@ export default function FraudProtection() {
 
       {/* Footer Callout */}
       <section className="section-padding py-32 bg-white relative overflow-hidden group">
-         <div className="absolute inset-0 bg-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -z-10" />
-         <div className="max-w-3xl mx-auto text-center space-y-12">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase leading-none">Military-Grade <br /><span className="text-blue-600 not-italic">Assurance.</span></h2>
-            <p className="text-lg md:text-xl font-bold text-gray-400 max-w-lg mx-auto italic leading-relaxed">
-               "Join the most secure protection network for gig workers. We protect the system, so the system can protect you."
-            </p>
-            <div className="flex items-center justify-center gap-6">
-               <Link 
-                 to="/buy-plan"
-                 className="px-10 py-6 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] shadow-2xl"
-               >
-                 Start Protection
-               </Link>
-               <Link 
-                 to="/"
-                 className="px-10 py-6 text-gray-400 font-black text-[10px] uppercase tracking-[0.3em] hover:text-black transition-all"
-               >
-                 Go Back
-               </Link>
-            </div>
-         </div>
+        <div className="absolute inset-0 bg-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -z-10" />
+        <div className="max-w-3xl mx-auto text-center space-y-12">
+          <h2 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase leading-none">Military-Grade <br /><span className="text-blue-600 not-italic">Assurance.</span></h2>
+          <p className="text-lg md:text-xl font-bold text-gray-400 max-w-lg mx-auto italic leading-relaxed">
+            "Join the most secure protection network for gig workers. We protect the system, so the system can protect you."
+          </p>
+          <div className="flex items-center justify-center gap-6">
+            <Link
+              to="/buy-plan"
+              className="px-10 py-6 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] shadow-2xl"
+            >
+              Start Protection
+            </Link>
+            <Link
+              to="/"
+              className="px-10 py-6 text-gray-400 font-black text-[10px] uppercase tracking-[0.3em] hover:text-black transition-all"
+            >
+              Go Back
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

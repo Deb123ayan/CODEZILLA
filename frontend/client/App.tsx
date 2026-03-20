@@ -23,6 +23,7 @@ import Claims from "./pages/Claims";
 import Payouts from "./pages/Payouts";
 import NotificationsPage from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import Deliveries from "./pages/Deliveries";
 import ProfileSetup from "./pages/ProfileSetup";
 import DocumentVerification from "./pages/DocumentVerification";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -81,6 +82,7 @@ const App = () => (
 
               {/* Worker Dashboard Routes */}
               <Route path="/dashboard" element={<UserGuard><Dashboard /></UserGuard>} />
+              <Route path="/deliveries" element={<UserGuard><Deliveries /></UserGuard>} />
               <Route path="/policies" element={<UserGuard><Policies /></UserGuard>} />
               <Route path="/claims" element={<UserGuard><Claims /></UserGuard>} />
               <Route path="/payouts" element={<UserGuard><Payouts /></UserGuard>} />

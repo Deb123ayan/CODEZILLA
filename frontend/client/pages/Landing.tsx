@@ -272,7 +272,7 @@ export default function Landing() {
 
           <div className="lg:col-span-2 grid sm:grid-cols-2 gap-8">
             {[
-              { q: "EarnLock saved my weekly earnings during the Delhi heatwave. Payout was instant.", user: "Rajesh S.", role: "Zomato Partner" },
+              { q: "Zafby saved my weekly earnings during the Delhi heatwave. Payout was instant.", user: "Rajesh S.", role: "Zomato Partner" },
               { q: "Finally, an insurance company that understands our daily struggles with traffic.", user: "Priya K.", role: "Zepto Delivery" },
             ].map((t, i) => (
               <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
@@ -342,7 +342,7 @@ export default function Landing() {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Zap size={16} className="text-white fill-current" />
               </div>
-              <span className="font-black text-xl tracking-tighter">EarnLock</span>
+              <span className="font-black text-xl tracking-tighter">Zafby</span>
             </Link>
             <p className="text-sm font-bold text-gray-500 leading-relaxed uppercase tracking-widest">
               Empowering the gig economy with smart, data-driven security.
@@ -374,7 +374,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-32 flex flex-col sm:flex-row items-center justify-between gap-8 border-t border-white/5 mt-10">
-          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">&copy; 2024 EarnLock. Built for the future of work.</p>
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">&copy; 2024 Zafby. Built for the future of work.</p>
           <div className="flex gap-8">
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Privacy</span>
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Cookies</span>

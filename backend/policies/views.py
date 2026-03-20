@@ -85,10 +85,13 @@ class PolicyPurchaseView(APIView):
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['worker_id', 'payment_status'],
+            required=['worker_id', 'payment_status', 'plan_type'],
             properties={
                 'worker_id': openapi.Schema(type=openapi.TYPE_STRING, description="UUID of the worker"),
                 'payment_status': openapi.Schema(type=openapi.TYPE_STRING, description="Set to 'SUCCESS' to simulate payment"),
+                'plan_type': openapi.Schema(type=openapi.TYPE_STRING, enum=['BASIC', 'PRO', 'PREMIUM_PLUS'], description="Selected plan"),
+                'premium': openapi.Schema(type=openapi.TYPE_NUMBER, description="Premium paid"),
+                'coverage': openapi.Schema(type=openapi.TYPE_NUMBER, description="Coverage limit for the plan"),
             }
         ),
         responses={201: "Policy created", 400: "Bad Request"}
@@ -96,6 +99,9 @@ class PolicyPurchaseView(APIView):
     def post(self, request, *args, **kwargs):
         worker_id = request.data.get('worker_id')
         payment_status = request.data.get('payment_status')
+        plan_type = request.data.get('plan_type', 'BASIC')
+        premium = request.data.get('premium')
+        coverage = request.data.get('coverage')
 
         if not worker_id:
             return Response({"error": "worker_id is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,23 +139,36 @@ class PolicyPurchaseView(APIView):
             working_days = len(worker.working_days) if worker.working_days else 6
             avg_income = worker.weekly_earnings // max(working_days, 1)
 
-        quote = calculate_risk_and_premium(
-            zone=worker.zone,
-            avg_income=avg_income,
-            weather_risk=weather_risk,
-            pollution_risk=pollution_risk,
-            platform=worker.platform
-        )
+        # Fallback values if not provided by frontend list but we have the plan type
+        final_premium = premium
+        final_coverage = coverage
+
+        if not final_premium or not final_coverage:
+            quote = calculate_risk_and_premium(
+                zone=worker.zone,
+                avg_income=avg_income,
+                weather_risk=weather_risk,
+                pollution_risk=pollution_risk,
+                platform=worker.platform
+            )
+            final_premium = final_premium or quote['premium']
+            final_coverage = final_coverage or quote['coverage']
 
         policy = Policy.objects.create(
             worker=worker,
-            weekly_premium=quote['premium'],
-            coverage_limit=quote['coverage'],
+            plan_type=plan_type,
+            weekly_premium=final_premium,
+            coverage_limit=final_coverage,
             start_date=date.today(),
             end_date=date.today() + timedelta(days=7),
             next_payment_date=date.today() + timedelta(days=7),
             status='ACTIVE'
         )
+
+        # Update worker profile summary
+        worker.pricing_plan = plan_type
+        worker.renewal_date = policy.end_date
+        worker.save(update_fields=['pricing_plan', 'renewal_date'])
 
         return Response({
             "message": "Policy activated successfully",

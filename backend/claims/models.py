@@ -44,7 +44,6 @@ class Claim(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('worker', 'claim_date', 'claim_reason')
         ordering = ['-created_at']
 
     def __str__(self):

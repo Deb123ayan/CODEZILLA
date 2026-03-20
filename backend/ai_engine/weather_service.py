@@ -52,11 +52,61 @@ class WeatherService:
         return None
 
     @staticmethod
+    def fetch_open_meteo_weather(lat, lng):
+        """
+        Fetch real-time weather from Open-Meteo (Free, no API key).
+        Returns standardized weather data.
+        """
+        try:
+            url = (
+                f"https://api.open-meteo.com/v1/forecast"
+                f"?latitude={lat}&longitude={lng}&current_weather=true&hourly=precipitation,rain,showers,snowfall,temperature_2m"
+            )
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            curr = data.get('current_weather', {})
+            
+            # Find closest hourly rain for current hour
+            import datetime
+            current_hour = datetime.datetime.now().hour
+            hourly = data.get('hourly', {})
+            
+            # Simple index-based lookup for the current hour (0-23)
+            rain_val = hourly.get('rain', [0])[current_hour] if len(hourly.get('rain', [])) > current_hour else 0
+            showers_val = hourly.get('showers', [0])[current_hour] if len(hourly.get('showers', [])) > current_hour else 0
+            temp_val = hourly.get('temperature_2m', [25])[current_hour] if len(hourly.get('temperature_2m', [])) > current_hour else curr.get('temperature', 25)
+            
+            total_precip = rain_val + showers_val
+
+            return {
+                'source': 'openmeteo_live',
+                'lat': lat,
+                'lng': lng,
+                'temperature_c': float(temp_val),
+                'humidity': 60,
+                'rain_1h_mm': float(total_precip),
+                'rain_3h_mm': float(total_precip * 3), 
+                'wind_speed_kmh': float(curr.get('windspeed', 0)),
+                'description': 'clear' if total_precip == 0 else 'rainy',
+                'weather_main': 'Rain' if total_precip > 0 else 'Clear',
+                'timestamp': datetime.datetime.now().isoformat(),
+            }
+        except Exception as e:
+            print(f"Open-Meteo API error: {e}")
+            return None
+
+    @staticmethod
     def fetch_current_weather(lat, lng):
         """
-        Fetch real-time weather from OpenWeatherMap.
-        Returns standardized weather data dict.
+        Fetch real-time weather. Tries Open-Meteo first (Free/No-Key), 
+        then OpenWeatherMap as fallback.
         """
+        # Try Open-Meteo first as requested
+        om_data = WeatherService.fetch_open_meteo_weather(lat, lng)
+        if om_data:
+            return om_data
+
         if not OPENWEATHER_API_KEY:
             return WeatherService._simulated_weather(lat, lng)
 
@@ -68,7 +118,8 @@ class WeatherService:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
             data = response.json()
-
+            
+            # ... rest of OpenWeatherMap logic ...
             rain_1h = data.get('rain', {}).get('1h', 0)
             rain_3h = data.get('rain', {}).get('3h', 0)
             wind_speed = data.get('wind', {}).get('speed', 0)
@@ -85,7 +136,7 @@ class WeatherService:
                 'humidity': humidity,
                 'rain_1h_mm': rain_1h,
                 'rain_3h_mm': rain_3h,
-                'wind_speed_kmh': round(wind_speed * 3.6, 1),  # m/s to km/h
+                'wind_speed_kmh': round(wind_speed * 3.6, 1),
                 'description': description,
                 'weather_main': weather_main,
                 'timestamp': datetime.now().isoformat(),
@@ -136,8 +187,6 @@ class WeatherService:
         """
         Master method: checks weather + AQI and determines if conditions
         qualify for an insurance claim (parametric trigger).
-        
-        Returns a verdict with evidence.
         """
         weather = WeatherService.fetch_current_weather(lat, lng)
         aqi_data = WeatherService.fetch_air_quality(lat, lng)
@@ -145,64 +194,50 @@ class WeatherService:
         triggers = []
         is_disrupted = False
 
-        # Trigger 1: Heavy Rain (>50mm in 3h or actively raining hard)
-        if weather['rain_3h_mm'] > 50 or weather['rain_1h_mm'] > 20:
+        # Ensure values are floats for comparison
+        rain_1h = float(weather.get('rain_1h_mm', 0))
+        rain_3h = float(weather.get('rain_3h_mm', 0))
+        temp = float(weather.get('temperature_c', 25))
+        wind = float(weather.get('wind_speed_kmh', 0))
+        aqi = float(aqi_data.get('aqi', 100))
+
+        # Trigger 1: Heavy Rain
+        if rain_3h > 50 or rain_1h > 20:
             triggers.append({
                 'type': 'HEAVY_RAIN',
                 'severity': 'HIGH',
-                'detail': f"Rain: {weather['rain_1h_mm']}mm/1h, {weather['rain_3h_mm']}mm/3h",
+                'detail': f"Rain: {rain_1h}mm/1h, {rain_3h}mm/3h",
                 'threshold': '20mm/1h or 50mm/3h',
             })
             is_disrupted = True
 
         # Trigger 2: Extreme Heat (>40°C)
-        if weather['temperature_c'] > 40:
+        if temp > 40:
             triggers.append({
                 'type': 'EXTREME_HEAT',
                 'severity': 'HIGH',
-                'detail': f"Temperature: {weather['temperature_c']}°C",
+                'detail': f"Temperature: {temp}°C",
                 'threshold': '40°C',
             })
             is_disrupted = True
 
         # Trigger 3: High Wind (>60 km/h)
-        if weather['wind_speed_kmh'] > 60:
+        if wind > 60:
             triggers.append({
                 'type': 'HIGH_WIND',
                 'severity': 'MEDIUM',
-                'detail': f"Wind: {weather['wind_speed_kmh']} km/h",
+                'detail': f"Wind: {wind} km/h",
                 'threshold': '60 km/h',
             })
             is_disrupted = True
 
         # Trigger 4: Severe Pollution (AQI > 300)
-        if aqi_data['aqi'] > 300:
+        if aqi > 300:
             triggers.append({
                 'type': 'SEVERE_POLLUTION',
                 'severity': 'HIGH',
-                'detail': f"AQI: {aqi_data['aqi']} ({aqi_data['aqi_category']})",
+                'detail': f"AQI: {aqi} ({aqi_data.get('aqi_category', 'Unknown')})",
                 'threshold': 'AQI > 300',
-            })
-            is_disrupted = True
-
-        # Trigger 5: Storm/Thunderstorm
-        storm_keywords = ['thunderstorm', 'storm', 'tornado', 'hurricane', 'cyclone']
-        if any(kw in weather['description'].lower() for kw in storm_keywords):
-            triggers.append({
-                'type': 'STORM',
-                'severity': 'HIGH',
-                'detail': f"Condition: {weather['description']}",
-                'threshold': 'Storm/Thunderstorm detected',
-            })
-            is_disrupted = True
-
-        # Trigger 6: Flood Risk (sustained heavy rain)
-        if weather['rain_3h_mm'] > 80:
-            triggers.append({
-                'type': 'FLOOD_RISK',
-                'severity': 'HIGH',
-                'detail': f"Sustained rain: {weather['rain_3h_mm']}mm in 3h — flood risk",
-                'threshold': '80mm/3h sustained rainfall',
             })
             is_disrupted = True
 
@@ -220,21 +255,18 @@ class WeatherService:
     def verify_claim(lat, lng, claimed_reason):
         """
         Anti-fraud: Verify a worker's claim against real weather.
-        
-        If worker says "heavy rain stopped me from working" but weather API
-        shows clear skies — it's fraud.
         """
         conditions = WeatherService.check_disruption_conditions(lat, lng)
 
-        # Map claimed reason to expected trigger type
         reason_to_trigger = {
             'WEATHER': ['HEAVY_RAIN', 'HIGH_WIND', 'STORM', 'FLOOD_RISK'],
             'RAIN': ['HEAVY_RAIN'],
             'HEAT': ['EXTREME_HEAT'],
             'AQI': ['SEVERE_POLLUTION'],
             'POLLUTION': ['SEVERE_POLLUTION'],
-            'STORM': ['STORM', 'HIGH_WIND', 'HEAVY_RAIN'],
+            'STORM': ['STORM', 'HIGH_WIND', 'HEAVY_RAIN', 'SEVERE_TRAFFIC'],
             'FLOOD': ['FLOOD_RISK', 'HEAVY_RAIN'],
+            'TRAFFIC': ['SEVERE_TRAFFIC'],
         }
 
         expected_triggers = reason_to_trigger.get(claimed_reason.upper(), [])
@@ -249,11 +281,10 @@ class WeatherService:
             'actual_conditions': conditions,
             'fraud_flag': not claim_verified and not conditions['is_disrupted'],
             'fraud_reason': (
-                f"Worker claimed '{claimed_reason}' but actual weather shows: "
-                f"{conditions['weather']['description']}, "
-                f"Temp: {conditions['weather']['temperature_c']}°C, "
-                f"Rain: {conditions['weather']['rain_1h_mm']}mm, "
-                f"AQI: {conditions['air_quality']['aqi']}"
+                f"Worker claimed '{claimed_reason}' but actual conditions were: "
+                f"{conditions['weather'].get('description', 'clear')}, "
+                f"Temp: {conditions['weather'].get('temperature_c')}°C, "
+                f"Rain: {conditions['weather'].get('rain_1h_mm')}mm"
             ) if not claim_verified else None,
         }
 

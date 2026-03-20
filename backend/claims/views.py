@@ -48,7 +48,7 @@ class ClaimSubmitView(views.APIView):
     )
     def post(self, request):
         from ai_engine.weather_service import WeatherService
-        from ai_engine.risk_calculator import audit_claim_for_fraud, compute_gps_distance
+        from ai_engine.risk_calculator import audit_claim_for_fraud, compute_gps_distance, check_neighborhood_consensus
 
         worker_id = request.data.get('worker_id')
         claim_reason = request.data.get('claim_reason', 'WEATHER').upper()
@@ -77,18 +77,7 @@ class ClaimSubmitView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # ── 3. Duplicate claim check ───────────────────────────────────
-        existing = Claim.objects.filter(
-            worker=worker,
-            claim_date=date.today(),
-            claim_reason=claim_reason
-        ).exists()
-
-        if existing:
-            return Response(
-                {"error": f"Duplicate claim: You already filed a '{claim_reason}' claim today."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Duplicate claim check removed per user request to allow multiple claims per day.
 
         # ── 4. Parametric weather verification ─────────────────────────
         # Social disruptions (CURFEW, STRIKE, ZONE_CLOSURE) are admin-reported,
@@ -211,12 +200,25 @@ class ClaimSubmitView(views.APIView):
                 dist = compute_gps_distance(worker.latitude, worker.longitude, other.latitude, other.longitude)
                 if dist <= 1.0:
                     nearby_workers_count += 1
+        
+        # New Consensus check: are others working fine in this neighborhood?
+        consensus = check_neighborhood_consensus(worker.zone, worker.id, claim_reason)
+        neighborhood_score = consensus['fraud_risk_score']
+        
+        # GPS Duplication check: are there agents with EXACT same coordinates? (Bot farm detection)
+        loc_dup_count = 0
+        if worker.latitude and worker.longitude:
+            loc_dup_count = Worker.objects.filter(
+                latitude=worker.latitude,
+                longitude=worker.longitude
+            ).exclude(id=worker.id).count()
 
         passed_fraud = audit_claim_for_fraud(
             lost_hours=lost_hours,
             compensation=compensation,
             distance_km=distance_km,
-            nearby_workers_count=nearby_workers_count
+            nearby_workers_count=nearby_workers_count,
+            neighborhood_score=neighborhood_score
         )
 
         fraud_score = 0.0 if passed_fraud else 0.85
@@ -240,6 +242,8 @@ class ClaimSubmitView(views.APIView):
                     'triggers': conditions['triggers'],
                     'distance_from_zone_km': round(distance_km, 2),
                     'nearby_workers_in_1km': nearby_workers_count,
+                    'neighborhood_consensus': consensus,
+                    'location_duplication_count': loc_dup_count,
                     'fraud_check_passed': passed_fraud,
                 }
             )

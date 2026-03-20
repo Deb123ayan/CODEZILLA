@@ -67,9 +67,75 @@ class DeliveryActionView(views.APIView):
                 delivery.cancel_and_enable_claim(cancel_type=cancel_type, reason=reason)
                 msg = "Delivery cancelled successfully."
 
-            # AUTOMATION: Automatically create and approve claim for the worker (only for immediate cancels)
-            claim_info = None
+            # ── FRAUD DETECTION / VERIFICATION ENGINE ──
+            # Step 1: Default to Review if verification fails
+            claim_status = 'PENDING_REVIEW'
+            verification_note = "Awaiting verification..."
+            v_data = {
+                'delivery_id': str(delivery.id), 
+                'type': cancel_type, 
+                'reason': reason,
+                'platform': platform,
+                'agent_kept_items': delivery.agent_can_keep_items,
+                'audit_trail': []
+            }
+
             if delivery.worker:
+                from ai_engine.weather_service import WeatherService
+                
+                # Check 1: Weather Verification
+                if delivery.worker.latitude and delivery.worker.longitude:
+                    if cancel_type == 'TRAFFIC':
+                        # Traffic: bypass weather fraud checks, trust social proof
+                        v_data['weather_check'] = {'fraud_flag': False, 'ignored': True}
+                        v_data['audit_trail'].append("INFO: Traffic claim strictly checked via Social Proof.")
+                    else:
+                        v_res = WeatherService.verify_claim(
+                            delivery.worker.latitude, 
+                            delivery.worker.longitude, 
+                            cancel_type
+                        )
+                        v_data['weather_check'] = v_res
+                        
+                        if v_res.get('claim_verified'):
+                            claim_status = 'AUTO_APPROVED'
+                            verification_note = "Weather verified at location."
+                            v_data['audit_trail'].append("PASSED: Weather verified.")
+                        elif v_res.get('fraud_flag'):
+                            claim_status = 'PENDING_REVIEW' # Flag for review
+                            verification_note = "Weather discrepancy detected."
+                            v_data['audit_trail'].append(f"FLAGGED: {v_res.get('fraud_reason')}")
+                        else:
+                            v_data['audit_trail'].append("UNCERTAIN: Weather data inconclusive.")
+
+                # Check 2: Neighborhood Consensus (Social Verification)
+                # Traffic uses pure social proof, others use it as fallback
+                if cancel_type == 'TRAFFIC':
+                    recent_zone_cancels = Delivery.objects.filter(
+                        worker__zone=delivery.worker.zone,
+                        status='CANCELLED',
+                        cancellation_type='TRAFFIC',
+                        updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+                    ).exclude(pk=delivery.pk).count()
+                    req_consensus = 1
+                else:
+                    recent_zone_cancels = Delivery.objects.filter(
+                        worker__zone=delivery.worker.zone,
+                        status='CANCELLED',
+                        updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+                    ).exclude(pk=delivery.pk).count()
+                    req_consensus = 2
+                
+                v_data['neighborhood_consensus'] = recent_zone_cancels
+                if recent_zone_cancels >= req_consensus: # High correlation
+                    v_data['audit_trail'].append(f"PASSED: {recent_zone_cancels} other agent reports found in {delivery.worker.zone}.")
+                    if claim_status != 'AUTO_APPROVED' and not v_data.get('weather_check', {}).get('fraud_flag'):
+                        claim_status = 'AUTO_APPROVED'
+                        verification_note = "Consensus reached in zone."
+                elif cancel_type == 'TRAFFIC':
+                    v_data['audit_trail'].append(f"FAILED: No other agents reported traffic in {delivery.worker.zone}.")
+
+                # Step 2: Finalize Claim
                 active_policy = Policy.objects.filter(
                     worker=delivery.worker, status='ACTIVE'
                 ).first()
@@ -78,42 +144,56 @@ class DeliveryActionView(views.APIView):
                     event = Event.objects.create(
                         type='DELIVERY_CANCELLED',
                         zone=delivery.worker.zone,
-                        severity=5,
-                        description=f"Automated claim for {platform} cancellation ({cancel_type}). Ref: {delivery.id}. {reason}"
+                        severity=5 if claim_status == 'AUTO_APPROVED' else 3,
+                        description=f"Automated claim for {platform} cancellation ({cancel_type}). Ref: {delivery.id}. {verification_note}"
                     )
                     
                     hourly_income = (delivery.worker.weekly_earnings / max(len(delivery.worker.working_days), 1)) / max(delivery.worker.working_hours, 1)
-                    compensation = min(int(hourly_income * 0.5), active_policy.coverage_limit)
+                    # Reduced compensation if pending review
+                    base_comp = min(int(hourly_income * 0.5), active_policy.coverage_limit)
+                    compensation = base_comp if claim_status == 'AUTO_APPROVED' else 0
                     
-                    claim = Claim.objects.create(
-                        worker=delivery.worker,
-                        policy=active_policy,
-                        event=event,
-                        claim_reason='DELIVERY_CANCELLED',
-                        claim_date=timezone.now().date(),
-                        lost_hours=1,
-                        compensation=compensation,
-                        status='AUTO_APPROVED',
-                        verification_data={
-                            'delivery_id': str(delivery.id), 
-                            'type': cancel_type, 
-                            'reason': reason,
-                            'platform': platform,
-                            'agent_kept_items': delivery.agent_can_keep_items
+                    try:
+                        claim = Claim.objects.create(
+                            worker=delivery.worker,
+                            policy=active_policy,
+                            event=event,
+                            claim_reason='DELIVERY_CANCELLED',
+                            claim_date=timezone.now().date(),
+                            lost_hours=1,
+                            compensation=compensation,
+                            status=claim_status,
+                            verification_data=v_data
+                        )
+                        claim_info = {
+                            "claim_id": str(claim.claim_id),
+                            "status": claim.status,
+                            "compensation": claim.compensation,
+                            "audit_summary": v_data['audit_trail']
                         }
-                    )
-                    claim_info = {
-                        "claim_id": str(claim.claim_id),
-                        "status": claim.status,
-                        "compensation": claim.compensation
-                    }
+                    except Exception as e:
+                        print(f"Error creating automated claim: {e}")
 
             return Response({
                 "message": msg,
+                "verification": verification_note,
                 "delivery": DeliverySerializer(delivery).data,
                 "automated_claim": claim_info
             })
         
+        elif action == 'start':
+            # Check if worker already has an ongoing delivery
+            ongoing = Delivery.objects.filter(worker=delivery.worker, status='ONGOING').exists()
+            if ongoing:
+                return Response({"error": "You already have an ongoing delivery. Complete it first!"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            delivery.status = 'ONGOING'
+            delivery.save()
+            return Response({
+                "message": "Delivery started. Good luck!",
+                "delivery": DeliverySerializer(delivery).data
+            })
+            
         elif action == 'complete':
             delivery.status = 'COMPLETED'
             delivery.save()
@@ -126,6 +206,10 @@ class DeliveryActionView(views.APIView):
 
 class ListDeliveriesView(views.APIView):
     def get(self, request):
-        deliveries = Delivery.objects.all()
+        worker_id = request.query_params.get('worker_id')
+        if worker_id:
+            deliveries = Delivery.objects.filter(worker_id=worker_id)
+        else:
+            deliveries = Delivery.objects.all()
         serializer = DeliverySerializer(deliveries, many=True)
         return Response(serializer.data)

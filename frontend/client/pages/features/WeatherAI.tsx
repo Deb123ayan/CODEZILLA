@@ -20,7 +20,7 @@ export default function WeatherAI() {
               AI-Powered <br /><span className="text-blue-600">Weather Detection.</span>
             </h1>
             <p className="text-lg md:text-xl font-bold text-gray-400 leading-relaxed max-w-lg">
-              Predict weather risks in your delivery zone before they impact earnings. EarnLock uses hyper-local weather data and AI models to detect rainfall, heatwaves and storms.
+              Predict weather risks in your delivery zone before they impact earnings. Zafby uses hyper-local weather data and AI models to detect rainfall, heatwaves and storms.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
               <Link
@@ -70,7 +70,7 @@ export default function WeatherAI() {
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="p-6 bg-blue-600/10 border border-blue-500/20 rounded-2xl flex items-center gap-6">
                   <div className="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center shrink-0">
                     <Thermometer className="text-blue-400" />
@@ -96,7 +96,7 @@ export default function WeatherAI() {
             <h2 className="text-3xl md:text-5xl font-black tracking-tighter italic">Weather AI <span className="text-blue-600 not-italic">Predicts.</span></h2>
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Real-time detection for real-world risks</p>
           </div>
-          
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "Heavy Rain", desc: "Instantly triggers coverage when localized precipitation exceeds delivery safety limits.", icon: CloudRain, color: "bg-blue-50 text-blue-600" },
@@ -124,7 +124,7 @@ export default function WeatherAI() {
             <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none italic max-w-2xl mx-auto">
               Ready to outsmart the <span className="text-blue-500 not-italic">Weather?</span>
             </h2>
-            <Link 
+            <Link
               to="/buy-plan"
               className="inline-flex items-center space-x-4 px-10 py-6 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-blue-500 hover:text-white transition-all duration-500 hover:scale-[1.05]"
             >

@@ -58,7 +58,7 @@ export default function Navbar() {
             <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
               <Zap size={20} className="text-white fill-current" />
             </div>
-            <span className="font-black text-2xl tracking-tighter text-gray-900 group-hover:text-blue-600 transition-colors">EarnLock</span>
+            <span className="font-black text-2xl tracking-tighter text-gray-900 group-hover:text-blue-600 transition-colors">Zafby</span>
           </Link>
 
           {/* Desktop Navigation */}
