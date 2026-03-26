@@ -162,8 +162,8 @@ class PolicyPurchaseView(APIView):
             weekly_premium=final_premium,
             coverage_limit=final_coverage,
             start_date=date.today(),
-            end_date=date.today() + timedelta(days=7),
-            next_payment_date=date.today() + timedelta(days=7),
+            end_date=date.today() + timedelta(days=PLAN_DURATION_DAYS),
+            next_payment_date=date.today() + timedelta(days=PLAN_DURATION_DAYS),
             status='ACTIVE'
         )
 
@@ -255,10 +255,13 @@ class PolicyRenewView(APIView):
             weekly_premium=quote['premium'],
             coverage_limit=quote['coverage'],
             start_date=date.today(),
-            end_date=date.today() + timedelta(days=7),
-            next_payment_date=date.today() + timedelta(days=7),
+            end_date=date.today() + timedelta(days=PLAN_DURATION_DAYS),
+            next_payment_date=date.today() + timedelta(days=PLAN_DURATION_DAYS),
             status='ACTIVE'
         )
+
+        worker.renewal_date = new_policy.end_date
+        worker.save(update_fields=['renewal_date'])
 
         return Response({
             "message": "Policy renewed successfully",
@@ -302,9 +305,21 @@ class PolicyStatusView(APIView):
             'coverage_limit', 'start_date', 'end_date', 'status', 'payment_method'
         )
 
+        # 30-Day Cycle Logic
+        first_policy = Policy.objects.filter(worker=worker).order_by('start_date').first()
+        cycle_day = 0
+        if first_policy:
+            days_since_start = (date.today() - first_policy.start_date).days
+            cycle_day = (days_since_start % 30) + 1
+
         return Response({
             "worker_id": str(worker_id),
             "has_active_policy": active_policy is not None,
+            "cycle_info": {
+                "day": cycle_day,
+                "total_days": 30,
+                "progress_percent": round((cycle_day / 30) * 100, 1)
+            },
             "active_policy": {
                 "policy_id": str(active_policy.policy_id),
                 "policy_number": active_policy.policy_number,

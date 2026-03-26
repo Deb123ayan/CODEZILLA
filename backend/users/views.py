@@ -286,16 +286,19 @@ class FinalizeOnboardingView(views.APIView):
             premium = int(premium * 1.5)
             coverage = int(coverage * 1.5)
             
-        Policy.objects.create(
+        policy = Policy.objects.create(
             worker=worker,
             plan_type=plan_type,
             weekly_premium=premium,
             coverage_limit=coverage,
             payment_method=payment_method,
             start_date=timezone.now().date(),
-            end_date=timezone.now().date() + timedelta(days=7),
-            next_payment_date=timezone.now().date() + timedelta(days=7),
+            end_date=timezone.now().date() + timedelta(days=4),
+            next_payment_date=timezone.now().date() + timedelta(days=4),
         )
+        
+        worker.renewal_date = policy.end_date
+        worker.save()
         
         return Response({
             "message": "Onboarding finalized and protection started",

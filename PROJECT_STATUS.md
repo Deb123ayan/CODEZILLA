@@ -41,13 +41,17 @@ By analyzing live weather, traffic, and platform telemetry, Zafby detects unprev
 ### Step 2: Identity & Platform Authentication
 1. The worker selects their specific delivery platform (e.g., Zomato, Zepto) from a grid.
 2. The user executes the mock **Platform Connect** step, tying their phone directly to a newly generated `PartnerID` and linking their geographical `Zone`.
-3. They upload an earnings or profile screenshot to the **AI Verification Pipeline**.
-4. The Python Image Forensics module decomposes the image bytes. If deemed authentic, it flags `is_verified=True`.
+3. They upload Aadhaar and PAN card images to the **AI-KYC Verification Pipeline**.
+4. The system runs a two-stage check:
+   - **ResNet18 Classifier**: Verifies the document is a valid Aadhaar/PAN card (not a random image).
+   - **ELA Forensics**: Analyzes compression layers to detect digital tampering (photoshopping).
+5. If both checks pass, it flags `is_aadhar_verified=True`, `is_pan_verified=True`, and `is_verified=True`.
 
 ### Step 3: Activating Protection & Operating
-1. The worker secures their final Active Policy (Standard or Premium) tier, with the secure discount automatically applied if their forensics score returned clean.
+1. The worker secures their final Active Policy (Standard or Premium) tier.
 2. Once activated, they are dropped into their **Live Dashboard**. 
-3. Here, they safely monitor their "Coverage Per Event" (e.g., ₹2000), "Weekly Premium" (e.g., ₹35 deduction), and watch their "Earnings vs. Protected" trends dynamically scale.
+3. Here, they safely monitor their "Coverage Per Event" (e.g., ₹2000), "Premium" (fixed for 4 days), and watch their "Earnings vs. Protected" trends.
+4. They can track their **30-Day Protection Cycle** progress bar to see their total monthly coverage status.
 
 ### Step 4: Claim Orchestration (The Admin)
 1. Whenever a disruption triggers or a worker files a manual issue within the "Claims Center", it queues in the backend. 
@@ -90,3 +94,9 @@ By analyzing live weather, traffic, and platform telemetry, Zafby detects unprev
 - ✅ Active separation of authentication states (Worker Dashboard tracking strictly apart from the Admin portal layout tracking).
 - ✅ Completed Python Image Forensics endpoints to validate profile truth. 
 - ✅ Implemented smooth anchoring links on the `Landing.tsx` mapping visually down to the Features/Partners sections.
+- ✅ **Deep Learning KYC Verification**: Computer Vision model (ResNet18) trained on Aadhaar and PAN datasets for automated identity document classification.
+- ✅ **Anti-Tampering ELA Forensics**: Integrated Error Level Analysis (ELA) to detect digital photoshopping or AI-based image manipulation in KYC uploads.
+- ✅ **Flexible 4-Day Premium Cycle**: Transitioned from weekly to 4-day insurance blocks for more dynamic protection.
+- ✅ **30-Day Protection Progress**: Implemented a master cycle tracker on the dashboard to visualize long-term coverage status.
+- ✅ **Automated Training Pipeline**: Created `train_kyc.py` for headless model training on custom document datasets.
+- ✅ **Feature Mismatch Correction**: Synchronized input vector dimensions across all AI models (InsuranceAI) to resolve backend runtime errors.

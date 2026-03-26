@@ -489,12 +489,31 @@ export default function Dashboard() {
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-green-500">All systems active</span>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">30-Day Cycle Progress</p>
+                        <span className="text-[10px] font-black text-blue-400 capitalize">Day {dashboardData?.policy?.cycle_info?.day}/30</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${dashboardData?.policy?.cycle_info?.progress_percent || 0}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                          />
+                        </div>
+                        <span className="text-xs font-black">{dashboardData?.policy?.cycle_info?.progress_percent}%</span>
+                      </div>
+                      <p className="text-[9px] font-bold text-gray-600 mt-2 uppercase tracking-tighter italic">Total Protection lifecycle mapping</p>
+                    </div>
+
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                       <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Risk Score</p>
                       <div className="flex items-center space-x-3">
                         <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500 w-3/4" />
+                          <div className="h-full bg-orange-500 w-3/4 shadow-[0_0_10px_rgba(249,115,22,0.3)]" />
                         </div>
                         <span className="text-xs font-black">7.2</span>
                       </div>
