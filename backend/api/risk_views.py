@@ -23,22 +23,28 @@ class RealTimeRiskPredictionView(generics.GenericAPIView):
         from ai_engine.weather_service import WeatherService
         from ai_engine.risk_calculator import get_realtime_risk_alert
 
-        zone = request.query_params.get('zone', 'Salt Lake')
+        # Support both 'zone' and 'city' parameters from frontend
+        zone = request.query_params.get('zone', request.query_params.get('city', 'Salt Lake'))
 
         # Security: prevent injection
-        zone = re.sub(r'[^a-zA-Z0-9 ]', '', zone)[:50]
+        zone = re.sub(r'[^a-zA-Z0-9 ]', '', str(zone))[:50]
 
-        # Fetch real weather data instead of random
+        from ai_engine.mappls_service import MapplsService
+
+        # Fetch real data instead of random
         coords = WeatherService.get_coordinates_for_zone(zone)
         if coords:
             lat, lng = coords
             weather = WeatherService.fetch_current_weather(lat, lng)
             aqi_data = WeatherService.fetch_air_quality(lat, lng)
+            traffic = MapplsService.get_traffic_congestion(lat, lng)
 
             forecast_data = {
                 "forecast_rain": weather.get('rain_3h_mm', 0) + weather.get('rain_1h_mm', 0),
                 "forecast_wind": weather.get('wind_speed_kmh', 0),
                 "aqi": aqi_data.get('aqi', 100),
+                "traffic_index": traffic.get('congestion_index', 0),
+                "traffic_description": traffic.get('description', 'Clear'),
                 "temperature_c": weather.get('temperature_c', 30),
                 "description": weather.get('description', 'unknown'),
                 "source": weather.get('source', 'unknown'),
@@ -50,6 +56,7 @@ class RealTimeRiskPredictionView(generics.GenericAPIView):
                 "forecast_rain": random.randint(50, 150),
                 "forecast_wind": random.randint(5, 40),
                 "aqi": random.randint(50, 500),
+                "traffic_index": random.randint(1, 10),
                 "source": "simulated_fallback",
             }
 
@@ -58,7 +65,8 @@ class RealTimeRiskPredictionView(generics.GenericAPIView):
             zone=zone,
             forecast_rain=forecast_data['forecast_rain'],
             forecast_wind=forecast_data['forecast_wind'],
-            aqi=forecast_data['aqi']
+            aqi=forecast_data['aqi'],
+            traffic_index=forecast_data.get('traffic_index', 0)
         )
 
         from datetime import datetime

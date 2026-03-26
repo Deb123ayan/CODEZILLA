@@ -24,6 +24,12 @@ class PayoutProcessView(APIView):
         claim.status = 'PAID'
         claim.save()
         
+        # Update Worker Balance
+        worker = claim.worker
+        if worker:
+            worker.balance += claim.compensation
+            worker.save(update_fields=['balance'])
+        
         return Response({
             "message": "Payout successful",
             "claim_id": claim_id,

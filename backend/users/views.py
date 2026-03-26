@@ -11,6 +11,8 @@ import secrets
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from django.conf import settings
+
 class GenerateOTPView(views.APIView):
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -36,16 +38,23 @@ class GenerateOTPView(views.APIView):
         # In real world, send SMS here. For demo, we just return it or log it.
         print(f"DEBUG: OTP for {phone} is {code}")
         
-        return Response({"message": "OTP sent successfully", "code": code if "test" in phone else "******"}, status=status.HTTP_200_OK)
+        # In dev/demo mode, we return the code. If production, mask it.
+        return Response({
+            "message": "OTP sent successfully", 
+            "code": code if (settings.DEBUG or "test" in phone) else "******"
+        }, status=status.HTTP_200_OK)
 
 class VerifyOTPView(views.APIView):
     def post(self, request):
         phone = request.data.get('phone')
         code = request.data.get('code')
         
+        print(f"DEBUG: Verifying OTP for {phone} with code {code}")
+        
         otp = OTP.objects.filter(phone=phone, code=code).last()
         
         if not otp or otp.is_expired():
+            print(f"DEBUG: Verification failed for {phone}. last_otp: {otp}")
             return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
         
         otp.is_verified = True

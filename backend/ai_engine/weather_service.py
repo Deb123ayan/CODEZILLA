@@ -185,11 +185,14 @@ class WeatherService:
     @staticmethod
     def check_disruption_conditions(lat, lng):
         """
-        Master method: checks weather + AQI and determines if conditions
-        qualify for an insurance claim (parametric trigger).
+        Master method: checks weather + AQI + Traffic and determines if 
+        conditions qualify for an insurance claim (parametric trigger).
         """
+        from .mappls_service import MapplsService
+        
         weather = WeatherService.fetch_current_weather(lat, lng)
         aqi_data = WeatherService.fetch_air_quality(lat, lng)
+        traffic = MapplsService.get_traffic_congestion(lat, lng)
 
         triggers = []
         is_disrupted = False
@@ -247,6 +250,7 @@ class WeatherService:
             'triggers': triggers,
             'weather': weather,
             'air_quality': aqi_data,
+            'traffic': traffic,
             'verdict': 'CLAIM_ELIGIBLE' if is_disrupted else 'NO_DISRUPTION',
             'checked_at': datetime.now().isoformat(),
         }
@@ -271,6 +275,19 @@ class WeatherService:
 
         expected_triggers = reason_to_trigger.get(claimed_reason.upper(), [])
         actual_trigger_types = [t['type'] for t in conditions['triggers']]
+
+        # Traffic Specific Verification (Mappls)
+        if claimed_reason.upper() == 'TRAFFIC':
+            traffic_data = conditions.get('traffic', {})
+            congestion_index = traffic_data.get('congestion_index', 0)
+            if congestion_index >= 7: # High congestion
+                return {
+                    'claim_verified': True,
+                    'claimed_reason': claimed_reason,
+                    'actual_conditions': conditions,
+                    'fraud_flag': False,
+                    'fraud_reason': None
+                }
 
         # Check if claimed reason matches actual conditions
         claim_verified = any(t in actual_trigger_types for t in expected_triggers)

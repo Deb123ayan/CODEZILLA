@@ -32,6 +32,16 @@ class Worker(models.Model):
     security_key = models.CharField(max_length=6, blank=True, null=True)
     govt_id = models.CharField(max_length=20, blank=True, null=True)
     
+    # KYC Documents
+    aadhar_front = models.ImageField(upload_to='kyc/aadhar/', null=True, blank=True)
+    aadhar_back = models.ImageField(upload_to='kyc/aadhar/', null=True, blank=True)
+    pan_card = models.ImageField(upload_to='kyc/pan/', null=True, blank=True)
+    
+    # Verification Status
+    is_aadhar_verified = models.BooleanField(default=False)
+    is_pan_verified = models.BooleanField(default=False)
+    kyc_submitted_at = models.DateTimeField(null=True, blank=True)
+    
     # Policy Summary in Worker profile
     pricing_plan = models.CharField(max_length=20, default='STANDARD')
     renewal_date = models.DateField(null=True, blank=True)
@@ -57,6 +67,7 @@ class Worker(models.Model):
     total_deliveries = models.IntegerField(default=0)
     total_cancelled = models.IntegerField(default=0)
     wallet_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     
     created_at = models.DateTimeField(auto_now_add=True)
 

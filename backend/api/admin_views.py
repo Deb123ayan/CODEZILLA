@@ -18,7 +18,8 @@ class AdminWorkerListView(APIView):
         workers = Worker.objects.all().values(
             'id', 'name', 'platform', 'partner_id', 'city', 'zone',
             'avg_daily_income', 'weekly_earnings', 'vehicle_type',
-            'is_verified', 'onboarding_completed', 'created_at'
+            'is_verified', 'is_aadhar_verified', 'is_pan_verified',
+            'onboarding_completed', 'created_at'
         )
         return Response(list(workers))
 

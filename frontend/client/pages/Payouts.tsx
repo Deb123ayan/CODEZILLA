@@ -47,7 +47,7 @@ export default function Payouts() {
 
       setTransactions(txns);
       setStats({
-        available: totalEarned * 0.2, // Mock available for demo
+        available: response.worker_balance || 0,
         totalEarned,
         pending
       });

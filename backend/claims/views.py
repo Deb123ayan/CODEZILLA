@@ -218,7 +218,8 @@ class ClaimSubmitView(views.APIView):
             compensation=compensation,
             distance_km=distance_km,
             nearby_workers_count=nearby_workers_count,
-            neighborhood_score=neighborhood_score
+            neighborhood_score=neighborhood_score,
+            traffic_index=conditions.get('traffic', {}).get('congestion_index', 0)
         )
 
         fraud_score = 0.0 if passed_fraud else 0.85
@@ -304,6 +305,7 @@ class ClaimHistoryView(views.APIView):
         return Response({
             "worker_id": str(worker_id),
             "worker_name": worker.name,
+            "worker_balance": float(worker.balance),
             "total_claims": len(claims),
             "total_compensation": total_compensation,
             "claims": list(claims),

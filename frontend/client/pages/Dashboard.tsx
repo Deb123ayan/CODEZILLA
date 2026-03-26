@@ -160,7 +160,7 @@ export default function Dashboard() {
       label: "Risk Factor", 
       value: dashboardData?.risk?.ai_analysis?.disruption_probability > 0.7 ? "High" : 
              dashboardData?.risk?.ai_analysis?.disruption_probability > 0.3 ? "Medium" : "Low", 
-      subtext: `${Math.round((dashboardData?.risk?.ai_analysis?.disruption_probability || 0) * 10)}/10 score`, 
+      subtext: (dashboardData?.risk?.forecast_data?.traffic_index > 6) ? "High Traffic Impact" : `${Math.round((dashboardData?.risk?.ai_analysis?.disruption_probability || 0) * 10)}/10 score`, 
       icon: AlertCircle, color: "bg-orange-50/50", iconColor: "text-orange-600" 
     },
   ];
@@ -169,7 +169,13 @@ export default function Dashboard() {
     { 
       title: dashboardData?.risk?.forecast_data?.description || "Weather Monitoring", 
       description: `Zone AQI: ${dashboardData?.risk?.forecast_data?.aqi || '---'} | Temp: ${dashboardData?.risk?.forecast_data?.temperature_c || '---'}°C`, 
-      time: "Live", icon: Cloud, color: "bg-blue-50" 
+      time: "Live Weather", icon: Cloud, color: "bg-blue-50" 
+    },
+    { 
+      title: "Traffic Monitor", 
+      description: dashboardData?.risk?.forecast_data?.traffic_description || "Clear Roads", 
+      time: `Index: ${dashboardData?.risk?.forecast_data?.traffic_index || 0}/10`, 
+      icon: Navigation, color: "bg-orange-50" 
     },
     { 
       title: "Latest Claim", 

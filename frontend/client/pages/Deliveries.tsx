@@ -217,9 +217,9 @@ export default function Deliveries() {
                         {verificationStatus.claim_verified ? "Disruption Detected" : "Verification Discrepancy"}
                       </p>
                       <p className="text-[9px] font-bold opacity-70 uppercase tracking-tight">
-                        {verificationStatus.claim_verified
-                          ? `Radar confirmed ${verificationStatus.actual_weather?.description || 'conditions'}.`
-                          : `shows ${verificationStatus.actual_weather?.description || 'clear'} conditions. Manual review required.`}
+                        {cancelType === 'TRAFFIC' 
+                          ? `Traffic Index: ${verificationStatus.actual_conditions?.traffic?.congestion_index || '---'}/10 | ${verificationStatus.actual_conditions?.traffic?.description || 'Clear'}`
+                          : `Radar shows ${verificationStatus.actual_conditions?.weather?.description || 'clear'} conditions. Manual review required.`}
                       </p>
                     </div>
                   </div>

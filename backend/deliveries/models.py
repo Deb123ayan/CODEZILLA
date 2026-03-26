@@ -61,6 +61,7 @@ class Delivery(models.Model):
         if self.worker and self.status != old_status:
             if self.status == 'COMPLETED':
                 self.worker.total_deliveries += 1
+                self.worker.balance += self.amount  # Credit delivery amount to balance
                 
                 # Cashback logic: if completion rate >= 90%, reward the worker
                 # rate = (completed / total_attempted) * 100
@@ -71,7 +72,7 @@ class Delivery(models.Model):
                         from decimal import Decimal
                         self.worker.wallet_savings += Decimal('50.00')
                 
-                self.worker.save(update_fields=['total_deliveries', 'wallet_savings'])
+                self.worker.save(update_fields=['total_deliveries', 'wallet_savings', 'balance'])
             elif self.status == 'CANCELLED':
                 self.worker.total_cancelled += 1
                 self.worker.save(update_fields=['total_cancelled'])

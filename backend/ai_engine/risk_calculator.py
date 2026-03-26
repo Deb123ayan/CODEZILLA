@@ -82,17 +82,17 @@ def compute_dynamic_risk(zone, lat=None, lng=None):
     return round(weather_risk, 2), round(pollution_risk, 2)
 
 
-def get_realtime_risk_alert(zone, forecast_rain, forecast_wind, aqi):
+def get_realtime_risk_alert(zone, forecast_rain, forecast_wind, aqi, traffic_index=0):
     """
-    AI-based disruption forecast.
+    AI-based disruption forecast that considers weather, AQI, and Traffic.
     """
-    prob = ai_service.predict_disruption(forecast_rain, forecast_wind, aqi)
+    prob = ai_service.predict_disruption(forecast_rain, forecast_wind, aqi, traffic_index)
 
     risk_level = "HIGH" if prob > 0.6 else "MEDIUM" if prob > 0.3 else "LOW"
 
     alerts = {
-        "HIGH": "⚠️ High disruption risk detected. Workers in this zone may face income loss.",
-        "MEDIUM": "Moderate risks detected. Monitor conditions closely.",
+        "HIGH": "⚠️ High disruption risk detected. Extreme traffic or weather may affect earnings.",
+        "MEDIUM": "Moderate risks detected. Traffic congestion rising.",
         "LOW": "Conditions look safe for deliveries.",
     }
 
@@ -152,10 +152,10 @@ def check_neighborhood_consensus(zone, worker_id, claim_reason):
     }
 
 
-def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_count=0, neighborhood_score=0.0):
+def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_count=0, neighborhood_score=0.0, traffic_index=0):
     """
     Returns True if the claim is NOT flagged by the IsolationForest anomaly detector.
-    Incorporates neighborhood consensus into the AI verdict.
+    Incorporates neighborhood consensus + real-world traffic data into the AI verdict.
     """
     # If neighborhood says others are working, it's a very high weight for isolation forest
     # or a hard override for this demo.
@@ -167,7 +167,8 @@ def audit_claim_for_fraud(lost_hours, compensation, distance_km, nearby_workers_
         compensation, 
         distance_km, 
         nearby_workers_count=nearby_workers_count,
-        neighborhood_score=neighborhood_score
+        neighborhood_score=neighborhood_score,
+        traffic_index=traffic_index
     )
 
 

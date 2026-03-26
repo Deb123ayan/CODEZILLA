@@ -10,6 +10,8 @@ from datetime import date, timedelta
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+PLAN_DURATION_DAYS = 4
+
 
 class PolicyQuoteQuerySerializer(serializers.Serializer):
     worker_id = serializers.UUIDField(help_text="UUID of the worker")
@@ -185,7 +187,7 @@ class PolicyPurchaseView(APIView):
 class PolicyRenewView(APIView):
     """
     POST /api/policy/renew/
-    Renew an expired or about-to-expire policy for another 7 days.
+    Renew an expired or about-to-expire policy for another 4 days.
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

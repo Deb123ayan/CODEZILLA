@@ -6,6 +6,9 @@ from .serializers import ScreenshotVerificationSerializer
 from .services import ScreenshotForensics
 from users.models import Worker
 from django.utils import timezone
+from ai_engine.kyc_service import KYCVerification
+import tempfile
+import os
 
 class VerifyScreenshotView(views.APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -86,53 +89,90 @@ class VerifyDocumentView(views.APIView):
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
         results = {}
-        forensics = ScreenshotForensics()
+        kyc_service = KYCVerification()
         total_score = 0
         docs_count = 0
 
-        for key, file_obj in [('aadhar', aadhar), ('pan', pan)]:
-            if file_obj:
-                docs_count += 1
-                image_bytes = file_obj.read()
-                
-                m_score, m_findings = forensics.check_metadata(image_bytes)
-                i_score, i_findings = forensics.check_image_integrity(image_bytes)
-                ai_score, ai_findings = forensics.check_ai_and_editing(image_bytes)
-                
-                doc_score = m_score + i_score + ai_score
-                total_score += doc_score
-                
-                results[key] = {
-                    "score": doc_score,
-                    "findings": m_findings + i_findings + ai_findings,
-                    "status": "PASS" if doc_score >= 20 else "FAIL" if doc_score < 5 else "REVIEW"
-                }
-                
-                # Save record
-                ScreenshotVerification.objects.create(
-                    worker=worker,
-                    screenshot=file_obj,
-                    forensics_score=doc_score,
-                    forensics_report=results[key],
-                    status=results[key].get('status', 'PENDING')
-                )
+        # Process Aadhaar
+        if aadhar:
+            docs_count += 1
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+                for chunk in aadhar.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
 
-        # Average score and final verdict
-        final_avg = total_score / docs_count if docs_count > 0 else 0
-        
-        if final_avg >= 20:
+            # Part 1: Classifier (Is it an Aadhar card?)
+            is_valid_type, confidence, pred_type = kyc_service.verify_document(tmp_path, expected_type='Aadhar')
+            
+            # Part 2: Forensics (Is it edited/fake?)
+            forensics = ScreenshotForensics()
+            with open(tmp_path, 'rb') as f:
+                image_bytes = f.read()
+            ai_score, ai_findings = forensics.check_ai_and_editing(image_bytes)
+            os.unlink(tmp_path)
+
+            is_authentic = (ai_score >= 0)
+            is_verified = is_valid_type and is_authentic
+
+            results['aadhar'] = {
+                "verified": is_verified,
+                "confidence": confidence,
+                "detected_type": pred_type,
+                "tampering_detected": not is_authentic,
+                "forensics_findings": ai_findings,
+                "status": "PASS" if is_verified else "FAIL"
+            }
+            if is_verified:
+                worker.aadhar_front = aadhar
+                worker.is_aadhar_verified = True
+
+        # Process PAN
+        if pan:
+            docs_count += 1
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+                for chunk in pan.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+
+            # Part 1: Classifier
+            is_valid_type, confidence, pred_type = kyc_service.verify_document(tmp_path, expected_type='PAN')
+            
+            # Part 2: Forensics
+            with open(tmp_path, 'rb') as f:
+                image_bytes = f.read()
+            ai_score, ai_findings = forensics.check_ai_and_editing(image_bytes)
+            os.unlink(tmp_path)
+
+            is_authentic = (ai_score >= 0)
+            is_verified = is_valid_type and is_authentic
+
+            results['pan'] = {
+                "verified": is_verified,
+                "confidence": confidence,
+                "detected_type": pred_type,
+                "tampering_detected": not is_authentic,
+                "forensics_findings": ai_findings,
+                "status": "PASS" if is_verified else "FAIL"
+            }
+            if is_verified:
+                worker.pan_card = pan
+                worker.is_pan_verified = True
+
+        # Final Verdict
+        if worker.is_aadhar_verified and worker.is_pan_verified:
             worker.is_verified = True
-            worker.save()
+            worker.kyc_submitted_at = timezone.now()
             verdict = "VERIFIED"
-        elif final_avg >= 10:
-            verdict = "HUMAN_REVIEW_REQUIRED"
+        elif docs_count > 0:
+            verdict = "PARTIAL_OR_FAILED"
         else:
             verdict = "REJECTED"
 
+        worker.save()
+
         return Response({
-            "message": "Documents processed",
+            "message": "KYC processing complete",
             "verdict": verdict,
-            "average_trust_score": final_avg,
             "details": results
         }, status=status.HTTP_200_OK)
 
