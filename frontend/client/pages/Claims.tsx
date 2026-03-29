@@ -1,30 +1,36 @@
-import Sidebar from "@/components/Sidebar";
-import { Plus, Clock, CheckCircle, AlertCircle, ExternalLink, Filter, Search, Phone, Loader2, ArrowRight } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { 
+  Plus, Clock, CheckCircle, AlertCircle, ExternalLink, Search, 
+  Phone, Loader2, ArrowRight, LayoutGrid, Home, Shield, User 
+} from "lucide-react";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { api } from "@/lib/api-client";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import DashboardHeader from "@/components/DashboardHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 export default function Claims() {
   const { platform: userPlatform, username: userUsername, phoneNumber, workerId } = useUserAuth();
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
-  const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [claimsData, setClaimsData] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reason, setReason] = useState("RAIN");
   const [lostHours, setLostHours] = useState("4");
   const [submitting, setSubmitting] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
 
   const fetchClaims = async () => {
-    if (!workerId) return;
+    if (!workerId && !phoneNumber) return;
+    const pid = workerId || phoneNumber;
     setLoading(true);
     try {
-      const res = await api.get<any>(`/claims/history/?worker_id=${workerId}`);
+      const res = await api.get<any>(`/claims/history/?worker_id=${pid}`);
       setClaimsData(res);
     } catch (error) {
       console.error("Failed to fetch claims:", error);
@@ -36,15 +42,16 @@ export default function Claims() {
 
   const handleSubmitClaim = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!workerId) {
+    if (!workerId && !phoneNumber) {
       toast.error("You must be logged in to file a claim");
       return;
     }
+    const pid = workerId || phoneNumber;
 
     setSubmitting(true);
     try {
       const res = await api.post<any>("/claims/submit/", {
-        worker_id: workerId,
+        worker_id: pid,
         claim_reason: reason,
         lost_hours: parseInt(lostHours)
       });
@@ -58,7 +65,7 @@ export default function Claims() {
       }
 
       setIsModalOpen(false);
-      fetchClaims(); // Refresh history
+      fetchClaims(); 
     } catch (error: any) {
       toast.error(error.message || "Submission failed. Please check your active policy.");
     } finally {
@@ -68,31 +75,13 @@ export default function Claims() {
 
   useEffect(() => {
     fetchClaims();
-    const el = mainRef.current;
-    if (!el) return;
-    const handleScroll = () => setScrolled(el.scrollTop > 20);
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [workerId]);
-
-  const getPlatformColor = (id?: string) => {
-    switch (id?.toLowerCase()) {
-      case "zomato": return "text-red-600";
-      case "blinkit": return "text-yellow-600";
-      case "flipkart": return "text-blue-600";
-      case "amazon": return "text-orange-600";
-      case "zepto": return "text-purple-600";
-      default: return "text-blue-600";
-    }
-  };
-
-  const platformColor = getPlatformColor(platform);
+  }, [workerId, phoneNumber]);
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
-        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Claims...</h2>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#fcf9f8] space-y-6">
+        <Loader2 className="w-16 h-16 text-[#004191] animate-spin" />
+        <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-[#434751] font-inter">Loading Claims...</h2>
       </div>
     );
   }
@@ -109,221 +98,217 @@ export default function Claims() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-white">
-      <Sidebar />
-      <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
-        <header className={cn(
-          "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
-        )}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
-            <div>
-              <h1 className={cn("text-2xl md:text-3xl font-black tracking-tighter transition-all", platformColor)}>
-                {platformName} Claims
-              </h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">{username}'s portal</p>
-              {phoneNumber && (
-                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                  <Phone size={12} className="text-blue-600" />
-                  <span>{phoneNumber}</span>
-                </div>
-              )}
+    <div className="bg-[#fcf9f8] text-[#1b1c1b] font-manrope selection:bg-[#004191]/20 selection:text-white min-h-screen flex flex-col pb-24 md:pb-0">
+      
+      <DashboardHeader />
+
+      {/* Claim Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-[#1b1c1b]/40 backdrop-blur-sm" onClick={() => !submitting && setIsModalOpen(false)} />
+          <div className="relative bg-[#ffffff] w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-[0_40px_80px_-20px_rgba(27,28,27,0.12)] border border-[#e4e2e0]/50 animate-in zoom-in-95 duration-300">
+            <div className="mb-8">
+              <h2 className="text-3xl font-extrabold tracking-tight text-[#1b1c1b]">Parametric Relief</h2>
+              <p className="text-[#434751] font-inter text-[10px] font-bold uppercase tracking-[0.1em] mt-2">Submit earnings protection claim</p>
             </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95"
+
+            <form onSubmit={handleSubmitClaim} className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#434751] ml-2">Disruption Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {claimReasons.map(r => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setReason(r.value)}
+                      className={cn(
+                        "px-4 py-4 rounded-2xl text-xs font-bold transition-all border-2 text-left font-manrope",
+                        reason === r.value
+                          ? "bg-[#1b1c1b] text-white border-[#1b1c1b] shadow-md scale-[1.02]"
+                          : "bg-[#f5f3f1] text-[#434751] border-transparent hover:border-[#e4e2e0]"
+                      )}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#434751] ml-2">Lost Working Hours</label>
+                <div className="relative group">
+                  <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-[#a8aebf] group-focus-within:text-[#004191] transition-colors" size={20} />
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={lostHours}
+                    onChange={(e) => setLostHours(e.target.value)}
+                    placeholder="e.g. 4"
+                    className="w-full bg-[#f5f3f1] border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-[#004191]/20 focus:bg-white transition-all text-[#1b1c1b] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                 <button
+                   type="button"
+                   disabled={submitting}
+                   onClick={() => setIsModalOpen(false)}
+                   className="w-full md:w-auto px-8 py-5 border border-[#e4e2e0] text-[#434751] font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#f5f3f1] transition-all disabled:opacity-50"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   type="submit"
+                   disabled={submitting}
+                   className="w-full flex-1 px-8 py-5 bg-[#004191] text-white font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#0058be] transition-all shadow-lg shadow-[#004191]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center space-x-3"
+                 >
+                   {submitting ? (
+                     <Loader2 className="animate-spin" size={18} />
+                   ) : (
+                     <>
+                       <span>Submit Claim</span>
+                       <ArrowRight size={16} />
+                     </>
+                   )}
+                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 pt-32 pb-40 px-6 max-w-7xl mx-auto w-full animate-in fade-in duration-700">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1b1c1b]">
+              {platformName} Claims
+            </h1>
+            <p className="text-[#434751] mt-2 font-medium text-lg">Protection log and payouts.</p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-center space-x-2 px-8 py-4 bg-[#1b1c1b] text-white rounded-full hover:bg-[#434751] transition-all shadow-[0_12px_24px_-8px_rgba(27,28,27,0.3)] active:scale-[0.98]"
+          >
+            <Plus size={20} />
+            <span className="text-xs font-inter font-bold uppercase tracking-[0.1em]">File New Claim</span>
+          </button>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {[
+            { label: "Total Claims", value: claimsData?.total_claims || 0, icon: CheckCircle, color: "text-[#004191]", bg: "bg-[#004191]/5" },
+            { label: "Pending Approval", value: claims.filter((c: any) => c.status === 'FRAUD_FLAGGED' || c.status === 'PENDING').length, icon: Clock, color: "text-[#d97706]", bg: "bg-[#d97706]/5" },
+            { label: "Total Payout", value: `₹${claimsData?.total_compensation || 0}`, icon: ExternalLink, color: "text-[#16a34a]", bg: "bg-[#16a34a]/5" },
+          ].map((stat, i) => (
+            <div
+              key={stat.label}
+              className="bg-[#ffffff] rounded-3xl p-8 flex flex-col justify-between border border-[#e4e2e0]/50 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.02)] min-h-[180px] hover:shadow-[0_24px_48px_-12px_rgba(27,28,27,0.06)] transition-all cursor-pointer"
             >
-              <Plus size={20} />
-              <span className="text-sm font-bold">File New Claim</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Claim Submission Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-0">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !submitting && setIsModalOpen(false)} />
-            <div className="relative bg-white w-full max-w-xl rounded-[3rem] p-10 md:p-14 shadow-2xl reveal active transition-all">
-              <div className="mb-10">
-                <h2 className="text-2xl font-black tracking-tight">Parametric Relief</h2>
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Submit earnings protection claim</p>
+              <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6", stat.bg, stat.color)}>
+                <stat.icon size={26} />
               </div>
-
-              <form onSubmit={handleSubmitClaim} className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Disruption Type</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {claimReasons.map(r => (
-                      <button
-                        key={r.value}
-                        type="button"
-                        onClick={() => setReason(r.value)}
-                        className={cn(
-                          "px-4 py-4 rounded-2xl text-xs font-bold transition-all border-2 text-left",
-                          reason === r.value
-                            ? "bg-black text-white border-black shadow-lg"
-                            : "bg-gray-50 text-gray-500 border-transparent hover:border-gray-200"
-                        )}
-                      >
-                        {r.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Lost Working Hours</label>
-                  <div className="relative group">
-                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="number"
-                      min="1"
-                      max="12"
-                      value={lostHours}
-                      onChange={(e) => setLostHours(e.target.value)}
-                      placeholder="e.g. 4"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 h-16 border-2 border-gray-100 text-gray-500 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-50 transition-all disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-[2] h-16 bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-black transition-all shadow-xl active:scale-95 disabled:bg-gray-400 flex items-center justify-center space-x-3"
-                  >
-                    {submitting ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                      <>
-                        <span>Submit Claim</span>
-                        <ArrowRight size={16} />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        <div className="section-padding space-y-12">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { label: "Total Claims", value: claimsData?.total_claims || 0, icon: CheckCircle, color: "bg-blue-50/50", iconColor: "text-blue-600" },
-              { label: "Pending Approval", value: claims.filter((c: any) => c.status === 'FRAUD_FLAGGED' || c.status === 'PENDING').length, icon: Clock, color: "bg-orange-50/50", iconColor: "text-orange-600" },
-              { label: "Total Payout", value: `₹${claimsData?.total_compensation || 0}`, icon: ExternalLink, color: "bg-green-50/50", iconColor: "text-green-600" },
-            ].map((stat, i) => (
-              <div
-                key={stat.label}
-                className={cn("p-8 rounded-[2.5rem] border border-gray-100 hover:bg-black group transition-all duration-500 transform hover:-translate-y-1 cursor-pointer reveal active shadow-sm shadow-black/5", stat.color)}
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className={cn("p-4 w-14 h-14 rounded-2xl mb-6 flex items-center justify-center group-hover:bg-white/10 group-hover:text-white transition-colors", stat.color, stat.iconColor)}>
-                  <stat.icon size={26} />
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-500 transition-colors">{stat.label}</p>
-                <h3 className="text-2xl font-black text-gray-900 mt-1 group-hover:text-white transition-colors">{stat.value}</h3>
-              </div>
-            ))}
-          </div>
-
-          {/* Table Section */}
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden reveal active" style={{ transitionDelay: "300ms" }}>
-            <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="relative flex-1 max-w-md">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search claims..."
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-black transition-all"
-                />
+              <div>
+                 <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#434751] mb-1">{stat.label}</p>
+                 <h3 className="text-3xl font-extrabold text-[#1b1c1b]">{stat.value}</h3>
               </div>
             </div>
+          ))}
+        </div>
 
-            <div className="overflow-x-auto no-scrollbar pt-2">
-              <table className="w-full text-left whitespace-nowrap">
-                <thead>
-                  <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 bg-gray-50/50">
-                    <th className="px-8 py-5">Claim ID</th>
-                    <th className="px-8 py-5">Issue Type</th>
-                    <th className="px-8 py-5">Platform</th>
-                    <th className="px-8 py-5">Date</th>
-                    <th className="px-8 py-5">Amount</th>
-                    <th className="px-8 py-5 text-right">Status</th>
+        {/* AI Banner */}
+        <section className="bg-gradient-to-r from-[#004191] to-[#0058be] rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden mb-12 shadow-[0_24px_48px_-12px_rgba(0,65,145,0.3)]">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -mr-40 -mt-40 mix-blend-overlay" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center shrink-0 border border-white/20">
+              <AlertCircle size={36} className="text-white" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-2xl font-extrabold tracking-tight mb-2">AI Verification Engine</h2>
+              <p className="text-blue-100 font-medium leading-relaxed max-w-xl text-sm">
+                Our system verifies 92% of claims automatically using traffic and weather data, ensuring payouts reach your wallet in minutes.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Claims Table wrapper */}
+        <div className="bg-[#ffffff] rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_24px_48px_-12px_rgba(27,28,27,0.04)] overflow-hidden">
+          <div className="p-8 border-b border-[#e4e2e0]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <h3 className="text-xl font-extrabold text-[#1b1c1b]">Claims History</h3>
+            <div className="relative max-w-sm w-full">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8aebf]" />
+              <input
+                type="text"
+                placeholder="Search specific claim..."
+                className="w-full pl-12 pr-4 py-3 bg-[#f5f3f1] border-none rounded-2xl text-sm font-medium placeholder:text-[#a8aebf] focus:ring-2 focus:ring-[#004191]/20 outline-none text-[#1b1c1b]"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left whitespace-nowrap min-w-[600px]">
+              <thead>
+                <tr className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#a8aebf] bg-[#fcf9f8]/50">
+                  <th className="px-8 py-6 font-semibold border-b border-[#e4e2e0]/30">Claim Ref</th>
+                  <th className="px-8 py-6 font-semibold border-b border-[#e4e2e0]/30">Issue Type</th>
+                  <th className="px-8 py-6 font-semibold border-b border-[#e4e2e0]/30">Date</th>
+                  <th className="px-8 py-6 font-semibold border-b border-[#e4e2e0]/30 text-right">Amount</th>
+                  <th className="px-8 py-6 font-semibold border-b border-[#e4e2e0]/30 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e4e2e0]/30">
+                {claims.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-20 text-center">
+                      <p className="text-[#a8aebf] font-inter font-bold uppercase tracking-widest text-xs">No claims filed yet</p>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {claims.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-8 py-20 text-center">
-                        <p className="text-gray-400 font-bold uppercase tracking-widest">No claims found</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    claims.map((claim: any) => (
-                      <tr key={claim.claim_id} className="group hover:bg-gray-50/80 transition-all cursor-pointer">
-                        <td className="px-8 py-6 font-black text-gray-900 group-hover:translate-x-1 transition-transform">
-                          {claim.claim_id.split('-')[0]}...
+                ) : (
+                  claims.map((claim: any) => {
+                    const statusConfig: Record<string, string> = {
+                      PAID: "bg-[#e2f5e9] text-[#16a34a] border-[#16a34a]/30",
+                      AUTO_APPROVED: "bg-[#e2f5e9] text-[#16a34a] border-[#16a34a]/30",
+                      FRAUD_FLAGGED: "bg-[#ffdad6] text-[#ba1a1a] border-[#ffdad6]",
+                      PENDING: "bg-[#fef3c7] text-[#d97706] border-[#fde68a]",
+                      REJECTED: "bg-[#f5f3f1] text-[#434751] border-[#e4e2e0]",
+                    };
+
+                    const statusClass = statusConfig[claim.status] || "bg-[#f5f3f1] text-[#434751] border-[#e4e2e0]";
+
+                    return (
+                      <tr key={claim.claim_id} className="hover:bg-[#fcf9f8] transition-colors">
+                        <td className="px-8 py-6 font-extrabold text-[#1b1c1b]">
+                          #{claim.claim_id.split('-')[0]}
                         </td>
-                        <td className="px-8 py-6 font-bold text-gray-500">{claim.claim_reason}</td>
-                        <td className="px-8 py-6">
-                          <span className="px-3 py-1 bg-gray-100 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                            {claim.policy__plan_type || 'STANDARD'}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6 text-gray-400 text-xs font-bold">
+                        <td className="px-8 py-6 font-medium text-[#434751]">{claim.claim_reason}</td>
+                        <td className="px-8 py-6 text-[#a8aebf] font-medium text-sm">
                           {new Date(claim.claim_date).toLocaleDateString()}
                         </td>
-                        <td className="px-8 py-6 font-black text-gray-900">₹{claim.compensation}</td>
+                        <td className="px-8 py-6 font-extrabold text-[#1b1c1b] text-right">₹{claim.compensation}</td>
                         <td className="px-8 py-6 text-right">
                           <span className={cn(
-                            "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                            claim.status === "PAID" || claim.status === "AUTO_APPROVED" ? "bg-green-100 text-green-700" :
-                              claim.status === "FRAUD_FLAGGED" ? "bg-red-100 text-red-700" :
-                                "bg-blue-100 text-blue-700"
+                            "px-4 py-2 rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.1em] border",
+                            statusClass
                           )}>
                             {claim.status.replace('_', ' ')}
                           </span>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-
-          {/* AI Banner */}
-          <section className="bg-gradient-to-r from-blue-700 to-indigo-900 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden reveal active" style={{ transitionDelay: "400ms" }}>
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.1),transparent)]" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-              <div className="w-20 h-20 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl flex items-center justify-center shrink-0 shadow-2xl">
-                <AlertCircle size={40} className="text-white" />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-black tracking-tight mb-3">AI Verification Engine</h2>
-                <p className="text-blue-100/70 font-medium leading-relaxed max-w-xl">
-                  Our system verifies 92% of claims automatically using traffic and weather data, ensuring payouts reach your wallet in under 4 hours.
-                </p>
-              </div>
-              <button className="px-8 py-4 bg-white text-blue-900 font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all shadow-xl active:scale-95 whitespace-nowrap">
-                How it works
-              </button>
-            </div>
-          </section>
         </div>
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }

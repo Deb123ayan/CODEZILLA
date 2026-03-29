@@ -87,3 +87,30 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.phone} - {self.code}"
+
+class MockPlatformData(models.Model):
+    # Core Identifiers
+    platform = models.CharField(max_length=50) # Zomato, Swiggy, Zepto, Blinkit, Amazon, Flipkart
+    phone = models.CharField(max_length=15, unique=True)
+    partner_id = models.CharField(max_length=50)
+    
+    # Personal Info
+    name = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, default='Bangalore')
+    zone = models.CharField(max_length=100)
+    
+    # Platform Metrics (Useful for Insurance Risk Engine & Dashboards)
+    weekly_earnings = models.IntegerField()
+    total_deliveries = models.IntegerField(default=50) # To simulate experience level
+    rating = models.FloatField(default=4.5) # Fake rating 1.0 to 5.0
+    vehicle_type = models.CharField(max_length=20, default='Bike')
+    joined_date = models.DateField(default=timezone.now) # Time on platform affects risk 
+    is_active = models.BooleanField(default=True) # Check if banned/active
+    
+    # Identity Verification
+    aadhaar_number = models.CharField(max_length=14, blank=True, null=True)  # Format: XXXX XXXX XXXX
+    pan_number     = models.CharField(max_length=10, blank=True, null=True)  # Format: ABCDE1234F
+
+    
+    def __str__(self):
+        return f"{self.name} ({self.platform} - {self.partner_id})"

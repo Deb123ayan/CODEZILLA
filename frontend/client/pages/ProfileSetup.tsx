@@ -1,30 +1,50 @@
 import React, { useState } from "react";
-import { User, Phone, IdCard, MapPin, Truck, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
+import { User, Phone, IdCard, MapPin, ChevronDown, CheckCircle2, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import DashboardHeader from "@/components/DashboardHeader";
+import DashboardFooter from "@/components/DashboardFooter";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useUserAuth } from "@/context/UserAuthContext";
+import { api } from "@/lib/api-client";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
-  const { platform, username, phoneNumber } = useUserAuth();
+  const { platform: contextPlatform, username, phoneNumber, status, workerId } = useUserAuth();
+  const isLoggedIn = status === "authenticated";
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: username || "",
     phoneNumber: phoneNumber || "",
     govtId: "",
-    platform: platform ? platform.toLowerCase() : "",
+    platform: contextPlatform ? contextPlatform.toLowerCase() : "",
     city: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Fetch existing worker data if they already have a partial profile in the DB
+  React.useEffect(() => {
+    if (!workerId) return;
+    
+    api.get<any>(`/workers/${workerId}/profile/`)
+      .then((res) => {
+        if (res) {
+          setFormData((prev) => ({
+            ...prev,
+            fullName: res.name || prev.fullName,
+            phoneNumber: res.phone || prev.phoneNumber,
+            platform: res.platform ? res.platform.toLowerCase() : prev.platform,
+            city: res.city || prev.city,
+            govtId: res.aadhaar_number || prev.govtId,
+          }));
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load existing profile data", err);
+      });
+  }, [workerId]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -38,7 +58,7 @@ export default function ProfileSetup() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error on change
@@ -51,15 +71,47 @@ export default function ProfileSetup() {
     }
   };
 
-  const handlePlatformChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, platform: value }));
-    if (errors.platform) {
-      setErrors((prev) => {
-        const updated = { ...prev };
-        delete updated.platform;
-        return updated;
-      });
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
     }
+
+    const getLocationPromise = new Promise<{ city: string; lat: number; lng: number }>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            const city = data.address?.city || data.address?.town || data.address?.state_district || "Remote Zone";
+            
+            if (phoneNumber) {
+               await api.post("/workers/location/", { phone: phoneNumber, latitude, longitude });
+            }
+            
+            resolve({ city, lat: latitude, lng: longitude });
+          } catch (e) {
+            if (phoneNumber) {
+               await api.post("/workers/location/", { phone: phoneNumber, latitude, longitude });
+            }
+            resolve({ city: "GPS Detected Zone", lat: latitude, lng: longitude });
+          }
+        },
+        (error) => {
+          reject(new Error("Location permission denied. Please allow location access."));
+        }
+      );
+    });
+
+    toast.promise(getLocationPromise, {
+      loading: "Detecting your location securely...",
+      success: (data) => {
+        setFormData(prev => ({ ...prev, city: data.city }));
+        return `Location verified: ${data.city}`;
+      },
+      error: (err) => err.message
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,169 +119,179 @@ export default function ProfileSetup() {
     if (!validate()) return;
 
     setLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
-
-    toast.success("Profile details saved successfully!");
-    navigate("/document-verification");
+    try {
+      await api.post("/auth/update-details/", {
+        phone: formData.phoneNumber,
+        name: formData.fullName,
+        aadhaar_number: formData.govtId,
+        city: formData.city,
+        platform: formData.platform,
+      });
+      toast.success("Profile details saved successfully!");
+      navigate("/document-verification");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 relative overflow-hidden font-inter">
-      {/* Subtle Background Gradient */}
-      <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-40">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#2563eb]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#10b981]/10 blur-[100px] rounded-full" />
-      </div>
+    <div className="min-h-screen bg-[#fcf9f8] text-[#1c1b1b] font-inter selection:bg-[#0058be]/10 flex flex-col items-center pt-12 md:pt-20 pb-24 px-6 overflow-x-hidden">
+      
+      {/* Top Navbar — auth-aware */}
+      {isLoggedIn ? <DashboardHeader /> : <Navbar />}
 
-      <div className="w-full max-w-[500px] animate-in fade-in zoom-in duration-500">
-        {/* Progress Indicator */}
-        <div className="mb-8 flex items-center justify-between px-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">1</div>
-            <span className="text-sm font-semibold text-gray-900">Step 1 of 3</span>
+      {/* Main Content */}
+      <div className="w-full max-w-2xl mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        
+        {/* Header & Progress */}
+        <div className="mb-12 text-center md:text-left">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <div className="h-1.5 w-16 rounded-full bg-[#0058be]"></div>
+            <div className="h-1.5 w-16 rounded-full bg-[#ebe7e7]"></div>
+            <div className="h-1.5 w-16 rounded-full bg-[#ebe7e7]"></div>
+            <span className="ml-2 text-xs font-bold uppercase tracking-widest text-[#0058be]/60">Step 1 of 3</span>
           </div>
-          <div className="flex space-x-1">
-            <div className="w-12 h-1.5 rounded-full bg-[#2563eb]" />
-            <div className="w-12 h-1.5 rounded-full bg-gray-200" />
-            <div className="w-12 h-1.5 rounded-full bg-gray-200" />
-          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Complete Your Profile</h1>
+          <p className="text-[#424754] text-lg max-w-lg leading-relaxed">
+            Help us verify your details to start protecting your income.
+          </p>
         </div>
 
-        <div className="bg-white rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 md:p-10 transition-all">
-          <div className="mb-10 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Complete Your Profile</h1>
-            <p className="text-gray-500 text-sm font-medium">Verify your details to activate income protection</p>
-          </div>
+        {/* Form Card */}
+        <div className="bg-[#ffffff] rounded-[3rem] p-8 md:p-12 shadow-[0_20px_40px_rgba(0,88,190,0.04)]">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            
+            {/* Row 1: Name & Phone */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Full Name</label>
+                <div className="relative">
+                  <User className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6]" size={20} />
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="John Doe"
+                    className={cn(
+                      "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all placeholder:text-[#c2c6d6]",
+                      errors.fullName && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                    )}
+                  />
+                  {errors.fullName && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.fullName}</p>}
+                </div>
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Full Name */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-              <div className="relative group">
-                <User className={cn("absolute left-4 top-1/2 -translate-y-1/2 transition-colors", errors.fullName ? "text-red-400" : "text-gray-300 group-focus-within:text-[#2563eb]")} size={18} />
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="Enter your full legal name"
-                  className={cn(
-                    "w-full bg-white border border-gray-200 rounded-xl h-14 pl-12 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 placeholder:text-gray-300",
-                    errors.fullName ? "border-red-500 focus:ring-red-100" : "focus:border-[#2563eb] focus:ring-[#2563eb]/10"
-                  )}
-                  value={formData.fullName}
-                  onChange={handleChange}
-                />
-                {errors.fullName && <p className="text-[10px] font-bold text-red-500 mt-1 ml-1">{errors.fullName}</p>}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Phone Number</label>
+                <div className="relative">
+                  <Phone className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6]" size={20} />
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="+91 98765 43210"
+                    className={cn(
+                      "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all placeholder:text-[#c2c6d6]",
+                      errors.phoneNumber && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                    )}
+                  />
+                  {errors.phoneNumber && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.phoneNumber}</p>}
+                </div>
               </div>
             </div>
 
-            {/* Phone Number */}
+            {/* Row 2: Govt ID */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
-              <div className="relative group">
-                <Phone className={cn("absolute left-4 top-1/2 -translate-y-1/2 transition-colors", errors.phoneNumber ? "text-red-400" : "text-gray-300 group-focus-within:text-[#2563eb]")} size={18} />
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  placeholder="+91 00000 00000"
-                  className={cn(
-                    "w-full bg-white border border-gray-200 rounded-xl h-14 pl-12 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 placeholder:text-gray-300",
-                    errors.phoneNumber ? "border-red-500 focus:ring-red-100" : "focus:border-[#2563eb] focus:ring-[#2563eb]/10"
-                  )}
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                />
-                {errors.phoneNumber && <p className="text-[10px] font-bold text-red-500 mt-1 ml-1">{errors.phoneNumber}</p>}
-              </div>
-            </div>
-
-            {/* Govt ID */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Aadhaar / Government ID</label>
-              <div className="relative group">
-                <IdCard className={cn("absolute left-4 top-1/2 -translate-y-1/2 transition-colors", errors.govtId ? "text-red-400" : "text-gray-300 group-focus-within:text-[#2563eb]")} size={18} />
+              <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Aadhaar / Government ID</label>
+              <div className="relative">
+                <IdCard className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6]" size={20} />
                 <input
                   type="text"
                   name="govtId"
-                  placeholder="XXXX XXXX XXXX"
-                  className={cn(
-                    "w-full bg-white border border-gray-200 rounded-xl h-14 pl-12 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 placeholder:text-gray-300",
-                    errors.govtId ? "border-red-500 focus:ring-red-100" : "focus:border-[#2563eb] focus:ring-[#2563eb]/10"
-                  )}
                   value={formData.govtId}
                   onChange={handleChange}
+                  placeholder="0000 0000 0000"
+                  className={cn(
+                    "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all placeholder:text-[#c2c6d6]",
+                    errors.govtId && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                  )}
                 />
-                {errors.govtId && <p className="text-[10px] font-bold text-red-500 mt-1 ml-1">{errors.govtId}</p>}
+                {errors.govtId && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.govtId}</p>}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Platform */}
+            {/* Row 3: Platform & City */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Delivery Platform</label>
-                <div className="relative group">
-                  <Select onValueChange={handlePlatformChange} value={formData.platform} disabled>
-                    <SelectTrigger className={cn(
-                      "w-full h-14 bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 text-sm font-medium focus:ring-2 transition-all opacity-70 cursor-not-allowed",
-                      errors.platform ? "border-red-500 focus:ring-red-100" : "focus:ring-[#2563eb]/10"
-                    )}>
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 transition-colors">
-                        <Truck size={18} />
-                      </div>
-                      <SelectValue placeholder={platform ? platform : "Select Platform"} />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-gray-100">
-                      {["Zomato", "Blinkit", "Flipkart", "Amazon", "Zepto", "Swiggy"].map(p => (
-                        <SelectItem key={p} value={p.toLowerCase()} className="rounded-lg font-medium py-3 cursor-pointer">{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.platform && <p className="text-[10px] font-bold text-red-500 mt-1 ml-1">{errors.platform}</p>}
+                <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Delivery Platform</label>
+                <div className="relative">
+                  <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6] pointer-events-none" size={20} />
+                  <select
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 appearance-none outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all text-[#424754]",
+                      errors.platform && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                    )}
+                  >
+                    <option disabled value="">Select Platform</option>
+                    <option value="zomato">Zomato</option>
+                    <option value="swiggy">Swiggy</option>
+                    <option value="uber">Uber</option>
+                    <option value="doordash">DoorDash</option>
+                    <option value="zepto">Zepto</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {errors.platform && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.platform}</p>}
                 </div>
               </div>
 
-              {/* City */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Work City / Zone</label>
-                <div className="relative group">
-                  <MapPin className={cn("absolute left-4 top-1/2 -translate-y-1/2 transition-colors", errors.city ? "text-red-400" : "text-gray-300 group-focus-within:text-[#2563eb]")} size={18} />
+                <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Work City/Zone</label>
+                <div className="relative">
+                  <MapPin className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6]" size={20} />
                   <input
                     type="text"
                     name="city"
-                    placeholder="e.g. Mumbai South"
-                    className={cn(
-                      "w-full bg-white border border-gray-200 rounded-xl h-14 pl-12 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 placeholder:text-gray-300",
-                      errors.city ? "border-red-500 focus:ring-red-100" : "focus:border-[#2563eb] focus:ring-[#2563eb]/10"
-                    )}
                     value={formData.city}
                     onChange={handleChange}
+                    placeholder="e.g. Bangalore South"
+                    className={cn(
+                      "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all placeholder:text-[#c2c6d6]",
+                      errors.city && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                    )}
                   />
-                  {errors.city && <p className="text-[10px] font-bold text-red-500 mt-1 ml-1">{errors.city}</p>}
+                  {errors.city && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.city}</p>}
                 </div>
+                <button
+                  type="button"
+                  onClick={handleDetectLocation}
+                  className="mt-2 text-xs font-bold text-[#0058be] flex items-center gap-1.5 hover:underline ml-1"
+                >
+                  <MapPin size={12} /> Auto-detect my location
+                </button>
               </div>
             </div>
 
-            <div className="pt-4 flex flex-col space-y-4">
+            {/* Actions */}
+            <div className="pt-8 flex flex-col md:flex-row items-center gap-6">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-14 bg-[#2563eb] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center space-x-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                className="w-full md:w-auto px-12 py-5 bg-[#0058be] text-white rounded-full font-bold text-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-[#0058be]/20 disabled:opacity-50 flex justify-center items-center"
               >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <>
-                    <span>Save & Continue</span>
-                    <ChevronRight size={18} />
-                  </>
-                )}
+                {loading ? <Loader2 className="animate-spin mr-2" size={24} /> : null}
+                Save & Continue
               </button>
-
               <button
                 type="button"
                 onClick={() => navigate("/document-verification")}
-                className="w-full h-12 bg-transparent text-gray-400 hover:text-gray-900 font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
+                className="text-[#424754] font-semibold hover:text-[#0058be] transition-colors py-2 px-4"
               >
                 Skip for now
               </button>
@@ -237,11 +299,29 @@ export default function ProfileSetup() {
           </form>
         </div>
 
-        {/* Footer Info */}
-        <div className="mt-8 flex items-center justify-center space-x-3 text-gray-400">
-          <CheckCircle2 size={16} className="text-[#10b981]" />
-          <p className="text-[10px] font-bold uppercase tracking-widest leading-none">Your data is encrypted with 256-bit security</p>
-        </div>
+        {/* Trust Banner */}
+        {/* <div className="mt-20 flex items-start gap-8 bg-[#f6f3f2] rounded-3xl p-8 relative overflow-hidden">
+          <div className="relative z-10 space-y-3 max-w-md">
+            <div className="w-12 h-12 bg-[#2170e4]/10 text-[#0058be] rounded-full flex items-center justify-center">
+              <Shield size={24} />
+            </div>
+            <h3 className="font-bold text-xl">Privacy First Architecture</h3>
+            <p className="text-[#424754] text-sm leading-relaxed">
+              Your personal data is encrypted and only used for verification purposes. We never share your details with platforms without your consent.
+            </p>
+          </div>
+          <div className="hidden md:block absolute -right-12 -bottom-12 w-64 h-64 bg-[#0058be]/5 rounded-full blur-3xl"></div>
+        </div> */}
+
+        {/* Footer Badge */}
+        {/* <footer className="mt-12 flex justify-center">
+           <div className="inline-flex items-center gap-2 bg-[#f0edec] px-5 py-2.5 rounded-full">
+               <CheckCircle2 size={14} className="text-[#424754]" />
+               <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#424754]">Data Encrypted</span>
+           </div>
+        </footer> */}
+
+        <DashboardFooter className="mt-12 bg-transparent border-t-0 shadow-none px-0" />
       </div>
     </div>
   );

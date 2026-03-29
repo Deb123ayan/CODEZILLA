@@ -45,6 +45,14 @@ export const api = {
   delete: <T>(endpoint: string, options: RequestInit = {}) => 
     apiFetch<T>(endpoint, { ...options, method: "DELETE" }),
     
+  patch: <T>(endpoint: string, data: any, options: RequestInit = {}) =>
+    apiFetch<T>(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: JSON.stringify(data)
+    }),
+
+    
   // Support for multipart/form-data (for file uploads)
   upload: async <T>(endpoint: string, formData: FormData, options: RequestInit = {}): Promise<T> => {
     const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;

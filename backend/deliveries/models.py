@@ -70,7 +70,7 @@ class Delivery(models.Model):
                     completion_rate = (self.worker.total_deliveries / total_attempts) * 100
                     if completion_rate >= 90:
                         from decimal import Decimal
-                        self.worker.wallet_savings += Decimal('50.00')
+                        self.worker.wallet_savings = Decimal(str(self.worker.wallet_savings)) + Decimal('50.00')
                 
                 self.worker.save(update_fields=['total_deliveries', 'wallet_savings', 'balance'])
             elif self.status == 'CANCELLED':

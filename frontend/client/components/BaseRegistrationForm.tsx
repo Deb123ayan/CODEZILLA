@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
+import { api } from "@/lib/api-client";
 
 interface Props {
   platformName: string;
@@ -12,57 +13,104 @@ interface Props {
 }
 
 export default function BaseRegistrationForm({ platformName, platformId }: Props) {
+  const [isManual, setIsManual] = useState(false);
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [employeeId, setEmployeeId] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
-  const { platformLogin } = useUserAuth();
+  const { platformLogin, generateOTP, verifyOTP } = useUserAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+    if (isManual && (!name || !employeeId)) {
+      toast.error("Please fill in all details");
+      return;
+    }
+    
+    setLoading(true);
+    const res = await generateOTP(phoneNumber);
+    setLoading(false);
+    
+    if (res.success) {
+      setStep(2);
+      toast.success("OTP sent to your phone!");
+    }
+  };
 
-    if (!name || !employeeId || !password || !confirmPassword) {
-      toast.error("Please fill in all fields");
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      toast.error("Please enter a valid OTP");
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    setLoading(true);
+    const verifyRes = await verifyOTP(phoneNumber, otp);
+    
+    if (!verifyRes.success) {
+      setLoading(false);
       return;
     }
 
-    // Password validation: min 6 chars, 1 capital, 1 special character
-    const hasCapital = /[A-Z]/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isValidLength = password.length >= 6;
-
-    if (!hasCapital) {
-      toast.error("Password must include at least one capital letter");
-      return;
-    }
-    if (!hasSpecial) {
-      toast.error("Password must include at least one special character");
-      return;
-    }
-    if (!isValidLength) {
-      toast.error("Password must be at least 6 characters long");
-      return;
-    }
-
-    const promise = platformLogin(platformId, employeeId, name, phoneNumber, "worker@gmail.com");
-    toast.promise(promise, {
-      loading: 'Syncing with platform...',
-      success: (success) => {
-        if (success) {
-          navigate("/profile-setup");
-          return 'Registration successful!';
+    // OTP verified, now proceed with registration
+    if (!isManual) {
+      const toastId = toast.loading(`Connecting to ${platformName}...`);
+      try {
+        const res = await api.post<{message: string; data: any}>("/auth/platform/connect/", {
+          phone: phoneNumber,
+          platform: platformName
+        });
+        
+        const mockData = res.data;
+        const result = await platformLogin(platformId, mockData.partner_id, mockData.name, phoneNumber, `worker_${phoneNumber}@gigshield.local`);
+        
+        setLoading(false);
+        if (result.success) {
+          toast.success(`Successfully connected to ${platformName}!`, { id: toastId });
+          if (result.onboarding_completed) {
+            navigate("/dashboard");
+          } else {
+            navigate("/profile-setup");
+          }
+        } else {
+          toast.error('Platform synchronization failed', { id: toastId });
         }
-        throw new Error('Sync failed');
-      },
-      error: 'Platform synchronization failed'
-    });
+      } catch (error: any) {
+        setLoading(false);
+        toast.error(error.message || `No data found on ${platformName}. Please enter details manually.`, { id: toastId });
+        setIsManual(true);
+        setStep(1);
+      }
+    } else {
+      const promise = platformLogin(platformId, employeeId, name, phoneNumber, `worker_${phoneNumber}@gigshield.local`);
+      toast.promise(promise, {
+        loading: 'Registering account...',
+        success: (result) => {
+          setLoading(false);
+          if (result.success) {
+            if (result.onboarding_completed) {
+              navigate("/dashboard");
+            } else {
+              navigate("/profile-setup");
+            }
+            return 'Registration successful!';
+          }
+          throw new Error('Sync failed');
+        },
+        error: () => {
+          setLoading(false);
+          return 'Registration failed';
+        }
+      });
+    }
   };
 
   return (
@@ -102,83 +150,98 @@ export default function BaseRegistrationForm({ platformName, platformId }: Props
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Partner verification & setup</p>
               </div>
 
-              <form className="space-y-8" onSubmit={handleSubmit}>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Legal Name</label>
-                  <div className="relative group">
-                    <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </div>
-                </div>
+              <form className="space-y-6" onSubmit={step === 1 ? handleInitialSubmit : handleVerifySubmit}>
+                
+                {step === 1 ? (
+                  <>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Mobile Number</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                        <input
+                          type="tel"
+                          placeholder="+91 9876543210"
+                          value={phoneNumber}
+                          className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Mobile Number</label>
-                  <div className="relative group">
-                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="tel"
-                      placeholder="+91 00000 00000"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                  </div>
-                </div>
+                    {isManual && (
+                      <div className="space-y-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Legal Name</label>
+                          <div className="relative group">
+                            <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                            <input
+                              type="text"
+                              placeholder="Rahul Sharma"
+                              value={name}
+                              className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                              onChange={(e) => setName(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform Partner ID</label>
-                  <div className="relative group">
-                    <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                    <input
-                      type="text"
-                      placeholder="EMP123456"
-                      className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                      onChange={(e) => setEmployeeId(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Security Key</label>
-                    <div className="relative group">
-                      <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                      <input
-                        type="password"
-                        placeholder="••••••"
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Platform Partner ID</label>
+                          <div className="relative group">
+                            <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
+                            <input
+                              type="text"
+                              placeholder="EMP123456"
+                              value={employeeId}
+                              className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
+                              onChange={(e) => setEmployeeId(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-6 animate-in zoom-in-[0.98] duration-300">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1 text-center block">Enter 6-Digit OTP</label>
+                      <input 
+                        className="w-full px-4 py-6 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-black transition-all text-black outline-none text-center text-3xl font-bold tracking-[0.5em] placeholder:text-gray-300" 
+                        placeholder="******" 
+                        type="text"
                         maxLength={6}
-                        className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
                       />
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Confirm Key</label>
-                    <div className="relative group">
-                      <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-                      <input
-                        type="password"
-                        placeholder="••••••"
-                        className="w-full bg-gray-50 border-none rounded-2xl h-16 pl-16 pr-6 text-sm font-bold focus:ring-2 focus:ring-black transition-all placeholder:text-gray-300"
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                )}
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3 disabled:opacity-70"
+                  >
+                    <span>{loading ? "Please wait..." : (step === 1 ? (isManual ? "Register Account" : `Connect ${platformName}`) : "Verify & Complete")}</span>
+                    {!loading && <Zap size={16} />}
+                  </button>
                 </div>
-
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Min 6 Chars • 1 Capital • 1 Special</p>
-
-                <button
-                  type="submit"
-                  className="w-full h-16 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all duration-500 active:scale-95 flex items-center justify-center space-x-3"
-                >
-                  <span>Activate Member Account</span>
-                  <Zap size={16} />
-                </button>
+                
+                {!isManual && (
+                  <div className="text-center mt-4">
+                    <button 
+                      type="button" 
+                      onClick={() => setIsManual(true)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-black transition-colors"
+                    >
+                      Enter details manually instead
+                    </button>
+                  </div>
+                )}
               </form>
 
               <div className="mt-12 text-center">

@@ -1,12 +1,14 @@
-import Sidebar from "@/components/Sidebar";
-import { AlertTriangle, Shield, Bell, Send, Trash2, CheckCircle, Info, Filter, ArrowRight, Zap, Target, Loader2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
-import { api } from "@/lib/api-client";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { 
+  AlertTriangle, Shield, Send, Info, Target, Loader2, ShieldAlert, Zap
+} from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 export default function AdminAlerts() {
-  const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
   const [heatmap, setHeatmap] = useState<any[]>([]);
@@ -17,7 +19,14 @@ export default function AdminAlerts() {
     severity: "7",
     description: ""
   });
-  const mainRef = useRef<HTMLElement>(null);
+  
+  const navigate = useNavigate();
+  const { logout } = useAdminAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/admin");
+  };
 
   const fetchAlerts = async () => {
     setLoading(true);
@@ -29,7 +38,7 @@ export default function AdminAlerts() {
       setEvents(evs);
       setHeatmap(rks);
     } catch (error) {
-      toast.error("Failed to sync Command Center");
+      toast.error("Failed to sync Risk Sonar");
     } finally {
       setLoading(false);
     }
@@ -58,107 +67,127 @@ export default function AdminAlerts() {
 
   useEffect(() => {
     fetchAlerts();
-    const el = mainRef.current;
-    if (!el) return;
-    const handleScroll = () => setScrolled(el.scrollTop > 20);
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
   }, []);
-
-  if (loading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
-        <Loader2 className="w-16 h-16 text-red-600 animate-spin" />
-        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Command Center...</h2>
-      </div>
-    );
-  }
 
   const criticalEvents = events.filter(e => e.severity >= 8).length;
   const warnings = events.filter(e => e.severity < 8 && e.severity >= 5).length;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-white">
-      <Sidebar isAdmin={true} />
-      <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
-        <header className={cn(
-          "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
-        )}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-16 sm:pl-0">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter">Command Center</h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">Real-time system health and broadcasts</p>
+    <div className="bg-[#fcf9f8] text-[#1b1c1b] font-manrope selection:bg-[#ba1a1a]/20 selection:text-[#ba1a1a] min-h-screen flex flex-col pb-10">
+      
+      {/* Admin Top Navbar */}
+      <header className="fixed top-0 w-full z-50 bg-[#1b1c1b] text-white backdrop-blur-xl border-b border-[#434751]/30">
+        <div className="flex justify-between items-center px-6 py-4 max-w-[1400px] mx-auto">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
+            <ShieldAlert className="text-[#ba1a1a]" size={28} />
+            <span className="text-2xl font-extrabold tracking-tighter hidden sm:block">Zafby<span className="text-[#a8aebf] font-medium ml-1">Admin</span></span>
+          </div>
+          
+          <nav className="hidden lg:flex items-center gap-10 font-inter text-[11px] font-bold tracking-[0.1em] uppercase">
+            <Link to="/admin/dashboard" className="text-[#a8aebf] hover:text-white transition-colors">Overview</Link>
+            <Link to="/admin/workers" className="text-[#a8aebf] hover:text-white transition-colors">Workers</Link>
+            <Link to="/admin/claims" className="text-[#a8aebf] hover:text-white transition-colors">Claims</Link>
+            <Link to="/admin/alerts" className="text-white relative after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-1 after:bg-[#ba1a1a]">Risk Sonar</Link>
+          </nav>
+          
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center px-4 py-2 bg-[#ba1a1a]/20 text-[#ffb4ab] text-[10px] font-inter font-bold uppercase tracking-[0.15em] rounded-full border border-[#ba1a1a]/30">
+              <span className="w-2 h-2 bg-[#ffb4ab] rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(255,180,171,0.8)]" />
+              Live Feed
             </div>
+            <button onClick={handleLogout} className="px-5 py-2.5 bg-[#ffffff] text-[#1b1c1b] font-inter font-bold text-[10px] uppercase tracking-[0.15em] rounded-full hover:bg-[#e4e2e0] transition-colors">
+              Secure Exit
+            </button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="section-padding space-y-12">
-          {/* Severity Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { label: "Critical", value: criticalEvents, icon: AlertTriangle, color: "bg-red-50/50", textColor: "text-red-900", iconColor: "text-red-600", desc: "Severity 8+ disruption" },
-              { label: "Alerts", value: warnings, icon: Info, color: "bg-orange-50/50", textColor: "text-orange-900", iconColor: "text-orange-600", desc: "Parametric detections" },
-              { label: "Risk Zones", value: heatmap.length, icon: Target, color: "bg-blue-50/50", textColor: "text-blue-900", iconColor: "text-blue-600", desc: "Active monitoring sectors" },
-            ].map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className={cn("p-8 rounded-[2.5rem] border border-gray-100/50 reveal active shadow-sm", stat.color)}
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className={cn("p-3 rounded-xl", stat.color, stat.iconColor)}>
-                      <Icon size={24} />
-                    </div>
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest", stat.textColor)}>{stat.label}</span>
+      {/* Main Content */}
+      <main className="flex-1 pt-32 px-6 max-w-[1400px] mx-auto w-full animate-in fade-in duration-700 space-y-12">
+        
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-[#1b1c1b]">Risk Sonar & Events</h1>
+            <p className="text-[#434751] mt-1 font-medium text-lg">Real-time systemic risk detection and manual overrides.</p>
+          </div>
+        </div>
+
+        {/* Severity Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { label: "Critical Risk", value: criticalEvents, icon: AlertTriangle, color: "text-[#ba1a1a]", bg: "bg-[#ffdad6]/40", desc: "Severity 8+ Infrastructure Issues" },
+            { label: "Active Warnings", value: warnings, icon: Info, color: "text-[#d97706]", bg: "bg-[#fffbeb]", desc: "Parametric Algorithmic Alerts" },
+            { label: "Tracked Zones", value: heatmap.length, icon: Target, color: "text-[#004191]", bg: "bg-[#f0f4ff]", desc: "Sectors under live surveillance" },
+          ].map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="bg-[#ffffff] p-8 md:p-10 rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.1)] transition-all duration-500 hover:-translate-y-1"
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div className={cn("p-4 w-16 h-16 rounded-[1.5rem] flex items-center justify-center border border-[#e4e2e0]/30 transition-colors", stat.bg, stat.color)}>
+                    <Icon size={28} />
                   </div>
-                  <h3 className={cn("text-5xl font-black tracking-tighter mb-2", stat.textColor)}>{stat.value}</h3>
-                  <p className={cn("text-[10px] font-bold uppercase tracking-widest opacity-60", stat.textColor)}>{stat.desc}</p>
+                  <span className={cn("text-[10px] font-inter font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full bg-[#fcf9f8] border border-[#e4e2e0]/50", stat.color)}>{stat.label}</span>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-10">
-            {/* Active Notifications List */}
-            <div className="lg:col-span-2 space-y-6 reveal active" style={{ transitionDelay: "300ms" }}>
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-xl font-black tracking-tight">System Event Log</h2>
-                <button className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Clear All</button>
+                <h3 className="text-5xl font-extrabold text-[#1b1c1b] tracking-tighter mb-2">{stat.value}</h3>
+                <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase tracking-[0.15em]">{stat.desc}</p>
               </div>
-              <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="divide-y divide-gray-50 px-2 pb-2">
+            );
+          })}
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-10">
+          
+          {/* Active Notifications List */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-2xl font-extrabold tracking-tight text-[#1b1c1b]">System Radar Feed</h2>
+              <button className="text-[10px] font-inter font-bold text-[#ba1a1a] uppercase tracking-[0.15em] hover:text-[#1b1c1b] transition-colors bg-[#f5f3f1] px-4 py-2 rounded-full border border-[#e4e2e0]">Clear Diagnostics</button>
+            </div>
+            
+            <div className="bg-[#ffffff] rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_24px_48px_-12px_rgba(27,28,27,0.04)] overflow-hidden min-h-[400px]">
+              {loading ? (
+                <div className="h-full flex flex-col items-center justify-center space-y-6 py-32">
+                  <Loader2 className="w-16 h-16 text-[#004191] animate-spin" />
+                  <p className="text-[11px] font-inter font-bold uppercase tracking-[0.2em] text-[#a8aebf]">Engaging Sonar...</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#e4e2e0]/40">
                   {events.length === 0 ? (
-                    <div className="p-20 text-center">
-                      <p className="text-gray-400 font-bold uppercase tracking-widest">No active events</p>
+                    <div className="p-32 text-center">
+                      <Shield size={48} className="mx-auto text-[#e4e2e0] mb-4" />
+                      <p className="text-sm font-inter font-bold text-[#a8aebf] uppercase tracking-widest">Radar clear. No active events.</p>
                     </div>
                   ) : (
-                    events.map((alert, i) => (
-                      <div key={alert.event_id} className="p-8 flex flex-col md:flex-row gap-6 hover:bg-gray-50/80 transition-all duration-300 rounded-[2rem] group cursor-pointer relative">
+                    events.map((alert) => (
+                      <div key={alert.event_id} className="p-8 md:p-10 flex flex-col md:flex-row gap-8 hover:bg-[#fcf9f8] transition-colors cursor-pointer group">
                         <div className={cn(
-                          "p-4 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:bg-black group-hover:text-white",
-                          alert.severity >= 8 ? "bg-red-50 text-red-600" :
-                            alert.severity >= 5 ? "bg-orange-50 text-orange-600" :
-                              "bg-blue-50 text-blue-600"
+                          "w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-[#e4e2e0]/30 shadow-sm transition-transform transform group-hover:scale-105",
+                          alert.severity >= 8 ? "bg-[#ffdad6]/40 text-[#ba1a1a]" :
+                            alert.severity >= 5 ? "bg-[#fffbeb] text-[#d97706]" :
+                              "bg-[#f0f4ff] text-[#004191]"
                         )}>
-                          {alert.type === "CURFEW" || alert.type === "STRIKE" ? <Shield size={26} /> : <Zap size={26} />}
+                          {alert.type === "CURFEW" || alert.type === "STRIKE" ? <ShieldAlert size={28} /> : <Zap size={28} />}
                         </div>
                         <div className="flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                            <h3 className="text-lg font-black tracking-tight text-gray-900 group-hover:translate-x-1 transition-transform">{alert.type} - {alert.zone}</h3>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                            <h3 className="text-xl font-extrabold tracking-tight text-[#1b1c1b] group-hover:text-[#004191] transition-colors">{alert.type.replace(/_/g, " ")} &bull; {alert.zone}</h3>
+                            <span className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#a8aebf] bg-[#f5f3f1] px-3 py-1.5 rounded-full border border-[#e4e2e0]">
+                              {new Date(alert.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
-                            {alert.description || "Disruption automatically detected by parametric triggers."}
+                          <p className="text-sm font-medium text-[#434751] leading-relaxed mb-6">
+                            {alert.description || "Systemic disruption automatically flagged by parametric boundary triggers."}
                           </p>
                           <div className="flex items-center space-x-4">
-                            <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-black hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                              Investigate
+                            <button className="px-6 py-3 bg-[#f5f3f1] text-[#1b1c1b] hover:bg-[#1b1c1b] hover:text-white rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] transition-all shadow-sm">
+                              Investigate Data
                             </button>
-                            <button className="px-5 py-2.5 bg-gray-50 text-gray-400 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                              Archive
+                            <button className="px-6 py-3 bg-[#fcf9f8] border border-[#e4e2e0] text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] transition-all shadow-sm">
+                              Archive Flag
                             </button>
                           </div>
                         </div>
@@ -166,87 +195,91 @@ export default function AdminAlerts() {
                     ))
                   )}
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Manual Controls & Logic */}
+          <div className="space-y-10">
+            
+            {/* Broadcast Form */}
+            <div className="bg-[#1b1c1b] rounded-[3rem] p-8 md:p-10 text-white shadow-[0_40px_80px_-20px_rgba(27,28,27,0.4)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#ba1a1a] rounded-full -mr-16 -mt-16 blur-[100px] opacity-20 pointer-events-none" />
+              <div className="relative z-10">
+                <h3 className="text-2xl font-extrabold tracking-tight mb-2">Zone Override</h3>
+                <p className="text-[#a8aebf] font-medium text-[13px] leading-relaxed mb-8">
+                  Deploy manual parametric dispatches to workers in a specific radius.
+                </p>
+                <form onSubmit={handleDispatch} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <select 
+                      value={formData.type}
+                      onChange={e => setFormData(f => ({...f, type: e.target.value}))}
+                      className="w-full bg-[#30343f]/20 border border-[#434751]/50 rounded-[1.5rem] px-5 py-4 text-[11px] font-inter font-bold text-white uppercase tracking-[0.1em] focus:ring-2 focus:ring-[#ba1a1a] focus:border-transparent outline-none appearance-none shadow-sm cursor-pointer">
+                      <option value="STRIKE" className="bg-[#1b1c1b]">STRIKE</option>
+                      <option value="CURFEW" className="bg-[#1b1c1b]">CURFEW</option>
+                      <option value="ZONE_CLOSURE" className="bg-[#1b1c1b]">CLOSURE</option>
+                      <option value="WEATHER" className="bg-[#1b1c1b]">WEATHER</option>
+                    </select>
+                    <select 
+                      value={formData.severity}
+                      onChange={e => setFormData(f => ({...f, severity: e.target.value}))}
+                      className="w-full bg-[#30343f]/20 border border-[#434751]/50 rounded-[1.5rem] px-5 py-4 text-[11px] font-inter font-bold text-white uppercase tracking-[0.1em] focus:ring-2 focus:ring-[#ba1a1a] focus:border-transparent outline-none appearance-none shadow-sm cursor-pointer">
+                      {[5,6,7,8,9,10].map(s => <option key={s} value={s} className="bg-[#1b1c1b]">SEV {s}</option>)}
+                    </select>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Enter target zone location ID..."
+                    value={formData.zone}
+                    onChange={e => setFormData(f => ({...f, zone: e.target.value}))}
+                    className="w-full bg-[#30343f]/20 border border-[#434751]/50 rounded-[1.5rem] px-6 py-4 text-sm font-bold text-white focus:ring-2 focus:ring-[#ba1a1a] focus:border-transparent outline-none placeholder:text-[#a8aebf] shadow-sm"
+                  />
+                  <textarea
+                    placeholder="Broadcast contextual details..."
+                    value={formData.description}
+                    onChange={e => setFormData(f => ({...f, description: e.target.value}))}
+                    className="w-full bg-[#30343f]/20 border border-[#434751]/50 rounded-[1.5rem] px-6 py-5 text-sm font-medium text-white h-32 focus:ring-2 focus:ring-[#ba1a1a] focus:border-transparent outline-none resize-none placeholder:text-[#a8aebf] shadow-sm leading-relaxed"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={dispatching}
+                    className="w-full h-16 bg-[#ba1a1a] text-white font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#d82222] transition-colors active:scale-[0.98] shadow-[0_12px_24px_-8px_rgba(186,26,26,0.5)] flex items-center justify-center space-x-3 disabled:bg-[#434751] disabled:cursor-not-allowed mt-2">
+                    {dispatching ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+                    <span>Dispatch Alert Override</span>
+                  </button>
+                </form>
               </div>
             </div>
 
-            {/* Manual Controls */}
-            <div className="space-y-8 reveal active" style={{ transitionDelay: "400ms" }}>
-              <div className="bg-black rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full -mr-10 -mt-10 blur-[80px] opacity-20" />
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-black mb-6 tracking-tight">Zone Broadcast</h3>
-                  <p className="text-gray-400 font-medium text-sm leading-relaxed mb-10">
-                    Deploy manual notifications to all active workers in a specific radius.
-                  </p>
-                  <form onSubmit={handleDispatch} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <select 
-                        value={formData.type}
-                        onChange={e => setFormData(f => ({...f, type: e.target.value}))}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-[10px] font-black text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
-                        <option value="STRIKE">STRIKE</option>
-                        <option value="CURFEW">CURFEW</option>
-                        <option value="ZONE_CLOSURE">CLOSURE</option>
-                        <option value="WEATHER">WEATHER</option>
-                      </select>
-                      <select 
-                        value={formData.severity}
-                        onChange={e => setFormData(f => ({...f, severity: e.target.value}))}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-[10px] font-black text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
-                        {[5,6,7,8,9,10].map(s => <option key={s} value={s}>SEV {s}</option>)}
-                      </select>
+            {/* Automation Logic Switches */}
+            <div className="bg-[#ffffff] rounded-[3rem] border border-[#e4e2e0]/50 p-8 md:p-10 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)]">
+              <h3 className="text-xl font-extrabold text-[#1b1c1b] mb-8 tracking-tight">System Autopilot</h3>
+              <div className="space-y-8">
+                {[
+                  { label: "Fraud Detection Shield", desc: "Instantly algorithm-block abusive IDs", active: true },
+                  { label: "Matrix Multipliers", desc: "Dynamic pricing on weather APIs", active: true },
+                  { label: "Asynchronous Settlement", desc: "Nightly automated banking batch", active: false },
+                ].map((rule) => (
+                  <div key={rule.label} className="flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer border-b border-[#e4e2e0]/30 pb-6 last:pb-0 last:border-0 gap-4">
+                    <div>
+                      <p className="text-[15px] font-extrabold text-[#1b1c1b] tracking-tight group-hover:text-[#004191] transition-colors">{rule.label}</p>
+                      <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase tracking-[0.15em] mt-1.5">{rule.desc}</p>
                     </div>
-                    <input 
-                      type="text" 
-                      placeholder="Target Zone Name..."
-                      value={formData.zone}
-                      onChange={e => setFormData(f => ({...f, zone: e.target.value}))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all outline-none placeholder:text-gray-600"
-                    />
-                    <textarea
-                      placeholder="Broadcast details..."
-                      value={formData.description}
-                      onChange={e => setFormData(f => ({...f, description: e.target.value}))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-gray-300 h-32 focus:ring-2 focus:ring-blue-500 transition-all outline-none resize-none placeholder:text-gray-600"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={dispatching}
-                      className="w-full h-14 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl flex items-center justify-center space-x-3 disabled:bg-gray-700">
-                      {dispatching ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
-                      <span>Dispatch Alert</span>
-                    </button>
-                  </form>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm">
-                <h3 className="text-xl font-black text-gray-900 mb-8 tracking-tight">Automation Rules</h3>
-                <div className="space-y-8">
-                  {[
-                    { label: "Fraud Guard", desc: "Auto-block high-risk IDs", active: true },
-                    { label: "Dynamic Payouts", desc: "Multiplier on severe weather", active: true },
-                    { label: "Batch Settlements", desc: "Nightly auto-payouts", active: false },
-                  ].map((rule) => (
-                    <div key={rule.label} className="flex items-center justify-between group cursor-pointer">
-                      <div>
-                        <p className="text-sm font-black text-gray-900 tracking-tight group-hover:text-blue-600 transition-colors">{rule.label}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{rule.desc}</p>
-                      </div>
+                    <div className={cn(
+                      "w-12 h-6 rounded-full relative transition-colors duration-300 flex items-center px-1 shrink-0",
+                      rule.active ? "bg-[#16a34a]" : "bg-[#e4e2e0]"
+                    )}>
                       <div className={cn(
-                        "w-12 h-6 rounded-full relative transition-all duration-300 flex items-center px-1",
-                        rule.active ? "bg-green-500" : "bg-gray-200"
-                      )}>
-                        <div className={cn(
-                          "w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm",
-                          rule.active ? "translate-x-6" : "translate-x-0"
-                        )} />
-                      </div>
+                        "w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm",
+                        rule.active ? "translate-x-6" : "translate-x-0"
+                      )} />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
+
           </div>
         </div>
       </main>

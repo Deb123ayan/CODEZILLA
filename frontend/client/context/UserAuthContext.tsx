@@ -19,9 +19,10 @@ function getInitialStatus(): UserAuthStatus {
 interface UserAuthContextType {
     status: UserAuthStatus;
     login: (platform: string, username: string, gmail: string, phone: string, platformId: string, workerId: string) => void;
-    platformLogin: (platform: string, partner_id: string, name: string, phone: string, email: string) => Promise<boolean>;
+    platformLogin: (platform: string, partner_id: string, name: string, phone: string, email: string) => Promise<{success: boolean; onboarding_completed?: boolean}>;
     generateOTP: (phone: string) => Promise<{ success: boolean; message: string }>;
     verifyOTP: (phone: string, code: string) => Promise<{ success: boolean; data?: any }>;
+    updateUsername: (newName: string) => void;
     logout: () => void;
     platform: string;
     username: string;
@@ -61,6 +62,11 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
         setWorkerId(workerIdVal);
     }, []);
 
+    const updateUsername = useCallback((newName: string) => {
+        sessionStorage.setItem("userUsername", newName);
+        setUsername(newName);
+    }, []);
+
     const platformLogin = useCallback(async (platform: string, partner_id: string, name: string, phone: string, email: string) => {
         try {
             const res = await api.post<any>("/auth/platform/login/", {
@@ -70,10 +76,10 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem(REFRESH_TOKEN, res.refresh);
             
             login(platform, name, email, phone, partner_id, res.worker_id);
-            return true;
+            return { success: true, onboarding_completed: res.onboarding_completed };
         } catch (error: any) {
             toast.error(error.message || "Platform synchronization failed");
-            return false;
+            return { success: false };
         }
     }, [login]);
 
@@ -132,7 +138,7 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
     }, [navigate]);
 
     return (
-        <UserAuthContext.Provider value={{ status, login, platformLogin, generateOTP, verifyOTP, logout, platform, username, phoneNumber, gmail, platformId, workerId }}>
+        <UserAuthContext.Provider value={{ status, login, platformLogin, generateOTP, verifyOTP, updateUsername, logout, platform, username, phoneNumber, gmail, platformId, workerId }}>
             {children}
         </UserAuthContext.Provider>
     );

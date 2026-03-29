@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -26,6 +27,7 @@ import Settings from "./pages/Settings";
 import Deliveries from "./pages/Deliveries";
 import ProfileSetup from "./pages/ProfileSetup";
 import DocumentVerification from "./pages/DocumentVerification";
+import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWorkers from "./pages/AdminWorkers";
 import AdminClaims from "./pages/AdminClaims";
@@ -34,6 +36,7 @@ import AdminAlerts from "./pages/AdminAlerts";
 import AdminSettings from "./pages/AdminSettings";
 import AdminLogin from "./pages/AdminLogin";
 import BuyPlan from "./pages/BuyPlan";
+import Payment from "./pages/Payment";
 import Tracking from "./pages/features/Tracking";
 import WeatherAI from "./pages/features/WeatherAI";
 import Traffic from "./pages/features/Traffic";
@@ -47,9 +50,41 @@ import UserGuard from "./components/UserGuard";
 import { UserAuthProvider } from "./context/UserAuthContext";
 import NotFound from "./pages/NotFound";
 
+// Info Pages
+import HowItWorks from "./pages/info/HowItWorks";
+import CoverageZones from "./pages/info/CoverageZones";
+import UpiSettlements from "./pages/info/UpiSettlements";
+import HelpCenter from "./pages/info/HelpCenter";
+import PrivacyPolicy from "./pages/info/PrivacyPolicy";
+import IrdaiTerms from "./pages/info/IrdaiTerms";
+import BankIntegrations from "./pages/info/BankIntegrations";
+
 const queryClient = new QueryClient();
 
-const App = () => (
+// Request geolocation permission once on first load
+function useGeolocationPermission() {
+  useEffect(() => {
+    if (localStorage.getItem("geoPrompted")) return;
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        localStorage.setItem("geoPrompted", "1");
+        localStorage.setItem("userLat", pos.coords.latitude.toString());
+        localStorage.setItem("userLng", pos.coords.longitude.toString());
+        console.log("[Zafby] Location acquired:", pos.coords.latitude, pos.coords.longitude);
+      },
+      () => {
+        localStorage.setItem("geoPrompted", "1");
+        console.warn("[Zafby] Location permission denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+}
+
+const App = () => {
+  useGeolocationPermission();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -62,6 +97,15 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<PlatformSelection />} />
+
+              {/* Info Pages (Public) */}
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/coverage-zones" element={<CoverageZones />} />
+              <Route path="/upi-settlements" element={<UpiSettlements />} />
+              <Route path="/help-center" element={<HelpCenter />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/irdai-terms" element={<IrdaiTerms />} />
+              <Route path="/bank-integrations" element={<BankIntegrations />} />
 
               {/* Feature Pages (Public) */}
               <Route path="/features/tracking" element={<Tracking />} />
@@ -91,6 +135,8 @@ const App = () => (
               <Route path="/profile-setup" element={<UserGuard><ProfileSetup /></UserGuard>} />
               <Route path="/document-verification" element={<UserGuard><DocumentVerification /></UserGuard>} />
               <Route path="/buy-plan" element={<UserGuard><BuyPlan /></UserGuard>} />
+              <Route path="/payment" element={<UserGuard><Payment /></UserGuard>} />
+              <Route path="/profile" element={<UserGuard><Profile /></UserGuard>} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -109,6 +155,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

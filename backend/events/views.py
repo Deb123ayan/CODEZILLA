@@ -1,6 +1,6 @@
 from rest_framework import status, views
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import Event
@@ -12,7 +12,7 @@ class ReportDisruptionView(views.APIView):
     Admin endpoint to report social disruptions (curfew, strike, zone closure).
     These events enable workers in the affected zone to file claims.
     """
-    permission_classes = [AllowAny]  # In production: IsAdminUser
+    permission_classes = [IsAdminUser]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -72,7 +72,7 @@ class ListEventsView(views.APIView):
     GET /api/events/?zone=<zone_name>
     List recent disruption events, optionally filtered by zone.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     @swagger_auto_schema(
         manual_parameters=[

@@ -1,10 +1,10 @@
 import Navbar from "@/components/Navbar";
+import DashboardFooter from "@/components/DashboardFooter";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Cloud, TrendingUp, AlertTriangle, Shield, Zap, X, MessageSquare, ArrowRight, Play, LayoutGrid, Award, ShieldCheck, MapPin, Activity, Smartphone, Wallet } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUserAuth } from "@/context/UserAuthContext";
 import { cn } from "@/lib/utils";
+import { 
+  ShieldCheck, Shield, CloudRainWind, MapPin, Zap, UserCheck, HeartHandshake, CheckCircle 
+} from "lucide-react";
 
 // Partner Logos
 import AmazonLogo from "@/assets/Amazon/Amazon_Logo_0.svg";
@@ -15,372 +15,268 @@ import BlinkitLogo from "@/assets/Blinkit/Blinkit_idCmcpCDCZ_0.svg";
 import SwiggyLogo from "@/assets/Swiggy/Swiggy_id8bItcgXR_0.svg";
 
 export default function Landing() {
-  const navigate = useNavigate();
-  const { login } = useUserAuth();
-  const [isOverDark, setIsOverDark] = useState(false);
-  const [showAllFeatures, setShowAllFeatures] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY + window.innerHeight - 100; // Point where widget sits
-      const darkSections = document.querySelectorAll('#how-it-works, #cta-final, footer');
-
-      let overDark = false;
-      darkSections.forEach(section => {
-        const rect = (section as HTMLElement).getBoundingClientRect();
-        const absoluteTop = rect.top + window.scrollY;
-        const absoluteBottom = absoluteTop + (section as HTMLElement).offsetHeight;
-
-        if (scrollY >= absoluteTop && scrollY <= absoluteBottom) {
-          overDark = true;
-        }
-      });
-      setIsOverDark(overDark);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-white selection:bg-black selection:text-white overflow-hidden">
+    <div className="bg-[#fcf9f8] text-[#1b1c1b] selection:bg-[#ba1a1a]/20 selection:text-[#ba1a1a] font-manrope antialiased min-h-screen">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-20 md:pt-48 md:pb-56 min-h-[auto] md:min-h-screen flex items-center justify-center section-padding">
-        {/* Background Gradients */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-blue-50/50 blur-[160px] rounded-full animate-pulse" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-50/40 blur-[140px] rounded-full" />
-        </div>
-
-        <div className="max-w-7xl mx-auto w-full text-center">
-          <div className="space-y-8 md:space-y-12 reveal active">
-
-            <h1 className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black text-gray-900 tracking-tighter leading-[0.9] max-w-[12ch] mx-auto group">
-              Protect your <span className="text-blue-600 group-hover:italic transition-all">Income</span>
+      <main className="pt-24 pb-8">
+        {/* Hero Section */}
+        <section className="px-6 pt-12 pb-16 overflow-hidden mt-10">
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+            {/* <div className="mb-8 inline-flex items-center gap-2 px-5 py-2 bg-[#f0f4ff] rounded-full border border-[#004191]/10">
+              <ShieldCheck className="text-[#004191]" size={16} />
+              <span className="text-[11px] font-inter font-bold tracking-[0.2em] uppercase text-[#004191]">Digital Shield v2.0 (India)</span>
+            </div> */}
+            
+            <h1 className="text-5xl md:text-[5rem] leading-[1.1] font-extrabold tracking-tighter text-[#1b1c1b] mb-6">
+              Protect your <span className="text-[#004191]">Income</span>
             </h1>
-
-            <p className="max-w-3xl mx-auto text-base md:text-2xl text-gray-500 font-bold leading-normal tracking-tight px-4 sm:px-0">
-              The world's first AI-driven protection layer for platform workers. No more worrying about rain, heat or traffic.
+            
+            <p className="text-lg md:text-xl leading-relaxed text-[#434751] max-w-2xl mx-auto mb-10 font-medium font-inter">
+              A digital sanctuary for gig economy heroes. We safeguard your earnings against volatility, extreme weather, and sudden market shifts across India.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
-              <Link
+            
+            <div className="flex flex-col sm:flex-row gap-5 justify-center w-full sm:w-auto">
+              <Link 
                 to="/register"
-                className="w-full sm:w-auto px-6 py-4 md:px-10 md:py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95 flex items-center justify-center space-x-3"
+                className="px-10 py-5 bg-[#004191] text-[#ffffff] rounded-full text-[11px] font-inter uppercase tracking-[0.15em] font-bold shadow-[0_12px_24px_-8px_rgba(0,65,145,0.4)] hover:bg-[#003171] transition-all active:scale-[0.98] text-center"
               >
-                <span>Start Protection</span>
-                <Zap size={18} className="fill-current text-white" />
+                Start Protection
               </Link>
-              <Link
+              <Link 
                 to="/login"
-                className="w-full sm:w-auto px-6 py-4 md:px-10 md:py-6 bg-white border border-gray-100 text-gray-900 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-50 transition-all shadow-xl active:scale-95 flex items-center justify-center"
+                className="px-10 py-5 bg-[#ffffff] text-[#1b1c1b] border border-[#e4e2e0] rounded-full text-[11px] font-inter uppercase tracking-[0.15em] font-bold hover:bg-[#f5f3f1] transition-all text-center"
               >
-                Go to Dashboard
-              </Link>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Partners Section */}
-      <section id="partners" className="section-padding py-20 bg-white border-b border-gray-50 reveal active">
-        <div className="max-w-7xl mx-auto flex flex-col items-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-12">Proudly partnering with top platforms</p>
-          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-20 w-full">
-            {[
-              { id: "amazon", name: "Amazon", logo: AmazonLogo },
-              { id: "zomato", name: "Zomato", logo: ZomatoLogo },
-              { id: "flipkart", name: "Flipkart", logo: FlipkartLogo },
-              { id: "zepto", name: "Zepto", logo: ZeptoLogo },
-              { id: "blinkit", name: "Blinkit", logo: BlinkitLogo },
-              { id: "swiggy", name: "Swiggy", logo: SwiggyLogo }
-            ].map(p => (
-              <div
-                key={p.name}
-                className="group cursor-pointer"
-                onClick={() => {
-                  login(p.id, "Demo Worker", "demo@gmail.com", "+91 00000 00000", "DEMO-123");
-                  navigate("/dashboard");
-                }}
-              >
-                <img src={p.logo} alt={p.name} className="h-12 md:h-16 object-contain group-hover:scale-110 transition-all duration-500" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Main Feature Visualization */}
-      <section className="section-padding py-20 md:py-40 bg-gray-50/50 reveal active">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-          <div className="space-y-12">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">Smart coverage, <br />payouts in <span className="text-blue-600">seconds.</span></h2>
-            <div className="space-y-8">
-              {[
-                { icon: ShieldCheck, title: "Weather Lock", desc: "Automatic payouts during heat waves or heavy rain." },
-                { icon: MapPin, title: "Zone Guard", desc: "Dynamic coverage based on traffic density levels." },
-                { icon: Zap, title: "Flash Payouts", desc: "Verified claims hit your wallet in under 60 minutes." },
-              ].map((f, i) => {
-                const Icon = f.icon;
-                return (
-                  <div key={i} className="flex gap-4 sm:gap-8 group cursor-pointer">
-                    <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-[2rem] md:rounded-[3rem] flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-500 shrink-0">
-                      <Icon size={32} className="md:size-[48px] text-black" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl md:text-2xl font-black tracking-tight">{f.title}</h3>
-                      <p className="text-xs md:text-gray-500 font-bold mt-2 max-w-sm leading-relaxed">{f.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="relative group perspective-[2000px]">
-            <div className="bg-white rounded-[40px] p-12 shadow-[0_60px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100/50 transform group-hover:rotate-y-[-5deg] transition-all duration-1000">
-              <div className="space-y-12">
-                <div className="flex items-center justify-between">
-                  <span className="px-4 py-2 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">System Monitoring Active</span>
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="p-8 bg-blue-600 text-white rounded-[2.5rem] shadow-2xl">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-4">Payout Potential</p>
-                    <h4 className="text-5xl font-black tracking-tighter">₹1,200</h4>
-                    <div className="mt-8 flex items-center text-[10px] font-black uppercase tracking-widest text-white/40">
-                      <TrendingUp size={14} className="mr-2" />
-                      Based on zone heat
-                    </div>
-                  </div>
-                  <div className="p-8 bg-gray-50 text-gray-900 rounded-[2.5rem] hover:scale-105 transition-all duration-500 shadow-sm border border-gray-100/50">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Active Coverage</p>
-                    <h4 className="text-5xl font-black tracking-tighter">Gold</h4>
-                    <div className="mt-8 flex items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      <ShieldCheck size={14} className="mr-2" />
-                      Full Protection
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Expanded Features Section */}
-      <section id="features" className="section-padding py-20 md:py-40 bg-white reveal active border-t border-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24 space-y-6">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tighter">Everything you need <br /><span className="text-blue-600">to earn securely</span></h2>
-            <p className="text-gray-400 font-bold max-w-2xl mx-auto text-lg md:text-xl">Our intelligent platform handles the risk while you focus on the road.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">            {[
-            { icon: Activity, title: "Real-time Tracking", desc: "Live API integrations with your delivery apps to monitor active dashes and earnings.", color: "bg-blue-600 text-white", route: "/features/tracking" },
-            { icon: Cloud, title: "Micro-Weather AI", desc: "Hyper-local weather tracking to predict conditions down to your specific delivery zone.", color: "bg-blue-600 text-white", route: "/features/weather-ai" },
-            { icon: AlertTriangle, title: "Traffic Disruption", desc: "Proactive alerts for roadblocks and traffic surges, ensuring you're compensated for delays.", color: "bg-blue-600 text-white", route: "/features/traffic" },
-            { icon: Wallet, title: "Zero-Click Claims", desc: "The system automatically detects qualifying events and initiates payouts—no forms required.", color: "bg-blue-600 text-white", route: "/features/claims" },
-            { icon: Shield, title: "Fraud Protection", desc: "Advanced forensic image analysis and location verification to keep the platform secure.", color: "bg-blue-600 text-white", route: "/features/fraud" },
-            { icon: Smartphone, title: "Mobile Optimized", desc: "A buttery-smooth mobile interface designed to be used safely while on the move.", color: "bg-blue-600 text-white", route: "/features/mobile" }
-          ].slice(0, showAllFeatures ? 6 : 3).map((f, i) => {
-            const Icon = f.icon;
-            return (
-              <Link to={f.route} key={i} className="bg-white/40 backdrop-blur-xl border border-white/20 rounded-[2.5rem] p-10 hover:bg-black hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 group transform hover:-translate-y-2 shadow-sm">
-                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 group-hover:bg-white transition-all duration-500", f.color)}>
-                  <Icon size={24} className="group-hover:text-black group-hover:animate-pulse" />
-                </div>
-                <h3 className="text-xl font-black tracking-tight mb-4 group-hover:text-white transition-colors uppercase italic leading-none">{f.title}</h3>
-                <p className="text-sm font-bold text-gray-400 leading-relaxed italic group-hover:text-gray-300">"{f.desc}"</p>
-              </Link>
-            )
-          })}
-          </div>
-
-          {!showAllFeatures && (
-            <div className="mt-20 text-center">
-              <button
-                onClick={() => setShowAllFeatures(true)}
-                className="inline-flex items-center space-x-4 px-10 py-6 bg-black text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all duration-500 hover:scale-[1.05] active:scale-95"
-              >
-                <span>Explore All Features</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="section-padding py-20 md:py-40 bg-black text-white reveal active overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-[60%] h-[100%] bg-blue-900/20 blur-[150px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[40%] h-[60%] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row gap-20 items-center">
-
-            <div className="lg:w-1/3 space-y-8">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-10 shadow-2xl">
-                <LayoutGrid size={32} className="text-blue-400" />
-              </div>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">How it <br /><span className="text-blue-400">Works.</span></h2>
-              <p className="text-gray-400 font-bold text-lg leading-relaxed">Three simple steps to absolute peace of mind during your shifts.</p>
-              <Link
-                to="/register"
-                className="inline-block px-8 py-5 mt-4 bg-white/5 border border-white/10 hover:bg-white hover:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 text-center"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            <div className="lg:w-2/3 grid sm:grid-cols-3 gap-8 relative">
-              {/* Connecting line for desktop */}
-              <div className="hidden sm:block absolute top-[4.5rem] left-10 right-10 h-[2px] bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0 z-0" />
-
-              {[
-                { step: "01", title: "Connect", desc: "Link your delivery accounts with one secure click to sync data.", icon: ShieldCheck, color: "text-blue-400" },
-                { step: "02", title: "Drive", desc: "Our AI silently monitors weather and traffic in the background.", icon: Zap, color: "text-blue-400" },
-                { step: "03", title: "Earn", desc: "Instant payouts triggered automatically if conditions breach limits.", icon: Wallet, color: "text-blue-400" }
-              ].map((s, i) => {
-                const Icon = s.icon;
-                return (
-                  <div key={i} className="relative z-10 bg-[#111] p-8 lg:p-10 rounded-[2.5rem] border border-white/5 hover:bg-[#151515] hover:border-white/10 transition-all duration-500 group transform hover:-translate-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-8 group-hover:text-white transition-colors">Step {s.step}</p>
-                    <div className="w-20 h-20 bg-black rounded-3xl flex items-center justify-center mb-8 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                      <Icon size={32} className={cn("transition-colors", s.color)} />
-                    </div>
-                    <h3 className="text-2xl font-black tracking-tight mb-4 text-gray-100 group-hover:text-white transition-colors">{s.title}</h3>
-                    <p className="text-xs font-bold text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{s.desc}</p>
-                  </div>
-                )
-              })}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof Section */}
-      <section className="section-padding py-20 md:py-40 reveal active">
-        <div className="max-w-7xl mx-auto text-center lg:text-left grid lg:grid-cols-3 gap-20 items-center">
-          <div className="lg:col-span-1 space-y-8">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none mb-6">Trusted by thousands of delivery heroes.</h2>
-            <p className="text-gray-400 font-bold text-lg md:text-xl leading-relaxed">Join the next generation of gig economy security.</p>
-          </div>
-
-          <div className="lg:col-span-2 grid sm:grid-cols-2 gap-8">
-            {[
-              { q: "Zafby saved my weekly earnings during the Delhi heatwave. Payout was instant.", user: "Rajesh S.", role: "Zomato Partner" },
-              { q: "Finally, an insurance company that understands our daily struggles with traffic.", user: "Priya K.", role: "Zepto Delivery" },
-            ].map((t, i) => (
-              <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
-                <div className="flex gap-1 mb-6">
-                  {[1, 2, 3, 4, 5].map(s => <Zap key={s} size={14} className="text-blue-500 fill-current" />)}
-                </div>
-                <p className="text-lg font-black tracking-tight leading-relaxed mb-8 italic">"{t.q}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black">{t.user[0]}</div>
-                  <div>
-                    <p className="font-black text-sm">{t.user}</p>
-                    <p className="text-xs font-bold text-gray-400">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section id="cta-final" className="section-padding py-24 md:py-40 reveal active">
-        <div className="max-w-6xl mx-auto bg-black rounded-[2.5rem] md:rounded-[4rem] p-10 md:p-20 lg:p-32 text-center text-white relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-[80%] h-[80%] bg-blue-600/20 blur-[150px] rounded-full group-hover:w-[90%] transition-all duration-1000" />
-          <div className="relative z-10 space-y-12">
-            <h2 className="text-4xl md:text-8xl font-black tracking-tighter max-w-[12ch] mx-auto leading-none">Ready to earn without worry?</h2>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link
-                to="/register"
-                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all duration-500 hover:scale-110"
-              >
-                Register Account
-              </Link>
-              <Link
-                to="/login"
-                className="w-full sm:w-auto px-6 py-4 md:px-12 md:py-7 bg-white/10 text-white rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white/20 transition-all"
-              >
-                Sign In
+                Sign in
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Risk Predictor Widget Link */}
-      <div className="fixed bottom-10 right-10 z-[100] group">
-        <Link
-          to="/risk-predictor"
-          className={cn(
-            "w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 relative ring-1",
-            isOverDark
-              ? "bg-white text-black ring-white/10"
-              : "bg-black text-white ring-black/10"
-          )}
-        >
-          <Zap className={cn("fill-current transition-colors", isOverDark ? "text-blue-600" : "text-blue-400")} size={24} />
-          <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-blue-500 rounded-full border-2 border-white animate-pulse" />
-        </Link>
-      </div>
-
-
-      {/* Footer */}
-      <footer className="bg-black border-t border-white/5 section-padding py-32 text-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
-          <div className="col-span-1 md:col-span-1 space-y-8">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Zap size={16} className="text-white fill-current" />
-              </div>
-              <span className="font-black text-xl tracking-tighter">Zafby</span>
-            </Link>
-            <p className="text-sm font-bold text-gray-500 leading-relaxed uppercase tracking-widest">
-              Empowering the gig economy with smart, data-driven security.
-            </p>
+          
+          <div className="max-w-5xl mx-auto mt-16 relative">
+            <div className="rounded-[3rem] overflow-hidden aspect-video md:aspect-[21/9] bg-[#e4e2e0] shadow-[0_40px_80px_-20px_rgba(27,28,27,0.1)]">
+              <img 
+                alt="Gig economy worker" 
+                className="w-full h-full object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQIDeZmKgAR8CMyP3qzZstIMkL1eWCYwFZNAXsSErjtNldkFW4xTEgVgQUsRhAgrLPWfMNX7IlgJ4EPLf09aVK04HL-W0Eo8mIkLEW6O8BBmNqt3uwwNrWOTt_ZNjxbqUs7EscIAlOKj2_8MFW0UrXLa5e8ZGXyU_JOKdaVn-xl-sPhrPTxwePwv8hYX8GOK9ru7W7Wr1VJ4R7tlUp4NoYfFH4MiopGUW43dU2ggL-GZfkHKe5iotUj9AT9e3mCABaSi15YZ4i5iY"
+              />
+            </div>
+            {/* Abstract Protection Symbol Overlays */}
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#ffffff]/90 backdrop-blur-md rounded-[2rem] shadow-xl flex items-center justify-center hidden md:flex border border-[#e4e2e0]">
+              <Shield className="text-[#004191]" size={48} />
+            </div>
           </div>
-          <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-12">
-            {[
-              { t: "Platform", l: ["Features", "Predictor", "Pricing"] },
-              { t: "Company", l: ["About Us", "Privacy", "Terms", "Admin Portal"] },
-              { t: "Social", l: ["Twitter", "Instagram", "LinkedIn"] },
-            ].map(col => (
-              <div key={col.t} className="space-y-8">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">{col.t}</h4>
-                <ul className="space-y-4">
-                  {col.l.map(link => (
-                    <li key={link}>
-                      {link === "Admin Portal" ? (
-                        <Link to="/admin/login" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</Link>
-                      ) : link === "Predictor" ? (
-                        <Link to="/risk-predictor" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</Link>
-                      ) : (
-                        <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">{link}</a>
-                      )}
+        </section>
+
+        {/* Trust Section */}
+        <section className="py-12 bg-[#ffffff] border-y border-[#e4e2e0]/50 mb-16">
+          <div className="max-w-7xl mx-auto px-6 text-center">
+            <p className="text-[10px] font-inter font-bold tracking-[0.2em] text-[#a8aebf] mb-8 uppercase">Compatible with major Indian platforms</p>
+            <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 grayscale opacity-70 contrast-125">
+               <img src={AmazonLogo} alt="Amazon" className="h-8 md:h-12 object-contain" />
+               <img src={ZomatoLogo} alt="Zomato" className="h-8 md:h-12 object-contain" />
+               <img src={FlipkartLogo} alt="Flipkart" className="h-8 md:h-12 object-contain" />
+               <img src={ZeptoLogo} alt="Zepto" className="h-8 md:h-12 object-contain" />
+               <img src={BlinkitLogo} alt="Blinkit" className="h-8 md:h-12 object-contain" />
+               <img src={SwiggyLogo} alt="Swiggy" className="h-8 md:h-12 object-contain" />
+            </div>
+          </div>
+        </section>
+
+        {/* Features (Elite Coverage) */}
+        <section className="px-6 mb-24 max-w-7xl mx-auto">
+          <div className="mb-12 text-center md:text-left">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#1b1c1b] mb-3">Premium Indian Coverage</h2>
+            <div className="h-1.5 w-16 bg-[#004191] rounded-full mx-auto md:mx-0"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature Card 1 */}
+            <div className="bg-[#ffffff] p-10 rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] group hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.1)] hover:-translate-y-1 transition-all duration-300">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-[#f0f4ff] flex items-center justify-center mb-8 group-hover:bg-[#004191] transition-colors">
+                <CloudRainWind size={32} className="text-[#004191] group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-extrabold mb-4 text-[#1b1c1b] tracking-tight">Monsoon & Heat Lock</h3>
+              <p className="text-[#434751] font-medium leading-relaxed font-inter text-sm">
+                Automatic compensation for extreme Indian weather conditions. Your earnings stay safe even when you can't ride.
+              </p>
+            </div>
+
+            {/* Feature Card 2 */}
+            <div className="bg-[#ffffff] p-10 rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] group hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.1)] hover:-translate-y-1 transition-all duration-300">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-[#fffbeb] flex items-center justify-center mb-8 group-hover:bg-[#d97706] transition-colors">
+                <MapPin size={32} className="text-[#d97706] group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-extrabold mb-4 text-[#1b1c1b] tracking-tight">Zone Guard</h3>
+              <p className="text-[#434751] font-medium leading-relaxed font-inter text-sm">
+                Income stabilization when working in low-demand tier-2 zones. We bridge the gap when daily orders slow down.
+              </p>
+            </div>
+
+            {/* Feature Card 3 */}
+            <div className="bg-[#ffffff] p-10 rounded-[3rem] border border-[#e4e2e0]/50 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] group hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.1)] hover:-translate-y-1 transition-all duration-300">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-[#fcf9f8] flex items-center justify-center mb-8 group-hover:bg-[#1b1c1b] transition-colors border border-[#e4e2e0]/80">
+                <Zap size={32} className="text-[#1b1c1b] group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-extrabold mb-4 text-[#1b1c1b] tracking-tight">UPI Flash Payouts</h3>
+              <p className="text-[#434751] font-medium leading-relaxed font-inter text-sm">
+                Direct to your UPI VPA in under 60 seconds. No waiting days for the money you've already earned.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Plans Section */}
+        <section id="plans" className="px-6 mb-24 scroll-mt-24">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-12 text-center">
+              <p className="text-[10px] font-inter font-bold tracking-[0.2em] text-[#004191] uppercase mb-3">Income Protection Plans</p>
+              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-[#1b1c1b] mb-4">Simple, transparent pricing</h2>
+              <p className="text-[#434751] font-medium font-inter text-lg max-w-xl mx-auto">Weekly plans designed for Indian gig workers. Cancel anytime.</p>
+              <div className="h-1.5 w-16 bg-[#004191] rounded-full mx-auto mt-6"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch">
+              {/* Basic */}
+              <div className="bg-[#f5f3f1] rounded-[3rem] p-10 flex flex-col border border-[#e4e2e0] hover:-translate-y-2 transition-all duration-300 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.12)]">
+                <div className="mb-8">
+                  <h3 className="text-2xl font-extrabold text-[#1b1c1b] mb-1">Basic Plan</h3>
+                  <div className="flex items-baseline">
+                    <span className="text-5xl font-extrabold tracking-tighter text-[#1b1c1b]">₹1,200</span>
+                    <span className="font-medium ml-1 text-[#a8aebf]">/week</span>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 mb-8">
+                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-[#a8aebf]">Max Coverage</p>
+                  <p className="text-2xl font-extrabold text-[#004191]">₹45,000 / disruption</p>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1">
+                  {["Weather Protection", "Traffic Delay Coverage", "Instant Payouts"].map(f => (
+                    <li key={f} className="flex items-center gap-3">
+                      <CheckCircle size={20} className="text-[#16a34a] flex-shrink-0" />
+                      <span className="text-sm font-medium text-[#434751]">{f}</span>
                     </li>
                   ))}
                 </ul>
+                <Link to="/register" className="w-full py-5 text-center bg-[#1b1c1b] text-white rounded-full font-inter font-bold text-[11px] uppercase tracking-[0.15em] hover:bg-[#434751] transition-all active:scale-[0.98] shadow-lg">
+                  Get Started
+                </Link>
               </div>
-            ))}
+
+              {/* Pro — Featured */}
+              <div className="bg-gradient-to-br from-[#004191] to-[#0058be] rounded-[3rem] p-10 flex flex-col border border-transparent hover:-translate-y-2 transition-all duration-300 shadow-[0_24px_48px_-12px_rgba(0,65,145,0.4)] hover:shadow-[0_40px_80px_-20px_rgba(0,65,145,0.5)] relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#ba1a1a] text-white px-4 py-1.5 rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] shadow-lg">
+                  Most Popular
+                </div>
+                <div className="mb-8">
+                  <h3 className="text-2xl font-extrabold text-white mb-1">Pro Plan</h3>
+                  <div className="flex items-baseline">
+                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹2,000</span>
+                    <span className="font-medium ml-1 text-white/60">/week</span>
+                  </div>
+                </div>
+                <div className="bg-white/10 rounded-2xl p-6 mb-8">
+                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-white/60">Max Coverage</p>
+                  <p className="text-2xl font-extrabold text-white">₹1,00,000 / disruption</p>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1">
+                  {["Everything in Basic", "Accident Coverage", "Vehicle Breakdown Aid", "Priority Claims"].map(f => (
+                    <li key={f} className="flex items-center gap-3">
+                      <CheckCircle size={20} className="text-[#bbf7d0] flex-shrink-0" />
+                      <span className="text-sm font-medium text-white/90">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/register" className="w-full py-5 text-center bg-white text-[#1b1c1b] rounded-full font-inter font-bold text-[11px] uppercase tracking-[0.15em] hover:bg-[#f5f3f1] transition-all active:scale-[0.98] shadow-xl">
+                  Activate Shield
+                </Link>
+              </div>
+
+              {/* Premium Plus */}
+              <div className="bg-[#1b1c1b] rounded-[3rem] p-10 flex flex-col border border-transparent hover:-translate-y-2 transition-all duration-300 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.3)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.5)]">
+                <div className="mb-8">
+                  <h3 className="text-2xl font-extrabold text-white mb-1">Premium Plus</h3>
+                  <div className="flex items-baseline">
+                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹3,500</span>
+                    <span className="font-medium ml-1 text-white/60">/week</span>
+                  </div>
+                </div>
+                <div className="bg-white/10 rounded-2xl p-6 mb-8">
+                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-white/60">Max Coverage</p>
+                  <p className="text-2xl font-extrabold text-white">₹2,00,000 / disruption</p>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1">
+                  {["Everything in Pro", "Health Insurance Add-on", "Family Coverage", "Legal Assistance"].map(f => (
+                    <li key={f} className="flex items-center gap-3">
+                      <CheckCircle size={20} className="text-[#bbf7d0] flex-shrink-0" />
+                      <span className="text-sm font-medium text-white/90">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/register" className="w-full py-5 text-center bg-white text-[#1b1c1b] rounded-full font-inter font-bold text-[11px] uppercase tracking-[0.15em] hover:bg-[#f5f3f1] transition-all active:scale-[0.98] shadow-xl">
+                  Get Full Coverage
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="max-w-7xl mx-auto pt-32 flex flex-col sm:flex-row items-center justify-between gap-8 border-t border-white/5 mt-10">
-          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">&copy; 2024 Zafby. Built for the future of work.</p>
-          <div className="flex gap-8">
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Privacy</span>
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] cursor-pointer hover:text-white transition-colors">Cookies</span>
+        </section>
+
+        {/* Stats Section (Bento Inspired) */}
+        <section className="px-6 mb-24">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-[#004191] text-[#ffffff] p-12 md:p-16 rounded-[3.5rem] flex flex-col justify-between shadow-[0_24px_48px_-12px_rgba(0,65,145,0.4)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#ffffff] rounded-full -mr-32 -mt-32 blur-[150px] opacity-10 pointer-events-none" />
+              <div className="relative z-10">
+                <span className="text-[10px] font-inter font-bold tracking-[0.2em] uppercase text-[#a8aebf]">Simulated Payouts</span>
+                <h2 className="text-5xl md:text-7xl font-extrabold mt-4 tracking-tighter">₹15,000+</h2>
+              </div>
+              <p className="text-[15px] font-medium text-blue-100 max-w-sm mt-12 leading-relaxed">Early-stage pilot program tests for delivery partners in our initial beta launch.</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8">
+              <div className="bg-[#ffffff] border border-[#e4e2e0]/50 p-10 rounded-[3rem] flex items-center gap-8 h-full shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)]">
+                <div className="bg-[#f5f3f1] p-5 rounded-[1.5rem] border border-[#e4e2e0]">
+                  <Shield size={36} className="text-[#1b1c1b]" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-extrabold text-[#1b1c1b] tracking-tight">Cloud Security Framework</h4>
+                  <p className="text-[#434751] font-medium font-inter text-sm mt-2">Built with industry-standard encryption for user data.</p>
+                </div>
+              </div>
+              
+              <div className="bg-[#1b1c1b] text-white p-10 rounded-[3rem] flex items-center gap-8 h-full shadow-[0_24px_48px_-12px_rgba(27,28,27,0.4)]">
+                <div className="bg-[#434751]/30 p-5 rounded-[1.5rem] border border-[#a8aebf]/20">
+                  <UserCheck size={36} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-extrabold text-white tracking-tight">Algorithmic Assessment</h4>
+                  <p className="text-[#a8aebf] font-medium font-inter text-sm mt-2">Smart contract logic ready for future insurance underwriting.</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </footer>
+        </section>
+
+        {/* Call to Action Splash */}
+        <section className="px-6">
+          <div className="max-w-7xl mx-auto bg-[#ffffff] rounded-[3.5rem] p-12 md:p-24 text-center shadow-[0_24px_48px_-12px_rgba(27,28,27,0.06)] overflow-hidden relative border border-[#e4e2e0]">
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-5xl leading-tight font-extrabold tracking-tighter mb-6 text-[#1b1c1b]">Ready to secure your bag?</h2>
+              <p className="text-lg text-[#434751] mb-12 max-w-xl mx-auto font-medium font-inter">Join our early pilot program and help us build a more secure future for gig workers through algorithmic income protection.</p>
+              
+              <Link to="/register" className="inline-block px-12 py-5 bg-[#004191] text-[#ffffff] rounded-full text-[11px] font-inter uppercase tracking-[0.15em] font-bold shadow-[0_12px_24px_-8px_rgba(0,65,145,0.4)] hover:scale-105 active:scale-95 transition-all">
+                Activate My Shield
+              </Link>
+            </div>
+            
+            {/* Background decoration */}
+            {/* <div className="absolute top-0 right-0 w-80 h-80 bg-[#f0f4ff] rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#fffbeb] rounded-full -translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none"></div> */}
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <DashboardFooter className="mt-8 mx-0 rounded-none bg-[#fcf9f8] backdrop-blur-none" />
     </div>
   );
 }

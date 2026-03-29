@@ -1,51 +1,75 @@
-import Sidebar from "@/components/Sidebar";
-import { Shield, Plus, CheckCircle, Calendar, ArrowRight, Phone, Loader2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { 
+  Shield, Plus, CheckCircle, Calendar, ArrowRight, Loader2,
+  ArrowUpRight, Zap, Star
+} from "lucide-react";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { api } from "@/lib/api-client";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import DashboardHeader from "@/components/DashboardHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const availablePlans = [
   {
     name: "Basic Plan",
-    price: "₹15",
+    price: "₹59",
     period: "week",
-    coverage: "₹500 / disruption",
+    coverage: "₹3,000 / disruption",
+    planKey: "BASIC",
+    premium: 59,
+    coverageValue: 3000,
     features: ["Weather Protection", "Traffic Delay Coverage", "Instant Payouts"],
-    color: "bg-blue-50/50",
-    borderColor: "border-blue-100",
-    buttonColor: "bg-blue-600 hover:bg-black",
+    color: "bg-[#f5f3f1]",
+    borderColor: "border-[#e4e2e0]",
+    buttonColor: "bg-[#1b1c1b] text-white hover:bg-[#434751]",
+    textColor: "text-[#1b1c1b]",
+    subTextColor: "text-[#a8aebf]",
+    coverageTextColor: "text-[#004191]",
   },
   {
     name: "Pro Plan",
-    price: "₹25",
+    price: "₹89",
     period: "week",
-    coverage: "₹1,200 / disruption",
+    coverage: "₹6,000 / disruption",
+    planKey: "PRO",
+    premium: 89,
+    coverageValue: 6000,
     features: [
       "Everything in Basic",
       "Accident Coverage",
       "Vehicle Breakdown Aid",
       "Priority Claims",
     ],
-    color: "bg-purple-50/50",
-    borderColor: "border-purple-100",
-    buttonColor: "bg-purple-600 hover:bg-black",
+    color: "bg-gradient-to-br from-[#004191] to-[#0058be]",
+    borderColor: "border-transparent",
+    buttonColor: "bg-white text-[#1b1c1b] hover:bg-[#f5f3f1]",
+    textColor: "text-white",
+    subTextColor: "text-white/60",
+    coverageTextColor: "text-white",
+    isPopular: true
   },
   {
     name: "Premium Plus",
-    price: "₹45",
+    price: "₹119",
     period: "week",
-    coverage: "₹2,500 / disruption",
+    coverage: "₹10,000 / disruption",
+    planKey: "PREMIUM_PLUS",
+    premium: 119,
+    coverageValue: 10000,
     features: [
       "Everything in Pro",
       "Health Insurance Add-on",
       "Family Coverage",
       "Legal Assistance",
     ],
-    color: "bg-orange-50/50",
-    borderColor: "border-orange-100",
-    buttonColor: "bg-orange-600 hover:bg-black",
+    color: "bg-[#1b1c1b]",
+    borderColor: "border-transparent",
+    buttonColor: "bg-white text-[#1b1c1b] hover:bg-[#f5f3f1]",
+    textColor: "text-white",
+    subTextColor: "text-white/60",
+    coverageTextColor: "text-white",
   },
 ];
 
@@ -54,24 +78,25 @@ export default function Policies() {
   const platform = userPlatform || "general";
   const username = userUsername || "Worker";
   const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
-  const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [policyData, setPolicyData] = useState<any>(null);
-  const mainRef = useRef<HTMLElement>(null);
 
   const fetchPolicy = async () => {
-    if (!workerId) {
-      setLoading(false); // If no workerId, stop loading and show no policy
+    if (!workerId && !phoneNumber) {
+      setLoading(false);
       return;
     }
+    const pid = workerId || phoneNumber;
     setLoading(true);
     try {
-      const res = await api.get<any>(`/policy/status/?worker_id=${workerId}`);
+      const res = await api.get<any>(`/policy/status/?worker_id=${pid}`);
       setPolicyData(res);
     } catch (error) {
       console.error("Failed to fetch policy:", error);
       toast.error("Error loading policy details");
-      setPolicyData(null); // Ensure policyData is null on error
+      setPolicyData(null);
     } finally {
       setLoading(false);
     }
@@ -79,67 +104,23 @@ export default function Policies() {
 
   useEffect(() => {
     fetchPolicy();
-    const el = mainRef.current;
-    if (!el) return;
-    const handleScroll = () => setScrolled(el.scrollTop > 20);
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [workerId]);
+  }, [workerId, phoneNumber]);
 
   const handleSelectPlan = async (plan: typeof availablePlans[0]) => {
-    if (!workerId) {
+    if (!workerId && !phoneNumber) {
       toast.error("Sign in to choose a plan");
       return;
     }
-
-    const planMap: Record<string, string> = {
-      "Basic Plan": "BASIC",
-      "Pro Plan": "PRO",
-      "Premium Plus": "PREMIUM_PLUS",
-    };
-
-    const planType = planMap[plan.name] || "BASIC";
-    const premiumValue = parseInt(plan.price.replace("₹", ""));
-    const coverageValue = parseInt(plan.coverage.split(" ")[0].replace("₹", "").replace(",", ""));
-
-    toast.loading(`Processing payment for ${plan.name}...`);
     
-    try {
-      await api.post("/policy/purchase/", {
-        worker_id: workerId,
-        payment_status: "SUCCESS",
-        plan_type: planType,
-        premium: premiumValue,
-        coverage: coverageValue,
-      });
-      
-      toast.dismiss();
-      toast.success(`${plan.name} activated successfully!`);
-      fetchPolicy(); // Refresh status
-    } catch (error: any) {
-      toast.dismiss();
-      toast.error(error.message || "Failed to purchase plan");
-    }
+    // Pass the selected plan object to the Payment Checkout gateway
+    navigate('/payment', { state: { plan } });
   };
-
-  const getPlatformColor = (id?: string) => {
-    switch (id?.toLowerCase()) {
-      case "zomato": return "text-red-600";
-      case "blinkit": return "text-yellow-600";
-      case "flipkart": return "text-blue-600";
-      case "amazon": return "text-orange-600";
-      case "zepto": return "text-purple-600";
-      default: return "text-blue-600";
-    }
-  };
-
-  const platformColor = getPlatformColor(platform);
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white space-y-6">
-        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-400">Syncing Policies...</h2>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#fcf9f8] space-y-6">
+        <Loader2 className="w-16 h-16 text-[#004191] animate-spin" />
+        <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-[#434751] font-inter">Syncing Policies...</h2>
       </div>
     );
   }
@@ -147,162 +128,182 @@ export default function Policies() {
   const activePolicy = policyData?.active_policy;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-white">
-      <Sidebar />
-      <main ref={mainRef} className="flex-1 overflow-auto bg-gray-50/30">
-        <header className={cn(
-          "relative md:sticky top-0 z-20 transition-all duration-300 section-padding py-6",
-          scrolled ? "bg-white border-b border-gray-100 shadow-sm py-4" : "bg-transparent"
-        )}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-20 sm:pl-0">
-            <div>
-              <h1 className={cn("text-2xl md:text-3xl font-black tracking-tighter transition-all", platformColor)}>
-                {platformName} Policies
-              </h1>
-              <p className="text-gray-500 text-sm font-medium mt-0.5">{username}'s coverage</p>
-              {phoneNumber && (
-                <div className="flex items-center space-x-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                  <Phone size={12} className="text-blue-600" />
-                  <span>{phoneNumber}</span>
-                </div>
-              )}
-            </div>
-            <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-black text-white rounded-2xl hover:bg-gray-800 transition-all shadow-lg active:scale-95">
-              <Plus size={20} />
-              <span className="text-sm font-bold">New Policy</span>
-            </button>
+    <div className="bg-[#fcf9f8] text-[#1b1c1b] font-manrope selection:bg-[#004191]/20 selection:text-white min-h-screen flex flex-col pb-24 md:pb-0">
+      
+      <DashboardHeader />
+
+      <main className="flex-1 pt-32 pb-40 px-6 max-w-7xl mx-auto w-full animate-in fade-in duration-700">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1b1c1b]">
+              {activePolicy ? "Your Protection" : "Choose a Plan"}
+            </h1>
+            <p className="text-[#434751] mt-2 font-medium text-lg">
+              {activePolicy
+                ? `Active ${platformName} coverage — you're protected.`
+                : `Select a plan to activate your ${platformName} income shield.`}
+            </p>
           </div>
-        </header>
+        </div>
 
-        <div className="section-padding space-y-12">
-          {/* Active Policies */}
-          <section className="reveal active">
-            <h2 className="text-lg font-black uppercase tracking-widest text-gray-400 mb-8">Active Coverage</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {!activePolicy ? (
-                <div className="col-span-full bg-white rounded-[2.5rem] border border-gray-100 p-12 text-center shadow-sm">
-                  <Shield size={40} className="mx-auto text-gray-200 mb-6" />
-                  <p className="text-gray-400 font-bold uppercase tracking-widest">No active policy found</p>
-                  <p className="text-xs text-gray-300 mt-2">Select a plan below to start your protection</p>
-                </div>
-              ) : (
-                <div key={activePolicy.policy_id} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-8">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-4 bg-green-50 text-green-600 rounded-2xl group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
-                          <Shield size={28} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black text-gray-900 leading-none mb-1">{activePolicy.plan_type || 'Standard Plan'}</h3>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">ID: {activePolicy.policy_number}</p>
-                        </div>
-                      </div>
-                      <span className="px-4 py-1.5 bg-green-100 text-green-800 text-[10px] font-black uppercase tracking-widest rounded-full">
-                        ACTIVE
-                      </span>
+        <div className="space-y-16">
+
+          {/* ─── ACTIVE PLAN CARD (shown only if active plan exists) ─── */}
+          {activePolicy && (
+            <section>
+              <h2 className="text-sm font-inter font-bold uppercase tracking-[0.15em] text-[#a8aebf] mb-6">Active Coverage</h2>
+              <div className="bg-[#ffffff] rounded-[3rem] border border-[#e4e2e0]/50 p-8 md:p-12 shadow-[0_24px_48px_-12px_rgba(27,28,27,0.04)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.08)] transition-all duration-500 relative overflow-hidden group max-w-4xl">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#e2f5e9] rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700 opacity-60" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+                  
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 bg-[#f0fdf4] text-[#16a34a] rounded-[2rem] flex items-center justify-center shrink-0 border border-[#bbf7d0]/50">
+                      <Shield size={40} />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-8 mb-10">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Coverage</p>
-                        <p className="text-lg font-black text-gray-900">₹{activePolicy.coverage_limit}</p>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <h3 className="text-3xl font-extrabold text-[#1b1c1b] leading-none">{activePolicy.plan_type || 'Standard Plan'}</h3>
+                        <span className="px-3 py-1 bg-[#16a34a] text-white text-[10px] font-inter font-bold uppercase tracking-widest rounded-full">ACTIVE</span>
                       </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Premium</p>
-                        <p className="text-lg font-black text-gray-900">₹{activePolicy.weekly_premium}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                        <span className="flex items-center">
-                          <Calendar size={14} className="mr-2 text-blue-600" />
+                      <p className="text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#434751]">Policy #{activePolicy.policy_number}</p>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center mt-6 text-[#1b1c1b] font-inter font-bold text-sm bg-[#f5f3f1] p-4 sm:px-5 sm:py-3 rounded-[1.25rem] w-fit gap-1 sm:gap-0">
+                        <div className="flex items-center whitespace-nowrap">
+                          <Calendar size={18} className="mr-2.5 text-[#004191]" />
                           Expires: {new Date(activePolicy.valid_until).toLocaleDateString()}
-                        </span>
-                        <span className="text-blue-600">{activePolicy.days_remaining} days left</span>
+                        </div>
+                        <div className="whitespace-nowrap text-[#004191] ml-[26px] sm:ml-4 sm:pl-4 sm:border-l sm:border-[#e4e2e0]">
+                          {activePolicy.days_remaining} days left
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </section>
 
-          {/* Available Plans */}
-          <section className="reveal active" style={{ transitionDelay: "200ms" }}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
-              <h2 className="text-lg font-black uppercase tracking-widest text-gray-400">Available Plans</h2>
-              <button className="text-blue-600 text-xs font-black uppercase tracking-widest flex items-center space-x-2 hover:translate-x-1 transition-transform">
-                <span>Compare all</span>
-                <ArrowRight size={16} />
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-6 md:border-l md:border-[#e4e2e0]/50 md:pl-10">
+                    <div>
+                      <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#434751] mb-2">Max Coverage</p>
+                      <p className="text-3xl font-extrabold text-[#1b1c1b]">₹{activePolicy.coverage_limit}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] text-[#434751] mb-2">Premium/Wk</p>
+                      <p className="text-3xl font-extrabold text-[#1b1c1b]">₹{activePolicy.weekly_premium}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ─── PLANS SECTION (marketplace or upgrade options) ─── */}
+          <section>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-sm font-inter font-bold uppercase tracking-[0.15em] text-[#a8aebf]">
+                  {activePolicy ? "Upgrade Options" : "Available Plans"}
+                </h2>
+                {activePolicy && (
+                  <p className="text-xs text-[#434751] font-medium mt-1">
+                    Upgrade anytime — new plan activates immediately.
+                  </p>
+                )}
+              </div>
+              <button className="text-[#004191] text-[11px] font-inter font-bold uppercase tracking-[0.15em] flex items-center space-x-1 hover:translate-x-1 transition-transform">
+                <span>Compare Plans</span>
+                <ArrowRight size={14} />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {availablePlans.map((plan, i) => (
-                <div
-                  key={plan.name}
-                  className={cn(
-                    "border rounded-[2.5rem] p-8 flex flex-col h-full hover:bg-black group transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl cursor-pointer",
-                    plan.color, plan.borderColor
-                  )}
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
-                  <div className="mb-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-white transition-colors">{plan.name}</h3>
-                    <div className="flex items-baseline group-hover:text-gray-400 transition-colors">
-                      <span className="text-4xl font-black text-gray-900 group-hover:text-white transition-colors">{plan.price}</span>
-                      <span className="text-gray-500 font-bold ml-1">/{plan.period}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl p-6 mb-8 group-hover:bg-white/10 transition-colors">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 group-hover:text-gray-500 transition-colors">Max Coverage</p>
-                    <p className="text-xl font-black text-blue-600 group-hover:text-blue-400 transition-colors">{plan.coverage}</p>
-                  </div>
-
-                  <ul className="space-y-4 mb-10 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start space-x-3">
-                        <CheckCircle size={18} className="text-green-500 mt-0.5 flex-shrink-0 group-hover:text-green-400 transition-colors" />
-                        <span className="text-xs font-bold text-gray-600 group-hover:text-gray-400 transition-colors leading-relaxed">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button 
-                    onClick={() => handleSelectPlan(plan)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-stretch pt-4">
+              {availablePlans.map((plan) => {
+                const isCurrentPlan = activePolicy?.plan_type === plan.planKey;
+                return (
+                  <div
+                    key={plan.name}
                     className={cn(
-                      "w-full h-14 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg active:scale-95 group-hover:bg-white group-hover:text-black",
-                      plan.buttonColor
+                      "rounded-[3rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 relative shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.12)] border",
+                      plan.color, plan.borderColor,
+                      isCurrentPlan && "ring-4 ring-[#16a34a]/30"
                     )}
                   >
-                    Select Plan
-                  </button>
-                </div>
-              ))}
+                    {plan.isPopular && !isCurrentPlan && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#ba1a1a] text-white px-4 py-1.5 rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] shadow-lg">
+                        Recommended
+                      </div>
+                    )}
+                    {isCurrentPlan && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#16a34a] text-white px-4 py-1.5 rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] shadow-lg flex items-center gap-1.5">
+                        <CheckCircle size={12} /> Current Plan
+                      </div>
+                    )}
+                    
+                    <div className="mb-8 relative z-10">
+                      <h3 className={cn("text-2xl font-extrabold mb-1", plan.textColor)}>{plan.name}</h3>
+                      <div className="flex items-baseline">
+                        <span className={cn("text-5xl font-extrabold tracking-tighter", plan.textColor)}>{plan.price}</span>
+                        <span className={cn("font-medium ml-1", plan.subTextColor)}>/{plan.period}</span>
+                      </div>
+                    </div>
+
+                    <div className={cn("rounded-2xl p-6 mb-8 relative z-10", plan.isPopular || plan.name === "Premium Plus" ? "bg-white/10" : "bg-white")}>
+                      <p className={cn("text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1", plan.subTextColor)}>Max Coverage</p>
+                      <p className={cn("text-2xl font-extrabold tracking-tight", plan.coverageTextColor)}>{plan.coverage}</p>
+                    </div>
+
+                    <ul className="space-y-4 mb-10 flex-1 relative z-10">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start space-x-3">
+                          <CheckCircle size={20} className={cn("mt-0.5 flex-shrink-0", plan.isPopular || plan.name === "Premium Plus" ? "text-[#bbf7d0]" : "text-[#16a34a]")} />
+                          <span className={cn("text-sm font-medium leading-relaxed", plan.isPopular || plan.name === "Premium Plus" ? "text-white/90" : "text-[#434751]")}>
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      onClick={() => !isCurrentPlan && handleSelectPlan(plan)}
+                      disabled={isCurrentPlan}
+                      className={cn(
+                        "w-full py-5 font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full transition-all active:scale-[0.98] relative z-10 shadow-lg flex items-center justify-center gap-2",
+                        isCurrentPlan
+                          ? "opacity-50 cursor-not-allowed bg-white/20 text-white"
+                          : plan.buttonColor
+                      )}
+                    >
+                      {isCurrentPlan ? (
+                        "Active"
+                      ) : activePolicy ? (
+                        <><ArrowUpRight size={14} /> Upgrade to {plan.name}</>
+                      ) : (
+                        "Select Plan"
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
-          {/* Help/Inspiration Section */}
-          <section className="bg-black rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden reveal active" style={{ transitionDelay: "400ms" }}>
-            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500 rounded-full -mr-20 -mt-20 blur-[120px] opacity-20" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-3xl font-black tracking-tight mb-4">Unsure about your coverage?</h2>
-                <p className="text-gray-400 font-medium leading-relaxed max-w-lg">
-                  Our algorithm analyzes your work patterns and zone risks to recommend the most optimal protection plan for you.
-                </p>
-              </div>
-              <button className="px-10 py-5 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all shadow-xl active:scale-95 whitespace-nowrap">
-                Run AI Analysis
-              </button>
+          {/* AI Banner Footer */}
+          <section className="bg-[#1b1c1b] rounded-[3rem] p-10 md:p-14 text-white relative overflow-hidden flex flex-col md:flex-row items-center gap-10 shadow-[0_40px_80px_-20px_rgba(27,28,27,0.3)]">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#004191] to-transparent rounded-full -mr-20 -mt-20 blur-[100px] opacity-40 mix-blend-screen" />
+            <div className="relative z-10 flex-1 text-center md:text-left">
+              <h2 className="text-3xl font-extrabold tracking-tight mb-4">Unsure about constraints?</h2>
+              <p className="text-[#a8aebf] font-medium leading-relaxed max-w-lg">
+                Our AI analyzes your delivery frequency, locations, and historical disruptions to recommend the optimal risk shield.
+              </p>
             </div>
+            <button className="relative z-10 w-full md:w-auto px-10 py-5 bg-white text-[#1b1c1b] font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#f5f3f1] transition-all shadow-xl active:scale-[0.98] whitespace-nowrap">
+              Run AI Analysis
+            </button>
           </section>
+
         </div>
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }

@@ -123,11 +123,16 @@ class PolicyPurchaseView(APIView):
         # Check for existing active policy
         existing = Policy.objects.filter(worker=worker, status='ACTIVE', end_date__gte=date.today()).first()
         if existing:
-            return Response({
-                "error": "You already have an active policy",
-                "policy_number": existing.policy_number,
-                "valid_until": existing.end_date
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if existing.plan_type == plan_type:
+                return Response({
+                    "error": f"You already have the {plan_type} plan active.",
+                    "policy_number": existing.policy_number,
+                    "valid_until": existing.end_date
+                }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Cancel the old plan so the user can upgrade/downgrade to the new one
+                existing.status = 'CANCELLED'
+                existing.save()
 
         # ── Dynamic risk calculation ───────────────────────────────────
         weather_risk, pollution_risk = compute_dynamic_risk(
@@ -299,6 +304,50 @@ class PolicyStatusView(APIView):
         active_policy = Policy.objects.filter(
             worker=worker, status='ACTIVE', end_date__gte=date.today()
         ).first()
+
+        # ── AUTO-REPAIR FOR MOCK USERS ──
+        # If no active policy exists but we have mock database info, auto-provision the dashboard
+        if not active_policy:
+            from users.models import MockPlatformData
+            from deliveries.models import Delivery
+            from django.utils import timezone
+            import datetime
+            
+            mock_data = MockPlatformData.objects.filter(phone=worker.phone).first()
+            if mock_data:
+                # Update worker basic info if empty
+                if not worker.onboarding_completed or worker.name == "Delivery Partner":
+                    worker.name = mock_data.name
+                    worker.platform = mock_data.platform
+                    worker.partner_id = mock_data.partner_id
+                    worker.weekly_earnings = mock_data.weekly_earnings
+                    worker.zone = mock_data.zone
+                    worker.onboarding_completed = True
+                    worker.save()
+                
+                # Provision Policy
+                active_policy = Policy.objects.create(
+                    worker=worker,
+                    plan_type='STANDARD',
+                    weekly_premium=80,
+                    coverage_limit=1500,
+                    payment_method='UPI',
+                    start_date=timezone.now().date(),
+                    end_date=timezone.now().date() + datetime.timedelta(days=7),
+                    next_payment_date=timezone.now().date() + datetime.timedelta(days=7),
+                    status='ACTIVE'
+                )
+                
+                # Provision Deliveries
+                if not Delivery.objects.filter(worker=worker).exists():
+                    Delivery.objects.create(
+                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                        location="Indiranagar 12th Main", amount=45, status='ONGOING'
+                    )
+                    Delivery.objects.create(
+                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                        location="Koramangala 4th Block", amount=55, status='COMPLETED'
+                    )
 
         all_policies = Policy.objects.filter(worker=worker).values(
             'policy_id', 'policy_number', 'plan_type', 'weekly_premium',

@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { useState, useEffect } from "react";
-import { CheckCircle2, ArrowRight, Zap, Target, LayoutGrid } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ArrowLeft, CheckCircle2, ArrowRight } from "lucide-react";
 
 // Partner Logos
 import AmazonLogo from "@/assets/Amazon/Amazon_Logo_0.svg";
@@ -12,152 +12,159 @@ import ZeptoLogo from "@/assets/Zepto/Zepto_idm2wBp3DO_1.svg";
 import BlinkitLogo from "@/assets/Blinkit/Blinkit_idCmcpCDCZ_0.svg";
 import SwiggyLogo from "@/assets/Swiggy/Swiggy_id8bItcgXR_0.svg";
 
-import { useUserAuth } from "@/context/UserAuthContext";
-
 interface Platform {
   id: string;
   name: string;
   logo: string;
   description: string;
-  color: string;
   route: string;
+  colorClass: string;
 }
 
 export default function PlatformSelection() {
   const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const { login } = useUserAuth();
 
   const platforms: Platform[] = [
     {
       id: "zomato",
       name: "Zomato",
       logo: ZomatoLogo,
-      description: "Food delivery with meal count tracking and zone management",
-      color: "border-red-100/50",
+      description: "Food Delivery Partner",
       route: "/register/zomato",
+      colorClass: "bg-red-50",
     },
     {
       id: "blinkit",
       name: "Blinkit",
       logo: BlinkitLogo,
-      description: "Quick commerce with hourly order tracking",
-      color: "border-yellow-100/50",
+      description: "Hyperlocal Delivery",
       route: "/register/blinkit",
+      colorClass: "bg-yellow-100",
     },
     {
       id: "flipkart",
       name: "Flipkart",
       logo: FlipkartLogo,
-      description: "Logistics and delivery with package tracking",
-      color: "border-blue-100/50",
+      description: "Supply Chain Partner",
       route: "/register/flipkart",
+      colorClass: "bg-blue-50",
     },
     {
       id: "amazon",
       name: "Amazon",
       logo: AmazonLogo,
-      description: "Global delivery network with performance tracking",
-      color: "border-orange-100/50",
+      description: "E-commerce Logistics",
       route: "/register/amazon",
+      colorClass: "bg-slate-100",
     },
     {
       id: "zepto",
       name: "Zepto",
       logo: ZeptoLogo,
-      description: "10-minute delivery with speed and efficiency tracking",
-      color: "border-purple-100/50",
+      description: "Quick Commerce Partner",
       route: "/register/zepto",
+      colorClass: "bg-purple-50",
     },
     {
       id: "swiggy",
       name: "Swiggy",
       logo: SwiggyLogo,
-      description: "Comprehensive food and grocery delivery partner network",
-      color: "border-orange-100/50",
+      description: "Instant Delivery Partner",
       route: "/register/swiggy",
+      colorClass: "bg-orange-50",
     },
   ];
 
   const handleSelectPlatform = (platform: Platform) => {
     setSelectedPlatform(platform.id);
+  };
 
-    setTimeout(() => {
-      navigate(platform.route);
-    }, 400);
+  const handleConnect = () => {
+    if (selectedPlatform) {
+      const p = platforms.find(pl => pl.id === selectedPlatform);
+      if (p) navigate(p.route);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[#fcf9f8] text-[#1c1b1b] font-['Inter'] selection:bg-[#d8e2ff] selection:text-[#004395]">
       <Navbar />
 
-      <main className="section-padding pt-40 pb-32 max-w-7xl mx-auto">
-        <div className="text-center mb-24 reveal active">
-          <div className="inline-flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-2xl mb-8">
-            <LayoutGrid size={16} className="text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Registration Step 1 of 2</span>
+      <main className="pt-24 pb-32 px-6 md:px-[5rem] max-w-7xl mx-auto mt-16">
+        {/* Navigation / Header Area */}
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate(-1)}>
+            <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 transition-colors scale-95 active:scale-90 shadow-sm border border-gray-100">
+              <ArrowLeft className="text-[#1c1b1b]" size={20} />
+            </button>
+            <span className="text-sm font-semibold text-gray-500 uppercase tracking-widest hidden sm:inline-block">Back</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gray-900 mb-6 italic leading-none">
-            Choose your <span className="text-blue-600 not-italic">Battlefield.</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg md:text-xl font-bold text-gray-400 leading-relaxed tracking-tight group">
-            Select the platform you currently work with. We'll synchronize your telemetry to provide real-time protection.
+          <div className="hidden md:flex items-center gap-8">
+            <span className="text-[#727785] font-bold text-xs uppercase tracking-widest bg-white px-4 py-2 rounded-full shadow-sm">Step 1 of 3</span>
+          </div>
+        </div>
+
+        {/* Hero Section */}
+        <section className="mb-16">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#1c1b1b] tracking-tighter mb-4">
+            Connect Your Platform
+          </h2>
+          <p className="text-lg text-[#424754] max-w-2xl leading-relaxed font-medium">
+            Select the food delivery or e-commerce platform you work for to sync your earnings and performance data seamlessly.
           </p>
+        </section>
+
+        {/* Platform Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {platforms.map((platform) => {
+            const isSelected = selectedPlatform === platform.id;
+            
+            return (
+              <button
+                key={platform.id}
+                onClick={() => handleSelectPlatform(platform)}
+                className={cn(
+                  "group relative bg-[#ffffff] p-8 rounded-[2rem] text-left transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] ring-2",
+                  isSelected 
+                    ? "ring-[#0058be] scale-[1.02] bg-[#fcf9f8]" 
+                    : "ring-transparent hover:ring-[#0058be]/10 hover:scale-[1.02]"
+                )}
+              >
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-6 overflow-hidden", platform.colorClass)}>
+                  <img src={platform.logo} alt={platform.name} className="w-10 h-10 object-contain" />
+                </div>
+                
+                <h3 className={cn("text-xl font-bold mb-1 transition-colors", isSelected ? "text-[#0058be]" : "text-[#1c1b1b]")}>
+                  {platform.name}
+                </h3>
+                <p className="text-sm text-[#424754] font-medium">{platform.description}</p>
+                
+                <div className={cn(
+                  "absolute top-6 right-6 transition-all duration-300",
+                  isSelected ? "opacity-100 scale-110 text-[#0058be]" : "opacity-0 group-hover:opacity-100 text-[#0058be]/50 rotate-[-10deg] group-hover:rotate-0"
+                )}>
+                  <CheckCircle2 size={24} className={isSelected ? "fill-current text-[#0058be]" : "text-[#0058be]/50"} />
+                </div>
+              </button>
+            )
+          })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 reveal active" style={{ transitionDelay: "200ms" }}>
-          {platforms.map((platform, i) => (
-            <button
-              key={platform.id}
-              onClick={() => handleSelectPlatform(platform)}
-              className={cn(
-                "group relative bg-white p-10 rounded-[3rem] transition-all duration-700 transform hover:scale-105 hover:shadow-2xl overflow-hidden flex flex-col items-start text-left h-full",
-                selectedPlatform === platform.id ? "border-2 border-blue-600 scale-105 shadow-2xl" : "border border-gray-100/50",
-                platform.color
-              )}
-              style={{ transitionDelay: `${i * 100}ms` }}
-            >
-              <div className="relative z-10 w-full flex flex-col h-full">
-                <div className="mb-10 group-hover:scale-110 transition-transform duration-500 bg-white p-6 rounded-[2.5rem] w-fit shadow-sm">
-                  <img src={platform.logo} alt={platform.name} className="h-16 md:h-20 object-contain rounded-xl" />
-                </div>
-                <div className="flex-1">
-                  <h2 className={cn("text-3xl font-black tracking-tight mb-4 transition-colors", selectedPlatform === platform.id ? "text-blue-600" : "text-gray-900")}>
-                    {platform.name}
-                  </h2>
-                  <p className={cn("text-sm font-bold leading-relaxed mb-8 transition-colors text-gray-400")}>
-                    {platform.description}
-                  </p>
-                </div>
-                <div className={cn("flex items-center space-x-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all", selectedPlatform === platform.id ? "text-emerald-600" : "text-blue-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-2")}>
-                  {selectedPlatform === platform.id ? <CheckCircle2 size={16} /> : <ArrowRight size={16} />}
-                  <span>{selectedPlatform === platform.id ? "Selected" : "Continue"}</span>
-                </div>
-              </div>
-
-              {/* Background Glow */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/5 rounded-full blur-[60px] group-hover:bg-blue-500/10 transition-all duration-1000" />
-            </button>
-          ))}
-        </div>
-
-        {/* Info Callout */}
-        <div className="mt-24 p-12 bg-black rounded-[3rem] text-white overflow-hidden relative reveal active" style={{ transitionDelay: "600ms" }}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px] -mr-20 -mt-20" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-              <Target size={32} className="text-white" />
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-xl font-black mb-1">Working with multiple platforms?</h3>
-              <p className="text-gray-400 font-medium text-sm leading-relaxed">
-                You can link additional platforms from your dashboard after registration to merge your protection limits.
-              </p>
-            </div>
-            <button className="px-10 py-5 bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all shadow-xl active:scale-95 whitespace-nowrap">
-              Contact Support
-            </button>
-          </div>
+        {/* Action Footer */}
+        <div className="mt-20 flex flex-col items-center gap-6">
+          <button 
+            onClick={handleConnect}
+            disabled={!selectedPlatform}
+            className="w-full md:w-auto md:min-w-[320px] bg-[#0058be] text-[#ffffff] font-bold text-lg py-5 px-12 rounded-full shadow-[0_20px_40px_rgba(0,88,190,0.2)] hover:bg-[#2170e4] transition-all scale-100 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            Connect Platform
+            <ArrowRight size={20} strokeWidth={3} />
+          </button>
+          
+          <p className="text-sm text-[#424754] font-medium">
+            Don't see your platform? <a className="text-[#0058be] hover:underline underline-offset-4 font-bold ml-1" href="/support">Request integration</a>
+          </p>
         </div>
       </main>
     </div>

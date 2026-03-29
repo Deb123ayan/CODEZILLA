@@ -75,10 +75,78 @@ class VerifyOTPView(views.APIView):
                 user.save()
             
             # 3. Create the worker record
-            worker, _ = Worker.objects.get_or_create(phone=phone, defaults={'user': user})
+            worker, created_worker = Worker.objects.get_or_create(phone=phone, defaults={'user': user})
             if worker.user != user:
                 worker.user = user
                 worker.save(update_fields=['user'])
+                
+        if not worker.onboarding_completed:
+            from users.models import MockPlatformData
+            from policies.models import Policy
+            from deliveries.models import Delivery
+            from django.utils import timezone
+            import datetime
+            import random
+            
+            mock_data = MockPlatformData.objects.filter(phone=phone).first()
+            if mock_data:
+                worker.name = mock_data.name
+                worker.platform = mock_data.platform
+                worker.partner_id = mock_data.partner_id
+                worker.weekly_earnings = mock_data.weekly_earnings
+                worker.zone = mock_data.zone
+                worker.city = mock_data.city
+                worker.is_verified = True
+                worker.onboarding_completed = True
+                working_days_count = len(worker.working_days) if worker.working_days else 6
+                worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
+                worker.save()
+                
+                # Create a dummy policy if not exists
+                if not Policy.objects.filter(worker=worker, status='ACTIVE').exists():
+                    Policy.objects.create(
+                        worker=worker,
+                        plan_type='STANDARD',
+                        weekly_premium=80,
+                        coverage_limit=1500,
+                        payment_method='UPI',
+                        start_date=timezone.now().date(),
+                        end_date=timezone.now().date() + datetime.timedelta(days=7),
+                        next_payment_date=timezone.now().date() + datetime.timedelta(days=7),
+                    )
+                
+                # Create some sample deliveries so dashboard isn't empty
+                if not Delivery.objects.filter(worker=worker).exists():
+                    # 1. An ongoing delivery
+                    Delivery.objects.create(
+                        worker=worker,
+                        category='QUICK_COMMERCE' if worker.platform.lower() in ['zomato', 'swiggy', 'zepto', 'blinkit'] else 'PARCEL',
+                        city=worker.city or "Bangalore",
+                        location="Indiranagar 12th Main",
+                        amount=45,
+                        status='ONGOING',
+                        products=[{"name": "Masala Dosa x2", "price": 180}]
+                    )
+                    # 2. A completed delivery
+                    Delivery.objects.create(
+                        worker=worker,
+                        category='QUICK_COMMERCE' if worker.platform.lower() in ['zomato', 'swiggy', 'zepto', 'blinkit'] else 'PARCEL',
+                        city=worker.city or "Bangalore",
+                        location="Koramangala 4th Block",
+                        amount=55,
+                        status='COMPLETED',
+                        products=[{"name": "Italian Pizza", "price": 450}]
+                    )
+                    # 3. A pending delivery
+                    Delivery.objects.create(
+                        worker=worker,
+                        category='QUICK_COMMERCE' if worker.platform.lower() in ['zomato', 'swiggy', 'zepto', 'blinkit'] else 'PARCEL',
+                        city=worker.city or "Bangalore",
+                        location="HSR Layout Sector 2",
+                        amount=40,
+                        status='PENDING',
+                        products=[{"name": "Organic Grocery Bucket", "price": 850}]
+                    )
         
         refresh = RefreshToken.for_user(user)
         
@@ -103,32 +171,37 @@ class MockPlatformConnectView(views.APIView):
         phone = request.data.get('phone')
         platform = request.data.get('platform', 'Zomato')
         
+        if not phone:
+            return Response({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from users.models import MockPlatformData
+        mock_data = MockPlatformData.objects.filter(phone=phone, platform=platform).first()
+        
+        if not mock_data:
+            return Response({"error": f"No data found for this number on {platform}"}, status=status.HTTP_404_NOT_FOUND)
+            
         try:
             worker = Worker.objects.get(phone=phone)
+            worker.name = mock_data.name
+            worker.platform = platform
+            worker.partner_id = mock_data.partner_id
+            worker.weekly_earnings = mock_data.weekly_earnings
+            worker.zone = mock_data.zone
+            worker.city = mock_data.city
+            worker.is_verified = True
+            worker.onboarding_completed = True
+            worker.save()
         except Worker.DoesNotExist:
-            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+            # If the worker hasn't registered yet, we just return the mock data for the frontend to use
+            pass
             
-        # Mocking data generation
-        partner_id = f"{platform[:3].upper()}{random.randint(100000, 999999)}"
-        mock_name = "Rajesh Kumar" # In real app, might come from platform
-        mock_earnings = random.randint(3500, 5500)
-        mock_zone = "Koramangala, Bangalore"
-        
-        worker.name = mock_name
-        worker.platform = platform
-        worker.partner_id = partner_id
-        worker.weekly_earnings = mock_earnings
-        worker.zone = mock_zone
-        worker.is_verified = True
-        worker.save()
-        
         return Response({
             "message": "Connected to platform successfully",
             "data": {
-                "partner_id": partner_id,
-                "name": mock_name,
-                "weekly_earnings": mock_earnings,
-                "zone": mock_zone
+                "partner_id": mock_data.partner_id,
+                "name": mock_data.name,
+                "weekly_earnings": mock_data.weekly_earnings,
+                "zone": mock_data.zone
             }
         }, status=status.HTTP_200_OK)
 
@@ -167,6 +240,13 @@ class PlatformLoginView(views.APIView):
         
         is_new = False
         if not worker:
+            # Try to link with existing account by email or phone
+            if email and Worker.objects.filter(email=email).exists():
+                worker = Worker.objects.filter(email=email).first()
+            elif phone and Worker.objects.filter(phone=phone).exists():
+                worker = Worker.objects.filter(phone=phone).first()
+
+        if not worker:
             is_new = True
             if not phone:
                 phone = f"9{random.randint(100000000, 999999999)}"
@@ -180,8 +260,12 @@ class PlatformLoginView(views.APIView):
             user.save()
             
             # Check if phone already used by another worker
-            if Worker.objects.filter(phone=phone).exists():
+            while Worker.objects.filter(phone=phone).exists():
                 phone = f"9{random.randint(100000000, 999999999)}"
+                
+            # Extra safeguard for email
+            if email and Worker.objects.filter(email=email).exists():
+                email = f"{username}_{random.randint(100,999)}@mock.com"
                 
             worker = Worker.objects.create(
                 user=user,
@@ -198,19 +282,78 @@ class PlatformLoginView(views.APIView):
         else:
             # Update info if provided
             updated = False
+            
+            if not worker.partner_id:
+                worker.partner_id = partner_id
+                worker.platform = platform
+                updated = True
+                
             if name and worker.name != name:
                 worker.name = name
                 updated = True
+                
             if phone and worker.phone != phone:
-                worker.phone = phone
-                updated = True
+                if not Worker.objects.filter(phone=phone).exclude(id=worker.id).exists():
+                    worker.phone = phone
+                    updated = True
+                    
             if email and worker.email != email:
-                worker.email = email
-                updated = True
+                if not Worker.objects.filter(email=email).exclude(id=worker.id).exists():
+                    worker.email = email
+                    updated = True
             
             if updated:
                 worker.save()
         
+        # ── AUTO-POPULATE MOCK DATA ──
+        if not worker.onboarding_completed:
+            from users.models import MockPlatformData
+            from policies.models import Policy
+            from deliveries.models import Delivery
+            from django.utils import timezone
+            import datetime
+            
+            mock_data = MockPlatformData.objects.filter(phone=worker.phone, platform__iexact=platform).first()
+            
+            if not mock_data:
+                mock_data = MockPlatformData.objects.filter(phone=worker.phone).first()
+                if mock_data:
+                    mock_data.platform = platform
+                    mock_data.partner_id = f"{platform[:3].upper()}{random.randint(10000, 99999)}"
+
+            if mock_data:
+                worker.name = mock_data.name
+                worker.platform = mock_data.platform
+                worker.partner_id = mock_data.partner_id
+                worker.weekly_earnings = mock_data.weekly_earnings
+                worker.zone = mock_data.zone
+                worker.city = mock_data.city
+                worker.is_verified = True
+                worker.onboarding_completed = True
+                worker.save()
+                
+                if not Policy.objects.filter(worker=worker, status='ACTIVE').exists():
+                    Policy.objects.create(
+                        worker=worker,
+                        plan_type='STANDARD',
+                        weekly_premium=80,
+                        coverage_limit=1500,
+                        payment_method='UPI',
+                        start_date=timezone.now().date(),
+                        end_date=timezone.now().date() + datetime.timedelta(days=7),
+                        next_payment_date=timezone.now().date() + datetime.timedelta(days=7),
+                    )
+                
+                if not Delivery.objects.filter(worker=worker).exists():
+                    Delivery.objects.create(
+                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                        location="Indiranagar 12th Main", amount=45, status='ONGOING'
+                    )
+                    Delivery.objects.create(
+                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                        location="Koramangala 4th Block", amount=55, status='COMPLETED'
+                    )
+
         # Issue JWT
         refresh = RefreshToken.for_user(worker.user)
         
@@ -223,6 +366,22 @@ class PlatformLoginView(views.APIView):
             "onboarding_completed": worker.onboarding_completed,
             "is_new_account": is_new
         }, status=status.HTTP_200_OK)
+
+class UpdateProfileDetailsView(views.APIView):
+    def post(self, request):
+        phone = request.data.get('phone')
+        try:
+            worker = Worker.objects.get(phone=phone)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        worker.name = request.data.get('name', worker.name)
+        worker.govt_id = request.data.get('aadhaar_number', worker.govt_id)
+        worker.city = request.data.get('city', worker.city)
+        worker.platform = request.data.get('platform', worker.platform)
+        worker.save()
+        
+        return Response({"message": "Profile details updated"}, status=status.HTTP_200_OK)
 
 class UpdateWorkDetailsView(views.APIView):
     def post(self, request):
@@ -503,4 +662,63 @@ class VerifyClaimWeatherView(views.APIView):
             "disruption_triggers": result.get('actual_conditions', {}).get('triggers', []),
             "verdict": result['actual_conditions']['verdict'],
         }, status=status.HTTP_200_OK)
+class WorkerProfileView(views.APIView):
+    """
+    GET  /api/workers/<worker_id>/profile/  – fetch merged profile
+    PATCH /api/workers/<worker_id>/profile/ – update editable fields
+    """
+    def get(self, request, worker_id):
+        try:
+            worker = Worker.objects.get(id=worker_id)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        from users.models import MockPlatformData
+        mock = MockPlatformData.objects.filter(phone=worker.phone).first()
+        
+        if mock and (not worker.name or worker.name == "Delivery Partner"):
+            worker.name = mock.name
+            worker.save(update_fields=['name'])
+        
+        return Response({
+            "id": str(worker.id),
+            "name": worker.name or (mock.name if mock else "—"),
+            "phone": worker.phone,
+            "platform": worker.platform,
+            "partner_id": worker.partner_id,
+            "city": mock.city if mock else worker.city,
+            "zone": worker.zone,
+            "weekly_earnings": worker.weekly_earnings,
+            "total_deliveries": mock.total_deliveries if mock else worker.total_deliveries,
+            "rating": mock.rating if mock else None,
+            "vehicle_type": mock.vehicle_type if mock else worker.vehicle_type,
+            "joined_date": mock.joined_date.isoformat() if mock and mock.joined_date else worker.created_at.date().isoformat(),
+            "is_verified": worker.is_verified,
+            "wallet_savings": float(worker.wallet_savings),
+            "aadhaar_number": mock.aadhaar_number if mock and mock.aadhaar_number else None,
+            "pan_number":     mock.pan_number     if mock and mock.pan_number     else None,
+        }, status=status.HTTP_200_OK)
 
+
+    def patch(self, request, worker_id):
+        try:
+            worker = Worker.objects.get(id=worker_id)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        updatable = ['name', 'city', 'zone', 'vehicle_type', 'weekly_earnings']
+        changed = []
+        for field in updatable:
+            if field in request.data:
+                setattr(worker, field, request.data[field])
+                changed.append(field)
+
+        if changed:
+            # Recalculate avg_daily_income if weekly_earnings changed
+            if 'weekly_earnings' in changed:
+                working_days = len(worker.working_days) if worker.working_days else 6
+                worker.avg_daily_income = worker.weekly_earnings // max(working_days, 1)
+                changed.append('avg_daily_income')
+            worker.save(update_fields=changed)
+
+        return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)

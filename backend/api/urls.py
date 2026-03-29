@@ -10,6 +10,8 @@ from users.views import (
     WeatherCheckView,
     VerifyClaimWeatherView,
     PlatformLoginView,
+    WorkerProfileView,
+    UpdateProfileDetailsView,
 )
 from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
@@ -38,11 +40,13 @@ urlpatterns = [
     path('auth/screenshot/verify/', VerifyScreenshotView.as_view(), name='screenshot-verify'),
     path('auth/document/verify/', VerifyDocumentView.as_view(), name='document-verify'),
     path('auth/work-details/', UpdateWorkDetailsView.as_view(), name='update-work-details'),
+    path('auth/update-details/', UpdateProfileDetailsView.as_view(), name='update-profile-details'),
     path('auth/finalize/', FinalizeOnboardingView.as_view(), name='finalize-onboarding'),
 
     # ── Worker ─────────────────────────────────────────────────────────
     path('workers/register/', WorkerRegisterView.as_view(), name='worker-register'),
     path('workers/location/', UpdateLocationView.as_view(), name='update-location'),
+    path('workers/<uuid:worker_id>/profile/', WorkerProfileView.as_view(), name='worker-profile'),
     
     # ── Policy Management ──────────────────────────────────────────────
     path('policy/quote/', PolicyQuoteView.as_view(), name='policy-quote'),

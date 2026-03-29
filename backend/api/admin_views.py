@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from users.models import Worker
 from claims.models import Claim
 from policies.models import Policy
@@ -12,7 +12,7 @@ from datetime import date, timedelta
 
 
 class AdminWorkerListView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         workers = Worker.objects.all().values(
@@ -25,7 +25,7 @@ class AdminWorkerListView(APIView):
 
 
 class AdminRiskHeatmapView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         heatmap = Event.objects.values('zone').annotate(
@@ -36,7 +36,7 @@ class AdminRiskHeatmapView(APIView):
 
 
 class AdminClaimsMonitoringView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         total_compensation = Claim.objects.aggregate(Sum('compensation'))['compensation__sum'] or 0
@@ -69,7 +69,7 @@ class AdminAnalyticsView(APIView):
     GET /api/admin/analytics/
     Revenue metrics, worker growth, policy stats, and loss ratios.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         today = date.today()
@@ -140,7 +140,7 @@ class AdminFraudStatsView(APIView):
     GET /api/admin/fraud-stats/
     Fraud detection statistics and verification scores.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         fraud_flagged = Claim.objects.filter(status='FRAUD_FLAGGED').count()
@@ -186,7 +186,7 @@ class AdminClaimListView(APIView):
     GET /api/admin/claims/list/
     Lists all claims for admin review.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         # We need more details like worker name
@@ -204,7 +204,7 @@ class AdminClaimActionView(APIView):
     POST /api/admin/claims/<uuid:claim_id>/action/
     { "action": "APPROVE" | "REJECT" }
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def post(self, request, claim_id):
         action = request.data.get('action')
@@ -222,7 +222,7 @@ class AdminClaimActionView(APIView):
                 worker = claim.worker
                 active_policy = claim.policy
                 # Re-calc: average daily / hours
-                hourly_income = (worker.weekly_earnings / max(len(worker.working_days), 1)) / max(worker.working_hours, 1)
+                hourly_income = (worker.weekly_earnings / max(len(worker.working_days.split(',')), 1)) / max(worker.working_hours, 1)
                 claim.compensation = min(int(hourly_income * claim.lost_hours), active_policy.coverage_limit)
         else:
             claim.status = 'REJECTED'
