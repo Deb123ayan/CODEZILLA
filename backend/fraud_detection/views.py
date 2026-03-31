@@ -77,11 +77,12 @@ class VerifyDocumentView(views.APIView):
 
     def post(self, request):
         phone = request.data.get('phone')
-        aadhar = request.FILES.get('aadhar')
+        aadhar_front = request.FILES.get('aadhar_front') or request.FILES.get('aadhar') # Fallback to 'aadhar' for compatibility
+        aadhar_back = request.FILES.get('aadhar_back')
         pan = request.FILES.get('pan')
         
-        if not phone or (not aadhar and not pan):
-            return Response({"error": "Phone and at least one document required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not phone:
+            return Response({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
             worker = Worker.objects.get(phone=phone)
@@ -90,63 +91,30 @@ class VerifyDocumentView(views.APIView):
 
         results = {}
         kyc_service = KYCVerification()
-        total_score = 0
-        docs_count = 0
-
-        # Process Aadhaar
-        if aadhar:
-            docs_count += 1
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
-                for chunk in aadhar.chunks():
-                    tmp.write(chunk)
-                tmp_path = tmp.name
-
-            # Part 1: Classifier (Is it an Aadhar card?)
-            is_valid_type, confidence, pred_type = kyc_service.verify_document(tmp_path, expected_type='Aadhar')
+        forensics = ScreenshotForensics()
+        
+        def process_doc(file_obj, expected_type):
+            if not file_obj: return None, 0, "None", False, {}
             
-            # Part 2: Forensics (Is it edited/fake?)
-            forensics = ScreenshotForensics()
-            with open(tmp_path, 'rb') as f:
-                image_bytes = f.read()
-            ai_score, ai_findings = forensics.check_ai_and_editing(image_bytes)
-            os.unlink(tmp_path)
-
-            is_authentic = (ai_score >= 0)
-            is_verified = is_valid_type and is_authentic
-
-            results['aadhar'] = {
-                "verified": is_verified,
-                "confidence": confidence,
-                "detected_type": pred_type,
-                "tampering_detected": not is_authentic,
-                "forensics_findings": ai_findings,
-                "status": "PASS" if is_verified else "FAIL"
-            }
-            if is_verified:
-                worker.aadhar_front = aadhar
-                worker.is_aadhar_verified = True
-
-        # Process PAN
-        if pan:
-            docs_count += 1
             with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
-                for chunk in pan.chunks():
+                for chunk in file_obj.chunks():
                     tmp.write(chunk)
                 tmp_path = tmp.name
 
-            # Part 1: Classifier
-            is_valid_type, confidence, pred_type = kyc_service.verify_document(tmp_path, expected_type='PAN')
+            # Part 1: AI Classifier
+            is_valid_type, confidence, pred_type = kyc_service.verify_document(tmp_path, expected_type=expected_type)
             
             # Part 2: Forensics
-            with open(tmp_path, 'rb') as f:
-                image_bytes = f.read()
+            file_obj.seek(0)
+            image_bytes = file_obj.read()
             ai_score, ai_findings = forensics.check_ai_and_editing(image_bytes)
             os.unlink(tmp_path)
 
+            file_obj.seek(0) # IMPORTANT: Seek back to 0 for Django storage
             is_authentic = (ai_score >= 0)
             is_verified = is_valid_type and is_authentic
-
-            results['pan'] = {
+            
+            detail = {
                 "verified": is_verified,
                 "confidence": confidence,
                 "detected_type": pred_type,
@@ -154,19 +122,35 @@ class VerifyDocumentView(views.APIView):
                 "forensics_findings": ai_findings,
                 "status": "PASS" if is_verified else "FAIL"
             }
-            if is_verified:
-                worker.pan_card = pan
-                worker.is_pan_verified = True
+            return detail, confidence, pred_type, is_verified, detail
 
-        # Final Verdict
+        # Process Documents
+        if aadhar_front:
+            detail, conf, ptype, verified, _ = process_doc(aadhar_front, 'Aadhar')
+            results['aadhar_front'] = detail
+            worker.aadhar_front = aadhar_front
+            worker.is_aadhar_verified = verified
+
+        if aadhar_back:
+            # We don't necessarily need a classifier for the back, but we run forensics
+            detail, conf, ptype, verified, _ = process_doc(aadhar_back, 'Aadhar')
+            results['aadhar_back'] = detail
+            worker.aadhar_back = aadhar_back
+            # Back verification doesn't globally set verified yet but we store it
+        
+        if pan:
+            detail, conf, ptype, verified, _ = process_doc(pan, 'PAN')
+            results['pan'] = detail
+            worker.pan_card = pan
+            worker.is_pan_verified = verified
+
+        # Final Verdict logic
         if worker.is_aadhar_verified and worker.is_pan_verified:
             worker.is_verified = True
             worker.kyc_submitted_at = timezone.now()
             verdict = "VERIFIED"
-        elif docs_count > 0:
-            verdict = "PARTIAL_OR_FAILED"
         else:
-            verdict = "REJECTED"
+            verdict = "PENDING_OR_FAILED"
 
         worker.save()
 

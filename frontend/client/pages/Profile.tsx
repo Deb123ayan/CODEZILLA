@@ -30,6 +30,9 @@ interface WorkerProfile {
   wallet_savings: number;
   aadhaar_number: string | null;
   pan_number: string | null;
+  aadhar_front: string | null;
+  aadhar_back: string | null;
+  pan_card: string | null;
 }
 
 interface EditForm {
@@ -48,6 +51,7 @@ export default function Profile() {
   const [profile, setProfile]       = useState<WorkerProfile | null>(null);
   const [loading, setLoading]       = useState(true);
   const [editOpen, setEditOpen]     = useState(false);
+  const [govtIdOpen, setGovtIdOpen] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [form, setForm]             = useState<EditForm>({
     name: "", city: "", zone: "", vehicle_type: "",
@@ -229,22 +233,6 @@ export default function Profile() {
               { Icon: Zap,        label: `${platformName} Partner ID`, value: displayPartner },
               { Icon: MapPin,     label: "Service Zone",         value: displayZone || displayCity },
               { Icon: CreditCard, label: "UPI Settlement",       value: displayUPI },
-              {
-                Icon: IdCard,
-                label: "Aadhaar Number",
-                // Mask first 8 digits: XXXX XXXX 1234
-                value: profile?.aadhaar_number
-                  ? `XXXX XXXX ${profile.aadhaar_number.replace(/\s/g, "").slice(-4)}`
-                  : "—",
-              },
-              {
-                Icon: IdCard,
-                label: "PAN Card",
-                // Mask middle 4 digits: AB**E1***F
-                value: profile?.pan_number
-                  ? `${profile.pan_number.slice(0, 2)}***${profile.pan_number.slice(5, 6)}${profile.pan_number.slice(6, 9).replace(/./g, "*")}${profile.pan_number.slice(-1)}`
-                  : "—",
-              },
             ].map(({ Icon, label, value }) => (
               <div key={label} className="flex items-center gap-4 px-8 py-5 hover:bg-[#fafaf9] transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-[#f5f3f1] flex items-center justify-center text-[#004191] flex-shrink-0">
@@ -267,12 +255,16 @@ export default function Profile() {
           </div>
           <div className="divide-y divide-[#f5f3f1]">
             {[
-              { Icon: Bell,  label: "Notifications", value: "Active",   dot: "#004191" },
-              { Icon: Globe, label: "Language",       value: "English",  dot: "#16a34a" },
-              { Icon: Shield,label: "Govt ID Status", value: "Verified", dot: "#16a34a" },
-              { Icon: Lock,  label: "Biometrics",     value: "Enabled",  dot: "#16a34a" },
-            ].map(({ Icon, label, value, dot }) => (
-              <div key={label} className="flex items-center justify-between px-8 py-5 hover:bg-[#fafaf9] transition-colors cursor-pointer group">
+              { Icon: Bell,  label: "Notifications", value: "Active",   dot: "#004191", onClick: () => {} },
+              { Icon: Globe, label: "Language",       value: "English",  dot: "#16a34a", onClick: () => {} },
+              { Icon: Shield,label: "Govt ID Status", value: profile?.is_verified ? "Verified" : "Pending", dot: profile?.is_verified ? "#16a34a" : "#ca8a04", onClick: () => setGovtIdOpen(true) },
+              { Icon: Lock,  label: "Biometrics",     value: "Enabled",  dot: "#16a34a", onClick: () => {} },
+            ].map(({ Icon, label, value, dot, onClick }) => (
+              <div 
+                key={label} 
+                onClick={onClick}
+                className="flex items-center justify-between px-8 py-5 hover:bg-[#fafaf9] transition-colors cursor-pointer group"
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#f5f3f1] flex items-center justify-center text-[#434751] group-hover:bg-[#e8f0ff] group-hover:text-[#004191] transition-colors">
                     <Icon size={18} />
@@ -469,6 +461,113 @@ export default function Profile() {
                   )}
                 </button>
 
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          Govt IDs Drawer
+      ════════════════════════════════════════════════════════════════ */}
+      {govtIdOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setGovtIdOpen(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_-12px_rgba(27,28,27,0.25)] max-h-[92vh] overflow-y-auto">
+              <div className="flex justify-center pt-4 pb-2">
+                <div className="w-12 h-1.5 bg-[#e4e2e0] rounded-full" />
+              </div>
+
+              <div className="flex items-center justify-between px-8 py-4 border-b border-[#f5f3f1]">
+                <div>
+                  <h2 className="text-xl font-black text-[#1b1c1b]">Government IDs</h2>
+                  <p className="text-xs text-[#a8aebf] font-medium mt-0.5">Your verified identity documents</p>
+                </div>
+                <button
+                  onClick={() => setGovtIdOpen(false)}
+                  className="w-10 h-10 rounded-full bg-[#f5f3f1] flex items-center justify-center text-[#434751] hover:bg-[#e4e2e0] transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="px-8 py-6 space-y-8 pb-12">
+                {/* Aadhaar Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#e8f0ff] flex items-center justify-center text-[#004191]">
+                      <IdCard size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-inter font-bold uppercase tracking-widest text-[#a8aebf]">Aadhaar Number</p>
+                      <p className="text-sm font-bold text-[#1b1c1b] font-mono">
+                        {profile?.aadhaar_number ? `XXXX XXXX ${profile.aadhaar_number.replace(/\s/g, "").slice(-4)}` : "—"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase">Front View</p>
+                      <div className="aspect-[3/2] bg-[#f7f5f3] rounded-2xl border border-[#e4e2e0] overflow-hidden flex items-center justify-center">
+                        {profile?.aadhar_front ? (
+                          <img src={profile.aadhar_front} alt="Aadhaar Front" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center p-4">
+                            <Shield className="w-8 h-8 text-[#e4e2e0] mx-auto mb-2" />
+                            <p className="text-[8px] text-[#a8aebf] font-bold uppercase text-center">No image</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase">Back View</p>
+                      <div className="aspect-[3/2] bg-[#f7f5f3] rounded-2xl border border-[#e4e2e0] overflow-hidden flex items-center justify-center">
+                        {profile?.aadhar_back ? (
+                          <img src={profile.aadhar_back} alt="Aadhaar Back" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center p-4">
+                            <Shield className="w-8 h-8 text-[#e4e2e0] mx-auto mb-2" />
+                            <p className="text-[8px] text-[#a8aebf] font-bold uppercase text-center">No image</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PAN Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 border-t border-[#f5f3f1] pt-6">
+                    <div className="w-8 h-8 rounded-lg bg-[#fefce8] flex items-center justify-center text-[#d4af37]">
+                      <CreditCard size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-inter font-bold uppercase tracking-widest text-[#a8aebf]">PAN Card Number</p>
+                      <p className="text-sm font-bold text-[#1b1c1b] font-mono">
+                        {profile?.pan_number ? `${profile.pan_number.slice(0, 2)}***${profile.pan_number.slice(5, 6)}${profile.pan_number.slice(6, 9).replace(/./g, "*")}${profile.pan_number.slice(-1)}` : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase">Card Image</p>
+                    <div className="aspect-video bg-[#f7f5f3] rounded-2xl border border-[#e4e2e0] overflow-hidden flex items-center justify-center">
+                      {profile?.pan_card ? (
+                        <img src={profile.pan_card} alt="PAN Card" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Shield className="w-8 h-8 text-[#e4e2e0] mx-auto mb-2" />
+                          <p className="text-[8px] text-[#a8aebf] font-bold uppercase text-center">No image</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

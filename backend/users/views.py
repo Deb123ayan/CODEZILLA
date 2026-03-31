@@ -697,6 +697,9 @@ class WorkerProfileView(views.APIView):
             "wallet_savings": float(worker.wallet_savings),
             "aadhaar_number": mock.aadhaar_number if mock and mock.aadhaar_number else None,
             "pan_number":     mock.pan_number     if mock and mock.pan_number     else None,
+            "aadhar_front": request.build_absolute_uri(worker.aadhar_front.url) if bool(worker.aadhar_front) else None,
+            "aadhar_back":  request.build_absolute_uri(worker.aadhar_back.url)  if bool(worker.aadhar_back)  else None,
+            "pan_card":     request.build_absolute_uri(worker.pan_card.url)     if bool(worker.pan_card)     else None,
         }, status=status.HTTP_200_OK)
 
 

@@ -3,196 +3,133 @@ import { Upload, ChevronRight, CheckCircle2, Loader2, FileText, X, ShieldCheck }
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useUserAuth } from "@/context/UserAuthContext";
+import { api } from "@/lib/api-client";
 
 export default function DocumentVerification() {
   const navigate = useNavigate();
+  const { phoneNumber } = useUserAuth();
   const [loading, setLoading] = useState(false);
-  const [aadharFile, setAadharFile] = useState<File | null>(null);
+  const [aadharFront, setAadharFront] = useState<File | null>(null);
+  const [aadharBack, setAadharBack] = useState<File | null>(null);
   const [panFile, setPanFile] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "aadhar" | "pan") => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "aadhar_front" | "aadhar_back" | "pan") => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (type === "aadhar") {
-        setAadharFile(file);
-      } else {
-        setPanFile(file);
-      }
+      if (type === "aadhar_front") setAadharFront(file);
+      else if (type === "aadhar_back") setAadharBack(file);
+      else setPanFile(file);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!aadharFile || !panFile) {
-      toast.error("Please upload both Aadhaar and PAN documents");
+    if (!aadharFront || !panFile) {
+      toast.error("Please upload at least Aadhaar Front and PAN");
+      return;
+    }
+
+    if (!phoneNumber) {
+      toast.error("Session expired. Please login again.");
+      navigate("/login");
       return;
     }
 
     setLoading(true);
-    // Simulate API call for document upload
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
+    try {
+      const formData = new FormData();
+      formData.append("phone", phoneNumber);
+      formData.append("aadhar_front", aadharFront);
+      if (aadharBack) formData.append("aadhar_back", aadharBack);
+      formData.append("pan", panFile);
 
-    toast.success("Documents verified successfully!");
-    navigate("/buy-plan"); // Step 3
+      const response = await api.post<any>("/auth/document/verify/", formData);
+      
+      if (response.verdict === "VERIFIED") {
+        toast.success("Documents verified successfully!");
+      } else {
+        toast.warning("Documents uploaded for review.");
+      }
+      
+      navigate("/buy-plan"); 
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload documents");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-[#fdf8f8] text-[#1c1b1b] antialiased min-h-screen flex flex-col font-inter">
-      {/* TopNavBar */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-[#fdf8f8]/90 backdrop-blur-md shadow-[0px_24px_48px_-12px_rgba(28,27,27,0.02)]">
         <div className="text-2xl font-black tracking-tighter text-[#1c1b1b]">Zafby</div>
       </header>
 
-      {/* Main Content Canvas */}
-      <main className="flex-grow pt-32 pb-40 px-6 flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
-        {/* Architectural Header Section */}
+      <main className="flex-grow pt-32 pb-40 px-6 flex flex-col items-center justify-center max-w-6xl mx-auto w-full">
         <section className="w-full text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-4 text-[#1c1b1b]">
             Document Verification
           </h1>
           <p className="text-[#424753] text-lg max-w-xl mx-auto font-medium opacity-80">
-            Upload your Aadhaar and PAN card for instant verification.
+            Upload your Aadhaar (Front & Back) and PAN card.
           </p>
         </section>
 
-        {/* Progress Indicator Block */}
-        <div className="w-full max-w-2xl mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-          <div className="flex justify-between items-end mb-4">
-            <span className="text-[#004191] font-bold text-sm tracking-widest uppercase">
-              Step 2 of 3
-            </span>
-            <span className="text-[#424753] font-semibold text-xs">66% Complete</span>
-          </div>
-          <div className="w-full h-2 bg-[#f1edec] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#004191] to-[#0058be] w-[66%] rounded-full transition-all duration-1000"></div>
-          </div>
-        </div>
-
-        {/* Bento-Style Grid for Document Uploads */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           
-          {/* Aadhaar Card Dropzone */}
-          <label
-            className={cn(
-              "group relative bg-[#ffffff] rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-[0px_24px_48px_-12px_rgba(28,27,27,0.06)] hover:shadow-[0px_32px_64px_-16px_rgba(28,27,27,0.12)] transition-all duration-500 border-2 min-h-[320px]",
-              aadharFile ? "border-[#0058be]/40 bg-[#d8e2ff]/10" : "border-dashed border-[#c2c6d5]/40 hover:border-[#004191]/40"
-            )}
-          >
-            <div
-              className={cn(
-                "mb-6 p-6 rounded-full transition-colors duration-500",
-                aadharFile ? "bg-[#d8e2ff] text-[#004191]" : "bg-[#f7f2f2] group-hover:bg-[#d8e2ff] text-[#004191]"
-              )}
-            >
-              {aadharFile ? <FileText size={40} /> : <Upload size={40} />}
+          {/* Aadhaar Front */}
+          <label className={cn(
+            "group relative bg-[#ffffff] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-500 border-2 min-h-[280px]",
+            aadharFront ? "border-[#0058be]/40 bg-[#d8e2ff]/10" : "border-dashed border-[#c2c6d5]/40 hover:border-[#004191]/40"
+          )}>
+            <div className={cn("mb-4 p-5 rounded-full transition-colors", aadharFront ? "bg-[#d8e2ff] text-[#004191]" : "bg-[#f7f2f2] text-[#004191]")}>
+              {aadharFront ? <FileText size={32} /> : <Upload size={32} />}
             </div>
-            
-            <h3 className="text-xl font-bold mb-2 text-[#1c1b1b]">
-               {aadharFile ? "Aadhaar Selected" : "Aadhaar Card"}
-            </h3>
-            
-            <p className="text-[#424753] text-sm font-medium">
-              {aadharFile ? aadharFile.name : "Click to upload or drag & drop"}
-            </p>
-            
-            <input
-              type="file"
-              className="hidden"
-              accept=".pdf,image/*"
-              onChange={(e) => handleFileChange(e, "aadhar")}
-            />
-            {aadharFile && (
-               <div
-                  className="absolute top-4 right-4 p-2 bg-[#ffffff] shadow-md rounded-full text-[#1c1b1b] hover:bg-[#ba1a1a] hover:text-[#ffffff] transition-colors"
-                  onClick={(e) => { e.preventDefault(); setAadharFile(null); }}
-               >
-                 <X size={16} />
-               </div>
-            )}
+            <h3 className="text-lg font-bold mb-1">Aadhaar Front</h3>
+            <p className="text-xs text-[#424753]">{aadharFront ? aadharFront.name : "Tap to upload"}</p>
+            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "aadhar_front")} />
           </label>
 
-          {/* PAN Card Dropzone */}
-          <label
-            className={cn(
-              "group relative bg-[#ffffff] rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-[0px_24px_48px_-12px_rgba(28,27,27,0.06)] hover:shadow-[0px_32px_64px_-16px_rgba(28,27,27,0.12)] transition-all duration-500 border-2 min-h-[320px]",
-              panFile ? "border-[#0058be]/40 bg-[#d8e2ff]/10" : "border-dashed border-[#c2c6d5]/40 hover:border-[#004191]/40"
-            )}
-          >
-            <div
-              className={cn(
-                "mb-6 p-6 rounded-full transition-colors duration-500",
-                panFile ? "bg-[#d8e2ff] text-[#004191]" : "bg-[#f7f2f2] group-hover:bg-[#d8e2ff] text-[#004191]"
-              )}
-            >
-              {panFile ? <FileText size={40} /> : <Upload size={40} />}
+          {/* Aadhaar Back */}
+          <label className={cn(
+            "group relative bg-[#ffffff] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-500 border-2 min-h-[280px]",
+            aadharBack ? "border-[#0058be]/40 bg-[#d8e2ff]/10" : "border-dashed border-[#c2c6d5]/40 hover:border-[#004191]/40"
+          )}>
+            <div className={cn("mb-4 p-5 rounded-full transition-colors", aadharBack ? "bg-[#d8e2ff] text-[#004191]" : "bg-[#f7f2f2] text-[#004191]")}>
+              {aadharBack ? <FileText size={32} /> : <Upload size={32} />}
             </div>
-            
-            <h3 className="text-xl font-bold mb-2 text-[#1c1b1b]">
-               {panFile ? "PAN Selected" : "PAN Card"}
-            </h3>
-            
-            <p className="text-[#424753] text-sm font-medium">
-              {panFile ? panFile.name : "Click to upload or drag & drop"}
-            </p>
-            
-            <input
-              type="file"
-              className="hidden"
-              accept=".pdf,image/*"
-              onChange={(e) => handleFileChange(e, "pan")}
-            />
-            {panFile && (
-               <div
-                  className="absolute top-4 right-4 p-2 bg-[#ffffff] shadow-md rounded-full text-[#1c1b1b] hover:bg-[#ba1a1a] hover:text-[#ffffff] transition-colors"
-                  onClick={(e) => { e.preventDefault(); setPanFile(null); }}
-               >
-                 <X size={16} />
-               </div>
-            )}
+            <h3 className="text-lg font-bold mb-1">Aadhaar Back</h3>
+            <p className="text-xs text-[#424753]">{aadharBack ? aadharBack.name : "Tap to upload (Optional)"}</p>
+            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "aadhar_back")} />
+          </label>
+
+          {/* PAN Card */}
+          <label className={cn(
+            "group relative bg-[#ffffff] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-500 border-2 min-h-[280px]",
+            panFile ? "border-[#0058be]/40 bg-[#d8e2ff]/10" : "border-dashed border-[#c2c6d5]/40 hover:border-[#004191]/40"
+          )}>
+            <div className={cn("mb-4 p-5 rounded-full transition-colors", panFile ? "bg-[#d8e2ff] text-[#004191]" : "bg-[#f7f2f2] text-[#004191]")}>
+              {panFile ? <FileText size={32} /> : <Upload size={32} />}
+            </div>
+            <h3 className="text-lg font-bold mb-1">PAN Card</h3>
+            <p className="text-xs text-[#424753]">{panFile ? panFile.name : "Tap to upload"}</p>
+            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "pan")} />
           </label>
 
         </div>
-
-        {/* Security Badge Footer Inside Canvas */}
-        {/* <div className="mt-16 flex items-center gap-3 py-4 px-8 bg-[#f1edec] rounded-full opacity-70 animate-in fade-in duration-1000 delay-300">
-          <ShieldCheck className="text-[#004191]" size={20} />
-          <span className="text-xs font-bold tracking-wider text-[#424753] uppercase">
-            Encrypted Security
-          </span>
-        </div> */}
       </main>
 
-      {/* BottomNavBar (Transaction Shell) */}
-      <footer className="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-10 py-6 md:py-8 bg-[#ffffff]/90 backdrop-blur-xl rounded-t-[1.5rem] shadow-[0px_-10px_30px_rgba(0,0,0,0.03)] border-t border-[#f1edec]">
-        <button
-          className="hidden md:flex flex-col items-center justify-center text-[#1c1b1b] px-8 py-3 font-semibold text-xs uppercase tracking-widest hover:translate-y-[-2px] transition-all duration-300"
-          onClick={() => navigate(-1)}
-        >
-          Back
-        </button>
-
+      <footer className="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-10 py-8 bg-[#ffffff]/90 backdrop-blur-xl border-t border-[#f1edec]">
+        <button className="text-[#1c1b1b] font-semibold text-xs uppercase tracking-widest" onClick={() => navigate(-1)}>Back</button>
         <button
           onClick={handleSubmit}
-          disabled={loading || (!aadharFile && !panFile)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-br from-[#004191] to-[#0058be] text-[#ffffff] rounded-[1.5rem] px-10 py-4 font-semibold text-xs uppercase tracking-widest hover:shadow-[0_10px_20px_rgba(0,88,190,0.2)] transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading || !aadharFront || !panFile}
+          className="bg-gradient-to-br from-[#004191] to-[#0058be] text-[#ffffff] rounded-full px-12 py-4 font-bold text-xs uppercase tracking-widest"
         >
-          {loading ? (
-             <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <>
-               <span>Verify & Continue</span>
-               <ChevronRight size={18} />
-            </>
-          )}
+          {loading ? <Loader2 size={18} className="animate-spin" /> : "Verify & Continue"}
         </button>
-
-        <button
-          onClick={() => navigate("/buy-plan")}
-          className="hidden md:flex flex-col items-center justify-center text-[#1c1b1b] px-8 py-3 font-semibold text-xs uppercase tracking-widest opacity-50 hover:opacity-100 transition-all duration-300"
-        >
-          Skip for now
-        </button>
+        <button onClick={() => navigate("/buy-plan")} className="text-[#1c1b1b] opacity-50 font-bold text-xs uppercase tracking-widest">Skip</button>
       </footer>
     </div>
   );

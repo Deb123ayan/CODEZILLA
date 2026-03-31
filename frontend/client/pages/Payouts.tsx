@@ -69,6 +69,35 @@ export default function Payouts() {
     fetchPayouts();
   }, [workerId, phoneNumber]);
 
+  const downloadStatement = () => {
+    if (transactions.length === 0) {
+      toast.error("No transactions to export");
+      return;
+    }
+    
+    const headers = ["TXN Ref", "Date", "Details", "Amount", "Status"];
+    const rows = transactions.map(txn => [
+      txn.id,
+      txn.date,
+      txn.bank,
+      txn.amount.replace('₹', ''),
+      txn.status
+    ]);
+    
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `zafby_statement_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Statement downloaded successfully");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#fcf9f8] space-y-6">
@@ -97,16 +126,12 @@ export default function Payouts() {
             <p className="text-[#434751] mt-3 font-medium text-lg">Manage your {platformName} income protection settlements.</p>
           </div>
           <div className="flex items-center space-x-3">
-             <button className="flex items-center justify-center space-x-2 px-6 py-4 bg-[#f5f3f1] text-[#1b1c1b] rounded-full hover:bg-[#e4e2e0] transition-all font-inter font-bold text-[11px] uppercase tracking-[0.1em] border border-[#e4e2e0]/50">
-               <Download size={16} />
-               <span>Statement</span>
-             </button>
-             <button
-               onClick={() => toast.success("Withdrawal initiated!")}
+             <button 
+               onClick={downloadStatement}
                className="flex items-center justify-center space-x-2 px-8 py-4 bg-[#004191] text-white rounded-full hover:bg-[#002b63] transition-all shadow-[0_12px_24px_-8px_rgba(0,65,145,0.3)] active:scale-[0.98] font-inter font-bold text-[11px] uppercase tracking-[0.1em]"
              >
-               <Target size={16} />
-               <span>Withdraw All</span>
+               <Download size={16} />
+               <span>Download Statement</span>
              </button>
           </div>
         </div>
