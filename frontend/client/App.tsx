@@ -31,6 +31,7 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWorkers from "./pages/AdminWorkers";
 import AdminClaims from "./pages/AdminClaims";
+import AdminPolicies from "./pages/AdminPolicies";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminAlerts from "./pages/AdminAlerts";
 import AdminSettings from "./pages/AdminSettings";
@@ -141,8 +142,10 @@ const App = () => {
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+              <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
               <Route path="/admin/workers" element={<AdminGuard><AdminWorkers /></AdminGuard>} />
               <Route path="/admin/claims" element={<AdminGuard><AdminClaims /></AdminGuard>} />
+              <Route path="/admin/policies" element={<AdminGuard><AdminPolicies /></AdminGuard>} />
               <Route path="/admin/analytics" element={<AdminGuard><AdminAnalytics /></AdminGuard>} />
               <Route path="/admin/alerts" element={<AdminGuard><AdminAlerts /></AdminGuard>} />
               <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />

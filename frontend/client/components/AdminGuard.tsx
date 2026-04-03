@@ -21,8 +21,8 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     }
 
     if (status === "logged_out") {
-        // Admin is completely sealed — send to landing page
-        return <Navigate to="/" replace />;
+        // Admin session ended — redirect to login
+        return <Navigate to="/admin/login" replace />;
     }
 
     // status === "unauthenticated" — fresh session, show login

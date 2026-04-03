@@ -20,6 +20,8 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+const PLAN_DURATION_DAYS = 4;
+
 export default function Dashboard() {
   const { platform: userPlatform, username: userUsername, phoneNumber, platformId, workerId, logout } = useUserAuth();
   const platform = userPlatform || "general";
@@ -317,6 +319,55 @@ export default function Dashboard() {
               </div>
             </div>
 
+          </div>
+        </section>
+
+        {/* Protection Cycle Summary */}
+        <section className="bg-[#1b1c1b] rounded-[3rem] p-8 md:p-12 text-white shadow-[0_40px_80px_-20px_rgba(27,28,27,0.3)] relative overflow-hidden flex flex-col md:flex-row items-center gap-12 group">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#004191] rounded-full -mr-32 -mt-32 blur-[120px] opacity-20 mix-blend-screen pointer-events-none group-hover:opacity-30 transition-opacity duration-700" />
+          
+          <div className="relative z-10 flex-1 space-y-6 text-center md:text-left">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">30-Day Protection Cycle</h2>
+              <p className="text-[#a8aebf] font-medium text-lg mt-2">Active continuity for parametric claim eligibility.</p>
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 py-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase tracking-[0.2em]">Current Day</p>
+                <p className="text-3xl font-extrabold text-white">{dashboardData?.policy?.cycle_info?.day || 0}<span className="text-lg text-[#434751] font-medium ml-1">/ 30</span></p>
+              </div>
+              <div className="w-px h-12 bg-[#434751]/40 hidden md:block" />
+              <div className="space-y-1">
+                <p className="text-[10px] font-inter font-bold text-[#a8aebf] uppercase tracking-[0.2em]">Status</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#16a34a] rounded-full animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.6)]" />
+                  <p className="text-xl font-bold text-white tracking-tight">Protected</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-sm text-[#a8aebf] leading-relaxed max-w-md mx-auto md:mx-0">
+               Maintain your cycle by renewing your active policy every {PLAN_DURATION_DAYS} days. Successful cycles unlock higher coverage limits and trust scores.
+            </p>
+          </div>
+
+          <div className="relative shrink-0 w-64 h-64 flex items-center justify-center">
+             {/* Progress Circle Graphic */}
+             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-[#434751]/30" />
+                <circle 
+                  cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                  strokeDasharray={2 * Math.PI * 44}
+                  strokeDashoffset={2 * Math.PI * 44 * (1 - (dashboardData?.policy?.cycle_info?.progress_percent || 0) / 100)}
+                  strokeLinecap="round"
+                  className="text-[#004191] transition-all duration-1000 ease-out"
+                />
+             </svg>
+             <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="text-4xl font-extrabold text-white tracking-tighter">{dashboardData?.policy?.cycle_info?.progress_percent || 0}%</span>
+                <span className="text-[9px] font-inter font-bold text-[#a8aebf] uppercase tracking-[0.2em] mt-1">Cycle Maturity</span>
+             </div>
           </div>
         </section>
 

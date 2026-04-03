@@ -3,7 +3,10 @@ export const API_BASE_URL = "http://localhost:8000/api";
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
   
-  const token = typeof window !== "undefined" ? sessionStorage.getItem("accessToken") : null;
+  // Admin token takes priority — ensures admin API calls use is_staff credentials
+  const token = typeof window !== "undefined" 
+    ? (sessionStorage.getItem("adminAccessToken") || sessionStorage.getItem("accessToken")) 
+    : null;
   
   const isFormData = options.body instanceof FormData;
   

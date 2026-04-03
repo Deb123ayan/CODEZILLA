@@ -36,13 +36,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = useCallback(async (username?: string, password?: string) => {
         if (!username || !password) {
-            // Fallback for demo if no credentials provided
-            sessionStorage.setItem(STORAGE_KEY, "authenticated");
-            setStatus("authenticated");
-            return true;
+            toast.error("Please enter administrator credentials");
+            return false;
         }
 
         try {
+            // Always try the real backend first — this gets a proper JWT token
+            // that the backend uses to verify admin permissions (IsAdminUser)
             const res = await api.post<any>("/token/", { username, password });
             sessionStorage.setItem(ADMIN_ACCESS_TOKEN, res.access);
             sessionStorage.setItem(ADMIN_REFRESH_TOKEN, res.refresh);
@@ -50,7 +50,25 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
             setStatus("authenticated");
             return true;
         } catch (error: any) {
-            toast.error(error.message || "Invalid admin credentials");
+            // Backend returned 401 → wrong credentials
+            const msg: string = error.message || "";
+            if (msg.includes("401") || msg.toLowerCase().includes("no active") || msg.toLowerCase().includes("unauthorized")) {
+                toast.error("Invalid administrator credentials");
+                return false;
+            }
+            // Backend is unreachable (network error) → check against .env for offline fallback
+            const envEmail = import.meta.env.VITE_ADMIN_EMAIL || "admin@user.com";
+            const envPassword = import.meta.env.VITE_ADMIN_PASSWORD || "admin";
+            if (username === envEmail && password === envPassword) {
+                // Offline mode — no JWT, but mark as authenticated so the UI works
+                sessionStorage.removeItem(ADMIN_ACCESS_TOKEN);
+                sessionStorage.removeItem(ADMIN_REFRESH_TOKEN);
+                sessionStorage.setItem(STORAGE_KEY, "authenticated");
+                setStatus("authenticated");
+                toast.warning("Connected in offline mode — live data unavailable");
+                return true;
+            }
+            toast.error(error.message || "Unable to reach authentication server");
             return false;
         }
     }, []);
@@ -62,7 +80,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.removeItem(ADMIN_REFRESH_TOKEN);
         setStatus("logged_out");
         // Replace current history entry → Back button cannot return to admin
-        navigate("/", { replace: true });
+        navigate("/admin/login", { replace: true });
     }, [navigate]);
 
     return (

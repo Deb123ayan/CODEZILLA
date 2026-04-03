@@ -177,8 +177,17 @@ class MockPlatformConnectView(views.APIView):
         from users.models import MockPlatformData
         mock_data = MockPlatformData.objects.filter(phone=phone, platform=platform).first()
         
+        # DEMO FALLBACK: If no mock data exists, create some on the fly for better UX
         if not mock_data:
-            return Response({"error": f"No data found for this number on {platform}"}, status=status.HTTP_404_NOT_FOUND)
+            mock_data = MockPlatformData.objects.create(
+                phone=phone,
+                platform=platform,
+                name=f"Partner-{phone[-4:]}",
+                partner_id=f"{platform[:3].upper()}{random.randint(10000, 99999)}",
+                weekly_earnings=random.randint(4000, 8000),
+                zone="HSR Layout, Bangalore",
+                city="Bangalore"
+            )
             
         try:
             worker = Worker.objects.get(phone=phone)
@@ -192,7 +201,6 @@ class MockPlatformConnectView(views.APIView):
             worker.onboarding_completed = True
             worker.save()
         except Worker.DoesNotExist:
-            # If the worker hasn't registered yet, we just return the mock data for the frontend to use
             pass
             
         return Response({
@@ -316,43 +324,48 @@ class PlatformLoginView(views.APIView):
             mock_data = MockPlatformData.objects.filter(phone=worker.phone, platform__iexact=platform).first()
             
             if not mock_data:
-                mock_data = MockPlatformData.objects.filter(phone=worker.phone).first()
-                if mock_data:
-                    mock_data.platform = platform
-                    mock_data.partner_id = f"{platform[:3].upper()}{random.randint(10000, 99999)}"
+                # CREATING DEMO FALLBACK
+                mock_data = MockPlatformData.objects.create(
+                    phone=worker.phone,
+                    platform=platform,
+                    name=worker.name if worker.name else f"Partner-{worker.phone[-4:]}",
+                    partner_id=partner_id if partner_id else f"{platform[:3].upper()}{random.randint(10000, 99999)}",
+                    weekly_earnings=random.randint(4000, 8000),
+                    zone="Bellandur, Bangalore",
+                    city="Bangalore"
+                )
 
-            if mock_data:
-                worker.name = mock_data.name
-                worker.platform = mock_data.platform
-                worker.partner_id = mock_data.partner_id
-                worker.weekly_earnings = mock_data.weekly_earnings
-                worker.zone = mock_data.zone
-                worker.city = mock_data.city
-                worker.is_verified = True
-                worker.onboarding_completed = True
-                worker.save()
-                
-                if not Policy.objects.filter(worker=worker, status='ACTIVE').exists():
-                    Policy.objects.create(
-                        worker=worker,
-                        plan_type='STANDARD',
-                        weekly_premium=80,
-                        coverage_limit=1500,
-                        payment_method='UPI',
-                        start_date=timezone.now().date(),
-                        end_date=timezone.now().date() + datetime.timedelta(days=7),
-                        next_payment_date=timezone.now().date() + datetime.timedelta(days=7),
-                    )
-                
-                if not Delivery.objects.filter(worker=worker).exists():
-                    Delivery.objects.create(
-                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
-                        location="Indiranagar 12th Main", amount=45, status='ONGOING'
-                    )
-                    Delivery.objects.create(
-                        worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
-                        location="Koramangala 4th Block", amount=55, status='COMPLETED'
-                    )
+            worker.name = mock_data.name
+            worker.platform = mock_data.platform
+            worker.partner_id = mock_data.partner_id
+            worker.weekly_earnings = mock_data.weekly_earnings
+            worker.zone = mock_data.zone
+            worker.city = mock_data.city
+            worker.is_verified = True
+            worker.onboarding_completed = True
+            worker.save()
+            
+            if not Policy.objects.filter(worker=worker, status='ACTIVE').exists():
+                Policy.objects.create(
+                    worker=worker,
+                    plan_type='STANDARD',
+                    weekly_premium=80,
+                    coverage_limit=1500,
+                    payment_method='UPI',
+                    start_date=timezone.now().date(),
+                    end_date=timezone.now().date() + datetime.timedelta(days=7),
+                    next_payment_date=timezone.now().date() + datetime.timedelta(days=7),
+                )
+            
+            if not Delivery.objects.filter(worker=worker).exists():
+                Delivery.objects.create(
+                    worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                    location="Indiranagar 12th Main", amount=45, status='ONGOING'
+                )
+                Delivery.objects.create(
+                    worker=worker, category='QUICK_COMMERCE', city=worker.city or "Bangalore",
+                    location="Koramangala 4th Block", amount=55, status='COMPLETED'
+                )
 
         # Issue JWT
         refresh = RefreshToken.for_user(worker.user)

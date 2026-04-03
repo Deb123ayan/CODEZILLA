@@ -1,0 +1,129 @@
+# ============================================================
+# ZafBy — Apache Security Configuration (.htaccess)
+# Hardens the web server against path/directory traversal
+# attacks, bad bots, dangerous methods, and common injections.
+# ============================================================
+
+# ── 1. Engine & Options ─────────────────────────────────────
+Options -Indexes -Includes -ExecCGI -FollowSymLinks
+ServerSignature Off
+
+# ── 2. Directory Traversal Prevention ───────────────────────
+# Block encoded traversal sequences and null bytes in URLs
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Block null-byte attacks
+  RewriteCond %{QUERY_STRING} (\%00|%00) [NC]
+  RewriteRule .* - [F,L]
+
+  # Block ../ and ..\ traversal patterns (plain and URL-encoded)
+  RewriteCond %{REQUEST_URI} \.\./          [NC,OR]
+  RewriteCond %{REQUEST_URI} \.\.\\         [NC,OR]
+  RewriteCond %{REQUEST_URI} (%2e%2e%2f)    [NC,OR]
+  RewriteCond %{REQUEST_URI} (%2e%2e/)      [NC,OR]
+  RewriteCond %{REQUEST_URI} (\.\.%2f)      [NC,OR]
+  RewriteCond %{REQUEST_URI} (%2e%2e%5c)    [NC,OR]
+  RewriteCond %{REQUEST_URI} (%252e%252e%255c) [NC,OR]
+  RewriteCond %{REQUEST_URI} (%252e%252e%252f) [NC,OR]
+  RewriteCond %{QUERY_STRING} \.\./          [NC,OR]
+  RewriteCond %{QUERY_STRING} (%2e|%252e)%2e [NC,OR]
+  RewriteCond %{QUERY_STRING} \.\.\%2f       [NC,OR]
+  RewriteCond %{QUERY_STRING} \.\.\%5c       [NC]
+  RewriteRule .* - [F,L]
+
+  # Block double-encoded slashes and backslashes
+  RewriteCond %{REQUEST_URI} (%2f%2e%2e|%2F%2E%2E) [NC,OR]
+  RewriteCond %{REQUEST_URI} (%5c%2e%2e|%5C%2E%2E) [NC]
+  RewriteRule .* - [F,L]
+
+  # Block attempts to access sensitive system paths
+  RewriteCond %{REQUEST_URI} (/etc/passwd|/etc/shadow|/proc/self|/var/log|/var/www|/usr/local) [NC,OR]
+  RewriteCond %{REQUEST_URI} (boot\.ini|win\.ini|system32|cmd\.exe|powershell) [NC]
+  RewriteRule .* - [F,L]
+</IfModule>
+
+# ── 3. Restrict Dangerous HTTP Methods ──────────────────────
+<LimitExcept GET POST PUT PATCH DELETE OPTIONS>
+  Deny from all
+</LimitExcept>
+
+# Block TRACE and TRACK entirely (XST attacks)
+<IfModule mod_rewrite.c>
+  RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK) [NC]
+  RewriteRule .* - [F,L]
+</IfModule>
+
+# ── 4. Block SQL Injection & Command Injection in Query String
+<IfModule mod_rewrite.c>
+  RewriteCond %{QUERY_STRING} (union.*select|select.*from|insert.*into|drop.*table|exec\(|execute\() [NC,OR]
+  RewriteCond %{QUERY_STRING} (;.*\||&.*cmd=|`.*`|\|.*\|) [NC,OR]
+  RewriteCond %{QUERY_STRING} (<script|javascript:|vbscript:|onload=|onerror=|onclick=) [NC]
+  RewriteRule .* - [F,L]
+</IfModule>
+
+# ── 5. Block Bad User Agents (Scanners, Exploit Kits) ───────
+<IfModule mod_rewrite.c>
+  RewriteCond %{HTTP_USER_AGENT} (nikto|sqlmap|nmap|masscan|zgrab|wget|libwww-perl|python-requests|curl\/[0-1]\.) [NC,OR]
+  RewriteCond %{HTTP_USER_AGENT} (havij|acunetix|burpsuite|qualysguard|nessus|openvas|w3af|skipfish) [NC,OR]
+  RewriteCond %{HTTP_USER_AGENT} ^-?$  [NC]
+  RewriteRule .* - [F,L]
+</IfModule>
+
+# ── 6. Prevent Access to Sensitive Files ────────────────────
+<FilesMatch "(\.env|\.env\.local|\.env\.production|\.htpasswd|\.htaccess|\.git|composer\.(json|lock)|package-lock\.json|requirements\.txt|db\.sqlite3|.*\.log|.*\.bak|.*\.sql|.*\.conf|.*\.config|manage\.py|settings\.py|wsgi\.py|asgi\.py)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# Block access to hidden directories (dot folders like .git, .ssh)
+<IfModule mod_rewrite.c>
+  RewriteRule "(^|/)\.(?!well-known)" - [F,L]
+</IfModule>
+
+# ── 7. Clickjacking & MIME-Type Sniffing Protection ─────────
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(self), camera=(), microphone=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' http://localhost:8000; frame-ancestors 'self';"
+</IfModule>
+
+# ── 8. Rate Limiting (if mod_ratelimit available) ───────────
+<IfModule mod_ratelimit.c>
+  SetOutputFilter RATE_LIMIT
+  SetEnv rate-limit 400
+</IfModule>
+
+# ── 9. Disable Server-Side Includes & CGI ───────────────────
+<IfModule mod_include.c>
+  Options -Includes
+</IfModule>
+
+# ── 10. Charset & MIME Hardening ────────────────────────────
+AddDefaultCharset UTF-8
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType text/css               .css
+  AddType application/json       .json
+</IfModule>
+
+# ── 11. Cache Control for Static Assets ─────────────────────
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp          "access plus 1 year"
+  ExpiresByType image/png           "access plus 1 year"
+  ExpiresByType image/svg+xml       "access plus 1 year"
+  ExpiresByType text/css            "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# ── 12. SPA Fallback (React Router) ─────────────────────────
+<IfModule mod_rewrite.c>
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>

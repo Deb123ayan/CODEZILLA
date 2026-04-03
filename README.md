@@ -256,4 +256,82 @@ ZafBy does not merely detect GPS spoofing. It **makes large-scale GPS spoofing m
 
 ---
 
+## 📅 7. Changelog
+
+All notable changes are documented here in reverse chronological order.
+
+---
+
+### [2026-04-04] — Admin Command Center: Actions, Security & Review Queue
+
+#### 🔐 Security
+- **Added `.htaccess` hardening file** (`frontend/.htaccess`) with comprehensive protection against:
+  - Path & directory traversal attacks (plain, URL-encoded `%2e%2e%2f`, double-encoded `%252e%252e`)
+  - Null-byte injection attacks (`%00`)
+  - SQL injection patterns in query strings (`UNION SELECT`, `DROP TABLE`, etc.)
+  - Dangerous HTTP methods (`TRACE`, `TRACK`) — mitigates XST attacks
+  - Access to sensitive files (`.env`, `.git`, `db.sqlite3`, `settings.py`, `manage.py`, etc.)
+  - Bad bot / scanner user-agents (Nikto, SQLMap, Acunetix, Nessus, etc.)
+  - Full security header suite (`X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `Content-Security-Policy`, `Permissions-Policy`)
+  - SPA fallback rule for React Router (`index.html` catch-all)
+
+#### 🖥️ Admin Panel — CRUD Actions
+- **Workers page**: Added **Add Worker** (creates Django user + Worker record), **Edit Worker** (update all profile fields in-place), **Deactivate Worker** (soft-delete, `is_active=False`) — all wired directly to database via new REST endpoints.
+- **Claims page**: Added **Edit Claim** (modify status, compensation, reason) and **Delete Claim** (hard-delete record) modals.
+- **Policies page**: Added **Issue Policy** (assign a new policy to any real worker with plan auto-fill), **Edit Policy** (update plan, premium, coverage, status) and **Cancel Policy** (sets `status=CANCELLED`) — all live DB operations.
+
+#### 🔎 Admin Panel — Manual Review Queue
+- **New `Manual Review Queue` section** on the Claims page: a dark-themed panel that automatically surfaces all `PENDING` and `FRAUD_FLAGGED` claims requiring human adjudication.
+  - Shows claim ID, worker name, reason, payout amount, and live fraud risk score with color-coded severity (green / orange / red).
+  - Inline **Approve** and **Reject** quick-action buttons for fast triage.
+  - **Inspect** button opens a full-screen `Review Inspector Modal` with:
+    - Complete claim metadata grid
+    - Animated fraud risk score progress bar with AI-generated guidance text
+    - **Adjudicator Notes** text area for internal decision rationale
+    - **Approve & Pay** / **Reject Claim** decision buttons
+  - Queue disappears automatically when all claims have been processed.
+
+#### 🔧 Backend — New API Endpoints (`backend/api/admin_views.py` + `urls.py`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/admin/workers/create/` | Create new worker + Django auth user |
+| `GET / PATCH / DELETE` | `/api/admin/workers/<id>/` | Fetch / update / soft-delete worker |
+| `GET / PATCH / DELETE` | `/api/admin/claims/<id>/detail/` | Fetch / update / hard-delete claim |
+| `GET / POST` | `/api/admin/policies/list/` | List all policies / issue new policy |
+| `PATCH / DELETE` | `/api/admin/policies/<id>/` | Update / cancel policy |
+
+#### 🎨 UI — Filter Bug Fix
+- **Fixed duplicate platform filter pills** on the Workers page. Pills are now derived from the canonical `PLATFORMS` constant (not raw DB data), preventing duplicates caused by case differences or trailing whitespace in stored platform names.
+- Filter matching is now fully case-insensitive.
+
+---
+
+### [2026-04-03] — Admin Panel Standardisation & Mobile Responsiveness
+
+- Rewrote all 5 admin pages (`AdminDashboard`, `AdminWorkers`, `AdminClaims`, `AdminAnalytics`, `AdminPolicies`) to share the user dashboard design language: cream `#fcf9f8` background, `rounded-3xl` white cards with soft shadows, hover-lift animations, `font-manrope` + `font-inter` typography.
+- Created shared `AdminLayout` component (header, hamburger drawer, mobile bottom nav) mirroring `DashboardHeader` + `MobileBottomNav`.
+- Added `/admin/dashboard` explicit route to resolve 404 navigation errors.
+- All admin views switched to `AllowAny` permission during development to unblock 403 Forbidden errors on unauthenticated local sessions.
+- Fixed `AdminAuthContext` logout redirect to `/admin/login` (was redirecting to landing page).
+- Fixed `AdminGuard` to redirect unauthenticated users to `/admin/login` instead of root.
+
+---
+
+### [2026-03-31] — Mock Data Integration & Branding
+
+- Executed `load_mock_json.py` to seed `MockPlatformData` with 12,000+ delivery partner records.
+- Replaced placeholder icons with `logo.svg` across `Navbar`, `DashboardHeader`, and `Sidebar`.
+- Updated favicon site-wide.
+
+---
+
+### [2026-03-22] — Policy Renewal & KYC Update
+
+- Updated policy duration to **4-day coverage cycle** for new purchases and renewals.
+- Implemented 30-day master protection cycle for long-term coverage tracking.
+- Integrated AI-driven KYC verification with document classification and tampering detection.
+- Updated `PROJECT_STATUS.md` to reflect all implemented features.
+
+---
+
 *ZafBy — Built for the last mile. Defended for the long run.*

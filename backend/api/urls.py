@@ -19,6 +19,10 @@ from api.admin_views import (
     AdminWorkerListView, AdminRiskHeatmapView, AdminClaimsMonitoringView,
     AdminAnalyticsView, AdminFraudStatsView, AdminClaimListView,
     AdminClaimActionView,
+    # CRUD views
+    AdminWorkerDetailView, AdminWorkerCreateView,
+    AdminClaimDetailView,
+    AdminPolicyListView, AdminPolicyDetailView,
 )
 from payments.views import PayoutProcessView
 from api.risk_views import RealTimeRiskPredictionView
@@ -71,12 +75,17 @@ urlpatterns = [
 
     # ── Admin Dashboard ────────────────────────────────────────────────
     path('admin/workers/', AdminWorkerListView.as_view(), name='admin-workers'),
+    path('admin/workers/create/', AdminWorkerCreateView.as_view(), name='admin-worker-create'),
+    path('admin/workers/<uuid:worker_id>/', AdminWorkerDetailView.as_view(), name='admin-worker-detail'),
     path('admin/risk-zones/', AdminRiskHeatmapView.as_view(), name='admin-risk-zones'),
     path('admin/claims/', AdminClaimsMonitoringView.as_view(), name='admin-claims-monitoring'),
     path('admin/analytics/', AdminAnalyticsView.as_view(), name='admin-analytics'),
     path('admin/fraud-stats/', AdminFraudStatsView.as_view(), name='admin-fraud-stats'),
     path('admin/claims/list/', AdminClaimListView.as_view(), name='admin-claims-list'),
     path('admin/claims/<uuid:claim_id>/action/', AdminClaimActionView.as_view(), name='admin-claim-action'),
+    path('admin/claims/<uuid:claim_id>/detail/', AdminClaimDetailView.as_view(), name='admin-claim-detail'),
+    path('admin/policies/list/', AdminPolicyListView.as_view(), name='admin-policies-list'),
+    path('admin/policies/<uuid:policy_id>/', AdminPolicyDetailView.as_view(), name='admin-policy-detail'),
 
     # ── AI Risk Prediction ─────────────────────────────────────────────
     path('risk/predict/', RealTimeRiskPredictionView.as_view(), name='risk-predict'),
