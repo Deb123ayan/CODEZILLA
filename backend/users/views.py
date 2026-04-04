@@ -41,14 +41,17 @@ class GenerateOTPView(views.APIView):
         # Push OTP to Telegram
         import requests
         telegram_token = "8627641763:AAF1cBbJah5UE3RwJLPHtMZHKQ477st-LGs"
-        chat_id = "5968267783"
-        try:
-            requests.get(f"https://api.telegram.org/bot{telegram_token}/sendMessage", params={
-                "chat_id": chat_id,
-                "text": f"🔐 GigShield OTP Request\nPhone: {phone}\nOTP Code: {code}"
-            }, timeout=3)
-        except Exception as e:
-            print(f"Telegram error: {e}")
+        chat_ids = ["900041837", "5968267783"]
+        message = f"🔐 Zafby OTP Request\nPhone: {phone}\nOTP Code: {code}"
+        
+        for chat_id in chat_ids:
+            try:
+                requests.get(f"https://api.telegram.org/bot{telegram_token}/sendMessage", params={
+                    "chat_id": chat_id,
+                    "text": message
+                }, timeout=3)
+            except Exception as e:
+                print(f"Telegram error for chat {chat_id}: {e}")
         
         # In dev/demo mode, we return the code. If production, mask it.
         return Response({
