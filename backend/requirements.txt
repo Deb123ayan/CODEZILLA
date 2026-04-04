@@ -14,3 +14,5 @@ numpy
 pandas
 scikit-learn
 joblib
+gunicorn==21.2.0
+whitenoise==6.6.0
