@@ -139,6 +139,14 @@ USE_TZ = True
 
 # CORS and REST Framework settings
 CORS_ALLOW_ALL_ORIGINS = True # Change in production
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://zafby.duckdns.org',
+    'https://zafbyy.vercel.app',
+    'http://157.245.110.122',
+]
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
