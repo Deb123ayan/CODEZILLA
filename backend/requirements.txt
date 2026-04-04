@@ -17,7 +17,6 @@ joblib
 gunicorn==21.2.0
 whitenoise==6.6.0
 setuptools
-# Extra dependencies for local use only
-# opencv-python-headless
-# torch
-# torchvision
+opencv-python-headless
+torch
+torchvision

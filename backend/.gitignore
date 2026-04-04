@@ -13,10 +13,28 @@ media
 
 # Environment variables
 .env
+.env.local
+.env.production
+
+# Deployment scripts with credentials (use deploy_production.py instead)
+deploy_vps.py
+vps_check.py
 
 # Models (too heavy for git)
 backend/ai_engine/models/*.joblib
 
+# Dataset (too large)
+dataset/
+
+# Simulation logs
+simulation_log.txt
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
