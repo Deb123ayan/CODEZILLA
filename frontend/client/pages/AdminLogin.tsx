@@ -43,7 +43,7 @@ export default function AdminLogin() {
             <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/80 backdrop-blur-xl border-b border-[#e4e2e0]/50">
                 <div className="flex justify-between items-center px-6 py-5 max-w-7xl mx-auto md:px-8 md:py-6">
                     <div className="flex items-center gap-3 md:gap-4 cursor-pointer" onClick={() => navigate("/")}>
-                        <img src="/client/assets/logo/logo.svg" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
+                        <img src="/client/assets/logo/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
                         <span className="text-2xl font-extrabold tracking-tighter text-[#1b1c1b]">Zafby</span>
                     </div>
                 </div>

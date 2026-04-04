@@ -13,7 +13,7 @@ class RiskPredictionQuerySerializer(serializers.Serializer):
 class RealTimeRiskPredictionView(generics.GenericAPIView):
     """
     GET /api/risk/predict/?zone=<zone_name>
-    AI-powered disruption forecast using real weather data.
+    Algorithmic disruption forecast using real weather data and ML models.
     """
     @swagger_auto_schema(
         query_serializer=RiskPredictionQuerySerializer,

@@ -21,10 +21,7 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
         <div className="flex flex-col items-center md:items-start space-y-4">
           <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-[#004191] rounded-[1rem] flex items-center justify-center transform transition-transform group-hover:rotate-12 group-hover:scale-110 duration-300 shadow-md">
-              <Shield className="text-white opacity-40" size={20} />
-              <Zap className="text-white absolute scale-75" size={18} />
-            </div>
+            <img src="/client/assets/logo/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
             <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">Zafby<span className="text-[#004191]">.</span></span>
           </div>
           <p className="text-[10px] font-inter font-bold uppercase tracking-[0.2em] text-[#a8aebf]">

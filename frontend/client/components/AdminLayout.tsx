@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             onClick={() => navigate("/admin/dashboard")}
           >
             <img
-              src="/client/assets/logo/logo.svg"
+              src="/client/assets/logo/logo.png"
               alt="Zafby Logo"
               className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500"
             />

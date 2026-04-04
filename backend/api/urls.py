@@ -12,6 +12,7 @@ from users.views import (
     PlatformLoginView,
     WorkerProfileView,
     UpdateProfileDetailsView,
+    PayoutMethodView,
 )
 from fraud_detection.views import VerifyScreenshotView, VerifyDocumentView
 from policies.views import PolicyQuoteView, PolicyPurchaseView, PolicyRenewView, PolicyStatusView
@@ -51,6 +52,7 @@ urlpatterns = [
     path('workers/register/', WorkerRegisterView.as_view(), name='worker-register'),
     path('workers/location/', UpdateLocationView.as_view(), name='update-location'),
     path('workers/<uuid:worker_id>/profile/', WorkerProfileView.as_view(), name='worker-profile'),
+    path('workers/<uuid:worker_id>/payout-method/', PayoutMethodView.as_view(), name='worker-payout-method'),
     
     # ── Policy Management ──────────────────────────────────────────────
     path('policy/quote/', PolicyQuoteView.as_view(), name='policy-quote'),

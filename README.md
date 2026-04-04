@@ -113,6 +113,9 @@ By analyzing live weather, traffic, and platform telemetry, ZafBy detects unprev
 
 ## 🔐 6. Adversarial Defense & Anti-Spoofing Strategy
 
+> **⚠️ ARCHITECTURAL DESIGN DOCUMENT**
+> *The following section describes the **planned, multi-layered anti-spoofing architecture** that ZafBy is designed to support. The current implementation includes Gate Zero (weather parametric verification via OpenWeatherMap API), ML-based anomaly detection (IsolationForest), GPS distance checks, and neighborhood consensus verification. Advanced telemetry signals (cell tower triangulation, IMU analysis, device fingerprinting, DBSCAN cluster analysis) are documented here as the intended production roadmap.*
+
 > **Threat Scenario:** A coordinated syndicate of 500+ delivery workers, organizing covertly via localized Telegram groups, deploys consumer-grade GPS-spoofing applications to fabricate their geolocation data. While physically at rest in the safety of their homes, these bad actors trick ZafBy's parametric trigger into believing they are stranded within a severe, red-alert weather zone — thereby engineering mass false claim payouts that drain the liquidity pool and destabilize the entire insurance ecosystem.
 
 > **Why GPS Spoofing Apps Work — And Exactly Why They Fail Against ZafBy:** Consumer GPS-spoofing applications (e.g., Fake GPS GO, Mock Location tools) operate by injecting false coordinates into the device's Location API — the single data channel that naive parametric platforms poll. They are architecturally incapable of simultaneously forging the device's cellular network attachment (which Cell Tower the SIM is physically registered to), the ISP/carrier routing of the outbound HTTP request (IP geolocation), or the raw readings from the device's hardware Inertial Measurement Unit (IMU). These three signals are sourced from entirely separate hardware and OS stacks. This structural gap is ZafBy's primary line of attack.
@@ -320,7 +323,7 @@ All notable changes are documented here in reverse chronological order.
 ### [2026-03-31] — Mock Data Integration & Branding
 
 - Executed `load_mock_json.py` to seed `MockPlatformData` with 12,000+ delivery partner records.
-- Replaced placeholder icons with `logo.svg` across `Navbar`, `DashboardHeader`, and `Sidebar`.
+- Replaced placeholder icons with `logo.png` across `Navbar`, `DashboardHeader`, and `Sidebar`.
 - Updated favicon site-wide.
 
 ---

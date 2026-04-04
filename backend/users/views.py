@@ -36,7 +36,7 @@ class GenerateOTPView(views.APIView):
         OTP.objects.create(phone=phone, code=code, expires_at=expires_at)
         
         # In real world, send SMS here. For demo, we just return it or log it.
-        print(f"DEBUG: OTP for {phone} is {code}")
+        print(f"DEBUG: OTP for {phone} is {code}", flush=True)
         
         # In dev/demo mode, we return the code. If production, mask it.
         return Response({
@@ -49,12 +49,12 @@ class VerifyOTPView(views.APIView):
         phone = request.data.get('phone')
         code = request.data.get('code')
         
-        print(f"DEBUG: Verifying OTP for {phone} with code {code}")
+        print(f"DEBUG: Verifying OTP for {phone} with code {code}", flush=True)
         
         otp = OTP.objects.filter(phone=phone, code=code).last()
         
         if not otp or otp.is_expired():
-            print(f"DEBUG: Verification failed for {phone}. last_otp: {otp}")
+            print(f"DEBUG: Verification failed for {phone}. last_otp: {otp}", flush=True)
             return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
         
         otp.is_verified = True
@@ -107,7 +107,7 @@ class VerifyOTPView(views.APIView):
                     Policy.objects.create(
                         worker=worker,
                         plan_type='STANDARD',
-                        weekly_premium=80,
+                        weekly_premium=59,
                         coverage_limit=1500,
                         payment_method='UPI',
                         start_date=timezone.now().date(),
@@ -349,7 +349,7 @@ class PlatformLoginView(views.APIView):
                 Policy.objects.create(
                     worker=worker,
                     plan_type='STANDARD',
-                    weekly_premium=80,
+                    weekly_premium=59,
                     coverage_limit=1500,
                     payment_method='UPI',
                     start_date=timezone.now().date(),
@@ -651,7 +651,7 @@ class VerifyClaimWeatherView(views.APIView):
                 worker__zone=worker.zone,
                 status='CANCELLED',
                 cancellation_type='TRAFFIC',
-                updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+                updated_at__gte=timezone.now() - timedelta(minutes=60)
             ).count()
             
             if recent_zone_cancels > 0:
@@ -713,6 +713,12 @@ class WorkerProfileView(views.APIView):
             "aadhar_front": request.build_absolute_uri(worker.aadhar_front.url) if bool(worker.aadhar_front) else None,
             "aadhar_back":  request.build_absolute_uri(worker.aadhar_back.url)  if bool(worker.aadhar_back)  else None,
             "pan_card":     request.build_absolute_uri(worker.pan_card.url)     if bool(worker.pan_card)     else None,
+            # Payout method details
+            "upi_id": worker.upi_id or None,
+            "bank_account_number": worker.bank_account_number or None,
+            "bank_ifsc": worker.bank_ifsc or None,
+            "bank_holder_name": worker.bank_holder_name or None,
+            "bank_name": worker.bank_name or None,
         }, status=status.HTTP_200_OK)
 
 
@@ -738,3 +744,65 @@ class WorkerProfileView(views.APIView):
             worker.save(update_fields=changed)
 
         return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
+
+
+class PayoutMethodView(views.APIView):
+    """
+    GET  /api/workers/<worker_id>/payout-method/  – fetch saved payout details
+    POST /api/workers/<worker_id>/payout-method/  – save/update payout details
+    """
+    def get(self, request, worker_id):
+        try:
+            worker = Worker.objects.get(id=worker_id)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            "upi_id": worker.upi_id or None,
+            "bank_account_number": worker.bank_account_number or None,
+            "bank_ifsc": worker.bank_ifsc or None,
+            "bank_holder_name": worker.bank_holder_name or None,
+            "bank_name": worker.bank_name or None,
+            "has_upi": bool(worker.upi_id),
+            "has_bank": bool(worker.bank_account_number and worker.bank_ifsc),
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, worker_id):
+        try:
+            worker = Worker.objects.get(id=worker_id)
+        except Worker.DoesNotExist:
+            return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        method_type = request.data.get('method_type')  # 'upi' or 'bank'
+
+        if method_type == 'upi':
+            upi_id = request.data.get('upi_id', '').strip()
+            if not upi_id or '@' not in upi_id:
+                return Response({"error": "Please enter a valid UPI ID (e.g. name@upi)"}, status=status.HTTP_400_BAD_REQUEST)
+            worker.upi_id = upi_id
+            worker.save(update_fields=['upi_id'])
+            return Response({"message": "UPI ID saved successfully", "upi_id": worker.upi_id}, status=status.HTTP_200_OK)
+
+        elif method_type == 'bank':
+            account = request.data.get('bank_account_number', '').strip()
+            ifsc = request.data.get('bank_ifsc', '').strip()
+            holder = request.data.get('bank_holder_name', '').strip()
+            bank_name = request.data.get('bank_name', '').strip()
+
+            if not account or not ifsc or not holder:
+                return Response({"error": "Account number, IFSC code, and holder name are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            worker.bank_account_number = account
+            worker.bank_ifsc = ifsc.upper()
+            worker.bank_holder_name = holder
+            worker.bank_name = bank_name
+            worker.save(update_fields=['bank_account_number', 'bank_ifsc', 'bank_holder_name', 'bank_name'])
+            return Response({
+                "message": "Bank details saved successfully",
+                "bank_account_number": worker.bank_account_number,
+                "bank_ifsc": worker.bank_ifsc,
+                "bank_holder_name": worker.bank_holder_name,
+                "bank_name": worker.bank_name,
+            }, status=status.HTTP_200_OK)
+
+        return Response({"error": "method_type must be 'upi' or 'bank'"}, status=status.HTTP_400_BAD_REQUEST)

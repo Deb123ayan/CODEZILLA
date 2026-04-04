@@ -11,7 +11,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="GigShield — AI Parametric Insurance API",
       default_version='v1',
-      description="API documentation for the AI-Powered Gig Worker Insurance Platform (Guidewire DEVTrails 2026)",
+      description="API documentation for the Algorithmically-Driven Gig Worker Insurance Platform (Guidewire DEVTrails 2026)",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@gigshield.local"),
       license=openapi.License(name="BSD License"),

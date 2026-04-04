@@ -12,6 +12,7 @@ class Policy(models.Model):
     
     PLAN_CHOICES = [
         ('BASIC', 'Basic Plan'),
+        ('STANDARD', 'Standard Plan'),
         ('PRO', 'Pro Plan'),
         ('PREMIUM_PLUS', 'Premium Plus'),
     ]

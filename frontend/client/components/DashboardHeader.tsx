@@ -51,7 +51,7 @@ export default function DashboardHeader() {
             if (!isOnboarding) navigate("/dashboard");
           }}
         >
-          <img src="/client/assets/logo/logo.svg" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
+          <img src="/client/assets/logo/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
           <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">
             Zafby<span className="text-[#004191]">.</span>
           </span>

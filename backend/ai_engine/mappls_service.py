@@ -64,7 +64,7 @@ class MapplsService:
             congestion_level = random.randint(1, 10) # 1 clear, 10 gridlock
             
             return {
-                "source": "mappls_live",
+                "source": "mappls_simulated",
                 "congestion_index": congestion_level,
                 "description": "Heavy Traffic" if congestion_level > 7 else "Normal Traffic",
                 "speed_kmh": 40 - (congestion_level * 3),

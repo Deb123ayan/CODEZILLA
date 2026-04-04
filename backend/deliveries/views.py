@@ -6,6 +6,7 @@ from claims.models import Claim
 from events.models import Event
 from policies.models import Policy
 from django.utils import timezone
+from datetime import timedelta
 
 class CreateDeliveryView(views.APIView):
     def post(self, request):
@@ -47,7 +48,7 @@ class DeliveryActionView(views.APIView):
             if platform in ['Amazon', 'Flipkart']:
                 # Amazon/Flipkart: Try for 3 days then cancel
                 delivery.status = 'RETRYING'
-                delivery.retail_retry_deadline = timezone.now() + timezone.timedelta(days=3)
+                delivery.retail_retry_deadline = timezone.now() + timedelta(days=3)
                 delivery.cancellation_type = cancel_type
                 delivery.cancellation_reason = f"Retry initiated. Will cancel after 3 days if undelivered. Reason: {reason}"
                 delivery.save()
@@ -69,6 +70,7 @@ class DeliveryActionView(views.APIView):
 
             # ── FRAUD DETECTION / VERIFICATION ENGINE ──
             # Step 1: Default to Review if verification fails
+            claim_info = None
             claim_status = 'PENDING_REVIEW'
             verification_note = "Awaiting verification..."
             v_data = {
@@ -115,14 +117,14 @@ class DeliveryActionView(views.APIView):
                         worker__zone=delivery.worker.zone,
                         status='CANCELLED',
                         cancellation_type='TRAFFIC',
-                        updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+                        updated_at__gte=timezone.now() - timedelta(minutes=60)
                     ).exclude(pk=delivery.pk).count()
                     req_consensus = 1
                 else:
                     recent_zone_cancels = Delivery.objects.filter(
                         worker__zone=delivery.worker.zone,
                         status='CANCELLED',
-                        updated_at__gte=timezone.now() - timezone.timedelta(minutes=60)
+                        updated_at__gte=timezone.now() - timedelta(minutes=60)
                     ).exclude(pk=delivery.pk).count()
                     req_consensus = 2
                 

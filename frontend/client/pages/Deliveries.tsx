@@ -233,13 +233,13 @@ export default function Deliveries() {
             </h1>
             <p className="text-[#434751] mt-2 font-medium text-lg">Manage your {platformName} routes.</p>
           </div>
-          <button
+          {/* <button
             onClick={fetchDeliveries}
             className="flex items-center gap-2 text-[10px] font-inter font-bold uppercase tracking-widest text-[#004191] bg-[#004191]/5 px-4 py-2 rounded-full hover:bg-[#004191]/10 transition-colors"
           >
             <RefreshCw size={14} />
             Refresh
-          </button>
+          </button> */}
         </div>
 
         {/* Status Count Bento */}

@@ -85,6 +85,8 @@ class ScreenshotForensics:
         except Exception as e:
             findings.append(f"Integrity check error: {str(e)}")
 
+        return min(max(score, 0), 25), findings
+
 
     @staticmethod
     def check_ai_and_editing(image_bytes):

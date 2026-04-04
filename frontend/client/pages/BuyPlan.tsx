@@ -43,14 +43,14 @@ export default function BuyPlan() {
 
   const plans = [
     {
-      name: "Starter",
-      id: "BASIC",
+      name: "Standard",
+      id: "STANDARD",
       price: billingCycle === "weekly" ? "₹59" : "₹199",
       period: billingCycle === "weekly" ? "/week" : "/month",
       desc: "Essential protection for part-time earners.",
       features: [
         "Weather Lock Protection",
-        "Flash Payouts up to ₹5,000"
+        "Flash Payouts up to ₹1,500"
       ]
     },
     {
@@ -61,9 +61,9 @@ export default function BuyPlan() {
       period: billingCycle === "weekly" ? "/week" : "/month",
       desc: "Full coverage for full-time professionals.",
       features: [
-        "Everything in Starter",
+        "Everything in Standard",
         "Zone Guard Coverage",
-        "Flash Payouts up to ₹10,000",
+        "Flash Payouts up to ₹3,000",
         "24/7 Priority Support"
       ]
     },
@@ -75,7 +75,7 @@ export default function BuyPlan() {
       desc: "Maximum stability for the top-tier workers.",
       features: [
         "Everything in Premium",
-        "Flash Payouts up to ₹20,000",
+        "Flash Payouts up to ₹5,000",
         "Comprehensive Legal Shield",
         "Multi-platform Cloud Support"
       ]

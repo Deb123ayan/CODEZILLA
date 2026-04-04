@@ -69,6 +69,13 @@ class Worker(models.Model):
     wallet_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     
+    # Payment / Payout Details
+    upi_id = models.CharField(max_length=100, blank=True, null=True)  # e.g. name@upi
+    bank_account_number = models.CharField(max_length=20, blank=True, null=True)
+    bank_ifsc = models.CharField(max_length=11, blank=True, null=True)
+    bank_holder_name = models.CharField(max_length=255, blank=True, null=True)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

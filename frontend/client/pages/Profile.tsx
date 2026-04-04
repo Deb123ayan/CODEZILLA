@@ -130,6 +130,27 @@ export default function Profile() {
   const displayUPI        = displayPhone ? `${displayPhone}@okaxis` : "Not set";
   const initials          = displayName.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
 
+  const getPlatformColors = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "zomato":
+        return { bar: "from-[#E23744] via-[#cb202d] to-[#E23744]", base: "from-[#E23744] to-[#cb202d]", shadow: "shadow-[#E23744]/30", bg: "bg-[#fdf2f2]", text: "text-[#E23744]" };
+      case "swiggy":
+        return { bar: "from-[#FC8019] via-[#e26a04] to-[#FC8019]", base: "from-[#FC8019] to-[#e26a04]", shadow: "shadow-[#FC8019]/30", bg: "bg-[#fff7f0]", text: "text-[#FC8019]" };
+      case "zepto":
+        return { bar: "from-[#3B1578] via-[#240c4a] to-[#3B1578]", base: "from-[#3B1578] to-[#240c4a]", shadow: "shadow-[#3B1578]/30", bg: "bg-[#f3effb]", text: "text-[#3B1578]" };
+      case "blinkit":
+        return { bar: "from-[#F8CB46] via-[#d6a518] to-[#F8CB46]", base: "from-[#F8CB46] to-[#d6a518]", shadow: "shadow-[#F8CB46]/30", bg: "bg-[#fefaf0]", text: "text-[#d6a518]" };
+      case "flipkart":
+        return { bar: "from-[#FFC200] via-[#e6af00] to-[#FFC200]", base: "from-[#FFC200] to-[#e6af00]", shadow: "shadow-[#FFC200]/30", bg: "bg-[#fffce8]", text: "text-[#b08600]" };
+      case "amazon":
+        return { bar: "from-[#232F3E] via-[#131A22] to-[#232F3E]", base: "from-[#232F3E] to-[#131A22]", shadow: "shadow-[#232F3E]/30", bg: "bg-[#f2f4f8]", text: "text-[#232F3E]" };
+      default:
+        return { bar: "from-[#004191] via-[#0058be] to-[#004191]", base: "from-[#004191] to-[#0058be]", shadow: "shadow-[#004191]/30", bg: "bg-[#e8f0ff]", text: "text-[#004191]" };
+    }
+  };
+
+  const pColors = getPlatformColors(displayPlatform);
+
   if (loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#fcf9f8] space-y-6">
@@ -148,13 +169,13 @@ export default function Profile() {
 
         {/* ── Hero Card ── */}
         <div className="bg-white rounded-[2.5rem] shadow-[0_8px_32px_-8px_rgba(27,28,27,0.10)] border border-[#e4e2e0]/40 overflow-hidden">
-          <div className="h-2 w-full bg-gradient-to-r from-[#004191] via-[#0058be] to-[#004191]" />
+          <div className={cn("h-2 w-full bg-gradient-to-r", pColors.bar)} />
           <div className="p-8 md:p-10">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-7">
 
               {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-[1.75rem] bg-gradient-to-br from-[#004191] to-[#0058be] flex items-center justify-center shadow-lg shadow-[#004191]/30">
+                <div className={cn("w-24 h-24 md:w-28 md:h-28 rounded-[1.75rem] bg-gradient-to-br flex items-center justify-center shadow-lg", pColors.base, pColors.shadow)}>
                   <span className="text-white text-3xl md:text-4xl font-black tracking-tighter">{initials}</span>
                 </div>
                 {profile?.is_verified && (
@@ -167,7 +188,7 @@ export default function Profile() {
               {/* Name + meta */}
               <div className="flex-1 text-center sm:text-left min-w-0">
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-3">
-                  <span className="px-3 py-1 bg-[#e8f0ff] text-[#004191] text-[10px] font-inter font-bold uppercase tracking-[0.08em] rounded-full">
+                  <span className={cn("px-3 py-1 text-[10px] font-inter font-bold uppercase tracking-[0.08em] rounded-full", pColors.bg, pColors.text)}>
                     {platformName} Partner
                   </span>
                   {profile?.is_verified && (
@@ -258,7 +279,7 @@ export default function Profile() {
               { Icon: Bell,  label: "Notifications", value: "Active",   dot: "#004191", onClick: () => {} },
               { Icon: Globe, label: "Language",       value: "English",  dot: "#16a34a", onClick: () => {} },
               { Icon: Shield,label: "Govt ID Status", value: profile?.is_verified ? "Verified" : "Pending", dot: profile?.is_verified ? "#16a34a" : "#ca8a04", onClick: () => setGovtIdOpen(true) },
-              { Icon: Lock,  label: "Biometrics",     value: "Enabled",  dot: "#16a34a", onClick: () => {} },
+              // { Icon: Lock,  label: "Biometrics",     value: "Enabled",  dot: "#16a34a", onClick: () => {} },
             ].map(({ Icon, label, value, dot, onClick }) => (
               <div 
                 key={label} 

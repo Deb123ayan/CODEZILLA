@@ -146,20 +146,18 @@ class PolicyPurchaseView(APIView):
             working_days = len(worker.working_days) if worker.working_days else 6
             avg_income = worker.weekly_earnings // max(working_days, 1)
 
-        # Fallback values if not provided by frontend list but we have the plan type
-        final_premium = premium
-        final_coverage = coverage
+        # Always compute risk quote for response data
+        quote = calculate_risk_and_premium(
+            zone=worker.zone,
+            avg_income=avg_income,
+            weather_risk=weather_risk,
+            pollution_risk=pollution_risk,
+            platform=worker.platform
+        )
 
-        if not final_premium or not final_coverage:
-            quote = calculate_risk_and_premium(
-                zone=worker.zone,
-                avg_income=avg_income,
-                weather_risk=weather_risk,
-                pollution_risk=pollution_risk,
-                platform=worker.platform
-            )
-            final_premium = final_premium or quote['premium']
-            final_coverage = final_coverage or quote['coverage']
+        # Use frontend-provided values if available, otherwise use quote
+        final_premium = premium or quote['premium']
+        final_coverage = coverage or quote['coverage']
 
         policy = Policy.objects.create(
             worker=worker,
@@ -329,7 +327,7 @@ class PolicyStatusView(APIView):
                 active_policy = Policy.objects.create(
                     worker=worker,
                     plan_type='STANDARD',
-                    weekly_premium=80,
+                    weekly_premium=59,
                     coverage_limit=1500,
                     payment_method='UPI',
                     start_date=timezone.now().date(),
