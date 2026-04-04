@@ -51,7 +51,9 @@ export default function DashboardHeader() {
             if (!isOnboarding) navigate("/dashboard");
           }}
         >
-          <img src="/client/assets/logo/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
+          <div className="w-10 h-10 rounded-xl bg-[#004191] flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform duration-500">
+            <Zap size={22} fill="currentColor" />
+          </div>
           <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">
             Zafby<span className="text-[#004191]">.</span>
           </span>

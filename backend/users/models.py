@@ -31,6 +31,8 @@ class Worker(models.Model):
     zone = models.CharField(max_length=100)
     security_key = models.CharField(max_length=6, blank=True, null=True)
     govt_id = models.CharField(max_length=20, blank=True, null=True)
+    aadhaar_number = models.CharField(max_length=14, blank=True, null=True) # Format: XXXX XXXX XXXX
+    pan_number = models.CharField(max_length=10, blank=True, null=True)     # Format: ABCDE1234F
     
     # KYC Documents
     aadhar_front = models.ImageField(upload_to='kyc/aadhar/', null=True, blank=True)

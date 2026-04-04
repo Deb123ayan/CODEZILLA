@@ -108,6 +108,8 @@ class VerifyOTPView(views.APIView):
                 worker.weekly_earnings = mock_data.weekly_earnings
                 worker.zone = mock_data.zone
                 worker.city = mock_data.city
+                worker.aadhaar_number = mock_data.aadhaar_number
+                worker.pan_number = mock_data.pan_number
                 worker.is_verified = True
                 worker.onboarding_completed = True
                 working_days_count = len(worker.working_days) if worker.working_days else 6

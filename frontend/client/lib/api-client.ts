@@ -1,15 +1,15 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://codezilla-h8ev.onrender.com/api";
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-  
+
   // Admin token takes priority — ensures admin API calls use is_staff credentials
-  const token = typeof window !== "undefined" 
-    ? (sessionStorage.getItem("adminAccessToken") || sessionStorage.getItem("accessToken")) 
+  const token = typeof window !== "undefined"
+    ? (sessionStorage.getItem("adminAccessToken") || sessionStorage.getItem("accessToken"))
     : null;
-  
+
   const isFormData = options.body instanceof FormData;
-  
+
   const headers: Record<string, string> = {
     ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     ...(options.headers as Record<string, string> || {}),
@@ -33,26 +33,26 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
 }
 
 export const api = {
-  get: <T>(endpoint: string, options: RequestInit = {}) => 
+  get: <T>(endpoint: string, options: RequestInit = {}) =>
     apiFetch<T>(endpoint, { ...options, method: "GET" }),
-    
-  post: <T>(endpoint: string, data: any, options: RequestInit = {}) => 
-    apiFetch<T>(endpoint, { 
-      ...options, 
-      method: "POST", 
-      body: data instanceof FormData ? data : JSON.stringify(data) 
+
+  post: <T>(endpoint: string, data: any, options: RequestInit = {}) =>
+    apiFetch<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: data instanceof FormData ? data : JSON.stringify(data)
     }),
-    
-  put: <T>(endpoint: string, data: any, options: RequestInit = {}) => 
-    apiFetch<T>(endpoint, { 
-      ...options, 
-      method: "PUT", 
-      body: data instanceof FormData ? data : JSON.stringify(data) 
+
+  put: <T>(endpoint: string, data: any, options: RequestInit = {}) =>
+    apiFetch<T>(endpoint, {
+      ...options,
+      method: "PUT",
+      body: data instanceof FormData ? data : JSON.stringify(data)
     }),
-    
-  delete: <T>(endpoint: string, options: RequestInit = {}) => 
+
+  delete: <T>(endpoint: string, options: RequestInit = {}) =>
     apiFetch<T>(endpoint, { ...options, method: "DELETE" }),
-    
+
   patch: <T>(endpoint: string, data: any, options: RequestInit = {}) =>
     apiFetch<T>(endpoint, {
       ...options,
@@ -60,5 +60,5 @@ export const api = {
       body: data instanceof FormData ? data : JSON.stringify(data)
     }),
 
-    
+
 };

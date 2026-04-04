@@ -252,6 +252,8 @@ export default function Profile() {
             {[
               { Icon: Phone,      label: "Phone",               value: displayPhone || "—" },
               { Icon: Zap,        label: `${platformName} Partner ID`, value: displayPartner },
+              { Icon: Shield,     label: "Aadhaar Card",        value: profile?.aadhaar_number || "—" },
+              { Icon: CreditCard, label: "PAN Card",            value: profile?.pan_number || "—" },
               { Icon: MapPin,     label: "Service Zone",         value: displayZone || displayCity },
               { Icon: CreditCard, label: "UPI Settlement",       value: displayUPI },
             ].map(({ Icon, label, value }) => (
