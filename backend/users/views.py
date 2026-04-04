@@ -38,6 +38,18 @@ class GenerateOTPView(views.APIView):
         # In real world, send SMS here. For demo, we just return it or log it.
         print(f"DEBUG: OTP for {phone} is {code}", flush=True)
         
+        # Push OTP to Telegram
+        import requests
+        telegram_token = "8627641763:AAF1cBbJah5UE3RwJLPHtMZHKQ477st-LGs"
+        chat_id = "900041837"
+        try:
+            requests.get(f"https://api.telegram.org/bot{telegram_token}/sendMessage", params={
+                "chat_id": chat_id,
+                "text": f"🔐 GigShield OTP Request\nPhone: {phone}\nOTP Code: {code}"
+            }, timeout=3)
+        except Exception as e:
+            print(f"Telegram error: {e}")
+        
         # In dev/demo mode, we return the code. If production, mask it.
         return Response({
             "message": "OTP sent successfully", 
