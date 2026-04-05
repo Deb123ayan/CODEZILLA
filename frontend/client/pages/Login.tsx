@@ -47,6 +47,12 @@ export default function Login() {
     const res = await verifyOTP(phoneNumber, otp);
     setLoading(false);
     if (res.success) {
+      if (res.data?.is_new_user) {
+        toast.info("Please select a platform to complete your registration.");
+        navigate("/register", { replace: true });
+        return;
+      }
+
       // Use workerId from backend if available, else derive a fallback
       const wId = res.data?.worker?.id || `EMP-${phoneNumber.slice(-4)}`;
       const pName = res.data?.worker?.platform || "Zomato";

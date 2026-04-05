@@ -114,6 +114,12 @@ export default function ProfileSetup() {
     });
   };
 
+  React.useEffect(() => {
+    if (!formData.city && navigator.geolocation) {
+       handleDetectLocation();
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
