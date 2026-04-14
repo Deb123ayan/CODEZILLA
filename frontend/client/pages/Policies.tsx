@@ -295,7 +295,10 @@ export default function Policies() {
                 Our AI analyzes your delivery frequency, locations, and historical disruptions to recommend the optimal risk shield.
               </p>
             </div>
-            <button className="relative z-10 w-full md:w-auto px-10 py-5 bg-white text-[#1b1c1b] font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#f5f3f1] transition-all shadow-xl active:scale-[0.98] whitespace-nowrap">
+            <button 
+              onClick={() => navigate('/risk-predictor')}
+              className="relative z-10 w-full md:w-auto px-10 py-5 bg-white text-[#1b1c1b] font-inter font-bold text-[11px] uppercase tracking-[0.15em] rounded-full hover:bg-[#f5f3f1] transition-all shadow-xl active:scale-[0.98] whitespace-nowrap"
+            >
               Run AI Analysis
             </button>
           </section>

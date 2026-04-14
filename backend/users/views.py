@@ -114,7 +114,6 @@ class VerifyOTPView(views.APIView):
                 worker.aadhaar_number = mock_data.aadhaar_number
                 worker.pan_number = mock_data.pan_number
                 worker.is_verified = True
-                worker.onboarding_completed = True
                 working_days_count = len(worker.working_days) if worker.working_days else 6
                 worker.avg_daily_income = worker.weekly_earnings // max(working_days_count, 1)
                 worker.save()
@@ -215,7 +214,6 @@ class MockPlatformConnectView(views.APIView):
             worker.zone = mock_data.zone
             worker.city = mock_data.city
             worker.is_verified = True
-            worker.onboarding_completed = True
             worker.save()
         except Worker.DoesNotExist:
             pass
@@ -359,7 +357,6 @@ class PlatformLoginView(views.APIView):
             worker.zone = mock_data.zone
             worker.city = mock_data.city
             worker.is_verified = True
-            worker.onboarding_completed = True
             worker.save()
             
             if not Policy.objects.filter(worker=worker, status='ACTIVE').exists():
@@ -409,6 +406,7 @@ class UpdateProfileDetailsView(views.APIView):
         worker.govt_id = request.data.get('aadhaar_number', worker.govt_id)
         worker.city = request.data.get('city', worker.city)
         worker.platform = request.data.get('platform', worker.platform)
+        worker.upi_id = request.data.get('upi_id', worker.upi_id)
         worker.save()
         
         return Response({"message": "Profile details updated"}, status=status.HTTP_200_OK)
@@ -536,6 +534,8 @@ class UpdateLocationView(views.APIView):
                 'phone': openapi.Schema(type=openapi.TYPE_STRING, description="Worker phone number"),
                 'latitude': openapi.Schema(type=openapi.TYPE_NUMBER, description="GPS latitude"),
                 'longitude': openapi.Schema(type=openapi.TYPE_NUMBER, description="GPS longitude"),
+                'zone': openapi.Schema(type=openapi.TYPE_STRING, description="Zone name"),
+                'city': openapi.Schema(type=openapi.TYPE_STRING, description="City name"),
             }
         ),
         responses={200: "Location updated"}
@@ -544,6 +544,8 @@ class UpdateLocationView(views.APIView):
         phone = request.data.get('phone')
         latitude = request.data.get('latitude')
         longitude = request.data.get('longitude')
+        zone = request.data.get('zone')
+        city = request.data.get('city')
         
         if not phone or latitude is None or longitude is None:
             return Response({"error": "phone, latitude, and longitude are required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -555,6 +557,8 @@ class UpdateLocationView(views.APIView):
         
         worker.latitude = float(latitude)
         worker.longitude = float(longitude)
+        if zone: worker.zone = zone
+        if city: worker.city = city
         worker.save()
         
         return Response({
@@ -759,6 +763,15 @@ class WorkerProfileView(views.APIView):
                 worker.avg_daily_income = worker.weekly_earnings // max(working_days, 1)
                 changed.append('avg_daily_income')
             worker.save(update_fields=changed)
+            
+            # Sync with MockPlatformData
+            from users.models import MockPlatformData
+            mock = MockPlatformData.objects.filter(phone=worker.phone).first()
+            if mock:
+                for field in updatable:
+                    if field in request.data and hasattr(mock, field):
+                        setattr(mock, field, request.data[field])
+                mock.save()
 
         return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
 

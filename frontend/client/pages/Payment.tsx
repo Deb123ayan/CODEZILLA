@@ -46,33 +46,58 @@ export default function Payment() {
     { id: "netbanking", label: "Net Banking", icon: Building },
   ];
 
+  const [processingStep, setProcessingStep] = useState("");
+
   const handlePayment = async () => {
+    // Basic Validation
+    if (selectedMethod === 'upi' && !upiId) {
+      toast.error("Please enter your UPI ID");
+      return;
+    }
+    if (selectedMethod === 'card' && (!cardNumber || !expiry || !cvv)) {
+      toast.error("Please fill in all card details");
+      return;
+    }
+    if (selectedMethod === 'netbanking' && !bank) {
+      toast.error("Please select your bank");
+      return;
+    }
+
     if (!workerId && !phoneNumber) {
       toast.error("Sign in to process payment");
       return;
     }
 
-    const pid = workerId || phoneNumber;
+    const phone = phoneNumber || sessionStorage.getItem("userPhone");
     setIsProcessing(true);
-    toast.loading(`Securing your ${plan.name} coverage...`, { id: 'payment' });
+    
+    // Simplified realistic payment simulation
+    const steps = [
+      "Securing connection...",
+      "Authorizing payment...",
+      "Payment Received!"
+    ];
 
     try {
-      // Simulate network gateway feeling
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      for (const step of steps) {
+        setProcessingStep(step);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
-      await api.post("/policy/purchase/", {
-        worker_id: pid,
-        payment_status: "SUCCESS",
+      // Finalize
+      await api.post("/auth/finalize/", {
+        phone: phone,
         plan_type: plan.planKey,
-        premium: plan.premium,
-        coverage: plan.coverageValue,
+        payment_method: selectedMethod.toUpperCase()
       });
 
-      toast.success(`${plan.name} activated successfully!`, { id: 'payment' });
-      navigate('/policies');
+      toast.success("Payment Received! Shield Active.", { duration: 3000 });
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
-      toast.error(error.message || "Payment attempt failed", { id: 'payment' });
+      console.error("Payment error:", error);
+      toast.error(error.message || "Gateway timeout. Please try again.");
       setIsProcessing(false);
+      setProcessingStep("");
     }
   };
 
@@ -273,7 +298,7 @@ export default function Payment() {
           >
             {isProcessing ? (
               <span className="flex items-center gap-3">
-                <Loader2 size={18} className="animate-spin" /> Verifying...
+                <Loader2 size={18} className="animate-spin" /> {processingStep || "Verifying..."}
               </span>
             ) : (
               `Pay Securely`

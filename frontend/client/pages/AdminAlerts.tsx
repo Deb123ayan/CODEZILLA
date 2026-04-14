@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { 
   AlertTriangle, Shield, Send, Info, Target, Loader2, ShieldAlert, Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import AdminLayout from "@/components/AdminLayout";
 
 export default function AdminAlerts() {
   const [loading, setLoading] = useState(true);
@@ -19,14 +18,6 @@ export default function AdminAlerts() {
     severity: "7",
     description: ""
   });
-  
-  const navigate = useNavigate();
-  const { logout } = useAdminAuth();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/admin");
-  };
 
   const fetchAlerts = async () => {
     setLoading(true);
@@ -73,45 +64,16 @@ export default function AdminAlerts() {
   const warnings = events.filter(e => e.severity < 8 && e.severity >= 5).length;
 
   return (
-    <div className="bg-[#fcf9f8] text-[#1b1c1b] font-manrope selection:bg-[#ba1a1a]/20 selection:text-[#ba1a1a] min-h-screen flex flex-col pb-10">
-      
-      {/* Admin Top Navbar */}
-      <header className="fixed top-0 w-full z-50 bg-[#1b1c1b] text-white backdrop-blur-xl border-b border-[#434751]/30">
-        <div className="flex justify-between items-center px-6 py-4 max-w-[1400px] mx-auto">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
-            <ShieldAlert className="text-[#ba1a1a]" size={28} />
-            <span className="text-2xl font-extrabold tracking-tighter hidden sm:block">Zafby<span className="text-[#a8aebf] font-medium ml-1">Admin</span></span>
-          </div>
-          
-          <nav className="hidden lg:flex items-center gap-10 font-inter text-[11px] font-bold tracking-[0.1em] uppercase">
-            <Link to="/admin/dashboard" className="text-[#a8aebf] hover:text-white transition-colors">Overview</Link>
-            <Link to="/admin/workers" className="text-[#a8aebf] hover:text-white transition-colors">Workers</Link>
-            <Link to="/admin/claims" className="text-[#a8aebf] hover:text-white transition-colors">Claims</Link>
-            <Link to="/admin/alerts" className="text-white relative after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-1 after:bg-[#ba1a1a]">Risk Sonar</Link>
-          </nav>
-          
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center px-4 py-2 bg-[#ba1a1a]/20 text-[#ffb4ab] text-[10px] font-inter font-bold uppercase tracking-[0.15em] rounded-full border border-[#ba1a1a]/30">
-              <span className="w-2 h-2 bg-[#ffb4ab] rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(255,180,171,0.8)]" />
-              Live Feed
-            </div>
-            <button onClick={handleLogout} className="px-5 py-2.5 bg-[#ffffff] text-[#1b1c1b] font-inter font-bold text-[10px] uppercase tracking-[0.15em] rounded-full hover:bg-[#e4e2e0] transition-colors">
-              Secure Exit
-            </button>
-          </div>
+    <AdminLayout>
+      {/* ── Page Header ──────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-2 mb-12">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-[#1b1c1b]">Risk Sonar & Events</h1>
+          <p className="text-[#434751] mt-1 font-medium text-lg">Real-time systemic risk detection and manual overrides.</p>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 pt-32 px-6 max-w-[1400px] mx-auto w-full animate-in fade-in duration-700 space-y-12">
-        
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-[#1b1c1b]">Risk Sonar & Events</h1>
-            <p className="text-[#434751] mt-1 font-medium text-lg">Real-time systemic risk detection and manual overrides.</p>
-          </div>
-        </div>
-
+      <div className="space-y-12">
         {/* Severity Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
@@ -282,7 +244,7 @@ export default function AdminAlerts() {
 
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

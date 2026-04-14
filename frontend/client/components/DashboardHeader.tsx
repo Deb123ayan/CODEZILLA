@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Zap } from "lucide-react";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import BrandLogo from "./BrandLogo";
 
 const navLinks = [
   { name: "Home",       href: "/dashboard" },
@@ -34,6 +36,31 @@ export default function DashboardHeader() {
         // silently ignore — fallback to username is already set
       });
   }, [workerId, isOnboarding]);
+
+  const { phoneNumber, status } = useUserAuth();
+  const prevClaimsLen = useRef<number>(-1);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || (!workerId && !phoneNumber)) return;
+    const pid = workerId || phoneNumber;
+
+    const checkAlerts = async () => {
+      try {
+        const claimRes = await api.get<any>(`/claims/history/?worker_id=${pid}`);
+        const currentClaims = claimRes.claims || [];
+        if (prevClaimsLen.current !== -1 && currentClaims.length > prevClaimsLen.current) {
+          toast.success("New Claim Update Received!", {
+            description: "Check your alerts for details."
+          });
+        }
+        prevClaimsLen.current = currentClaims.length;
+      } catch (e) {}
+    };
+
+    checkAlerts();
+    const intervalId = setInterval(checkAlerts, 30000);
+    return () => clearInterval(intervalId);
+  }, [workerId, phoneNumber, status]);
   
   const initials = displayName
     ? displayName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 1)
@@ -51,12 +78,7 @@ export default function DashboardHeader() {
             if (!isOnboarding) navigate("/dashboard");
           }}
         >
-          <div className="w-10 h-10 rounded-xl bg-[#004191] flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform duration-500">
-            <Zap size={22} fill="currentColor" />
-          </div>
-          <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">
-            Zafby<span className="text-[#004191]">.</span>
-          </span>
+          <BrandLogo />
         </div>
 
         <div className="flex items-center gap-6">

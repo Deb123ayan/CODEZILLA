@@ -78,6 +78,14 @@ class Worker(models.Model):
     bank_holder_name = models.CharField(max_length=255, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
     
+    # Telegram Integration
+    telegram_user_id = models.BigIntegerField(unique=True, null=True, blank=True)
+    telegram_username = models.CharField(max_length=255, null=True, blank=True)
+    telegram_chat_id = models.BigIntegerField(null=True, blank=True)
+    telegram_connection_token = models.CharField(max_length=255, null=True, blank=True)
+    telegram_connected = models.BooleanField(default=False)
+    telegram_connected_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

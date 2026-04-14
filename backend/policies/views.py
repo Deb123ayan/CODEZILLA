@@ -35,8 +35,15 @@ class PolicyQuoteView(generics.GenericAPIView):
         if not worker_id:
             return Response({"error": "worker_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -111,8 +118,15 @@ class PolicyPurchaseView(APIView):
         if payment_status != 'SUCCESS':
             return Response({"error": "Payment failed or not successful"}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -213,8 +227,15 @@ class PolicyRenewView(APIView):
         if not worker_id:
             return Response({"error": "worker_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -294,8 +315,15 @@ class PolicyStatusView(APIView):
         if not worker_id:
             return Response({"error": "worker_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 

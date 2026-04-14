@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { api } from "@/lib/api-client";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function DocumentVerification() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function DocumentVerification() {
   return (
     <div className="bg-[#fdf8f8] text-[#1c1b1b] antialiased min-h-screen flex flex-col font-inter">
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-[#fdf8f8]/90 backdrop-blur-md shadow-[0px_24px_48px_-12px_rgba(28,27,27,0.02)]">
-        <div className="text-2xl font-black tracking-tighter text-[#1c1b1b]">Zafby</div>
+        <BrandLogo />
       </header>
 
       <main className="flex-grow pt-32 pb-40 px-6 flex flex-col items-center justify-center max-w-6xl mx-auto w-full">

@@ -65,21 +65,56 @@ const queryClient = new QueryClient();
 // Request geolocation permission once on first load
 function useGeolocationPermission() {
   useEffect(() => {
-    if (localStorage.getItem("geoPrompted")) return;
     if (!navigator.geolocation) return;
+
+    // Track immediately then poll every 60s
+    const postLocation = async (pos: GeolocationPosition) => {
+      localStorage.setItem("userLat", pos.coords.latitude.toString());
+      localStorage.setItem("userLng", pos.coords.longitude.toString());
+      
+      const phone = sessionStorage.getItem("userPhone");
+      if (phone) {
+        // Reverse Geocode
+        let zone = "";
+        let city = "";
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+          const data = await res.json();
+          zone = data.address?.suburb || data.address?.neighbourhood || data.address?.commercial || data.address?.residential || "";
+          city = data.address?.city || data.address?.town || data.address?.state_district || "";
+          console.log("[Zafby] Zone resolved:", zone, city);
+        } catch (e) {
+          console.warn("[Zafby] Geocoding failure", e);
+        }
+
+        import("@/lib/api-client").then(({ api }) => {
+          api.post("/workers/location/", {
+            phone: phone,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            zone: zone,
+            city: city
+          }).catch(() => {});
+        });
+      }
+    };
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        localStorage.setItem("geoPrompted", "1");
-        localStorage.setItem("userLat", pos.coords.latitude.toString());
-        localStorage.setItem("userLng", pos.coords.longitude.toString());
-        console.log("[Zafby] Location acquired:", pos.coords.latitude, pos.coords.longitude);
-      },
+      postLocation,
       () => {
         localStorage.setItem("geoPrompted", "1");
         console.warn("[Zafby] Location permission denied");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+
+    const watchId = navigator.geolocation.watchPosition(
+      postLocation,
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 }
 
