@@ -136,21 +136,18 @@ export default function Landing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch">
-              {/* Basic */}
+              {/* Standard */}
               <div className="bg-[#f5f3f1] rounded-[3rem] p-10 flex flex-col border border-[#e4e2e0] hover:-translate-y-2 transition-all duration-300 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.04)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.12)]">
                 <div className="mb-8">
-                  <h3 className="text-2xl font-extrabold text-[#1b1c1b] mb-1">Basic Plan</h3>
+                  <h3 className="text-2xl font-extrabold text-[#1b1c1b] mb-1">Standard</h3>
                   <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold tracking-tighter text-[#1b1c1b]">₹1,200</span>
+                    <span className="text-5xl font-extrabold tracking-tighter text-[#1b1c1b]">₹59</span>
                     <span className="font-medium ml-1 text-[#a8aebf]">/week</span>
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 mb-8">
-                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-[#a8aebf]">Max Coverage</p>
-                  <p className="text-2xl font-extrabold text-[#004191]">₹45,000 / disruption</p>
-                </div>
+                <p className="text-sm text-[#434751] font-inter font-medium mb-6">Essential protection for part-time earners.</p>
                 <ul className="space-y-4 mb-10 flex-1">
-                  {["Weather Protection", "Traffic Delay Coverage", "Instant Payouts"].map(f => (
+                  {["Weather Lock Protection", "Flash Payouts up to ₹1,500"].map(f => (
                     <li key={f} className="flex items-center gap-3">
                       <CheckCircle size={20} className="text-[#16a34a] flex-shrink-0" />
                       <span className="text-sm font-medium text-[#434751]">{f}</span>
@@ -162,24 +159,21 @@ export default function Landing() {
                 </Link>
               </div>
 
-              {/* Pro — Featured */}
+              {/* Premium — Featured */}
               <div className="bg-gradient-to-br from-[#004191] to-[#0058be] rounded-[3rem] p-10 flex flex-col border border-transparent hover:-translate-y-2 transition-all duration-300 shadow-[0_24px_48px_-12px_rgba(0,65,145,0.4)] hover:shadow-[0_40px_80px_-20px_rgba(0,65,145,0.5)] relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#ba1a1a] text-white px-4 py-1.5 rounded-full text-[10px] font-inter font-bold uppercase tracking-[0.15em] shadow-lg">
                   Most Popular
                 </div>
                 <div className="mb-8">
-                  <h3 className="text-2xl font-extrabold text-white mb-1">Pro Plan</h3>
+                  <h3 className="text-2xl font-extrabold text-white mb-1">Premium</h3>
                   <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹2,000</span>
+                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹89</span>
                     <span className="font-medium ml-1 text-white/60">/week</span>
                   </div>
                 </div>
-                <div className="bg-white/10 rounded-2xl p-6 mb-8">
-                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-white/60">Max Coverage</p>
-                  <p className="text-2xl font-extrabold text-white">₹1,00,000 / disruption</p>
-                </div>
+                <p className="text-sm text-white/70 font-inter font-medium mb-6">Full coverage for full-time professionals.</p>
                 <ul className="space-y-4 mb-10 flex-1">
-                  {["Everything in Basic", "Accident Coverage", "Vehicle Breakdown Aid", "Priority Claims"].map(f => (
+                  {["Everything in Standard", "Zone Guard Coverage", "Flash Payouts up to ₹3,000", "24/7 Priority Support"].map(f => (
                     <li key={f} className="flex items-center gap-3">
                       <CheckCircle size={20} className="text-[#bbf7d0] flex-shrink-0" />
                       <span className="text-sm font-medium text-white/90">{f}</span>
@@ -191,21 +185,18 @@ export default function Landing() {
                 </Link>
               </div>
 
-              {/* Premium Plus */}
+              {/* Elite */}
               <div className="bg-[#1b1c1b] rounded-[3rem] p-10 flex flex-col border border-transparent hover:-translate-y-2 transition-all duration-300 shadow-[0_12px_24px_-8px_rgba(27,28,27,0.3)] hover:shadow-[0_40px_80px_-20px_rgba(27,28,27,0.5)]">
                 <div className="mb-8">
-                  <h3 className="text-2xl font-extrabold text-white mb-1">Premium Plus</h3>
+                  <h3 className="text-2xl font-extrabold text-white mb-1">Elite</h3>
                   <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹3,500</span>
+                    <span className="text-5xl font-extrabold tracking-tighter text-white">₹119</span>
                     <span className="font-medium ml-1 text-white/60">/week</span>
                   </div>
                 </div>
-                <div className="bg-white/10 rounded-2xl p-6 mb-8">
-                  <p className="text-[10px] font-inter font-bold uppercase tracking-[0.15em] mb-1 text-white/60">Max Coverage</p>
-                  <p className="text-2xl font-extrabold text-white">₹2,00,000 / disruption</p>
-                </div>
+                <p className="text-sm text-white/70 font-inter font-medium mb-6">Maximum stability for the top-tier workers.</p>
                 <ul className="space-y-4 mb-10 flex-1">
-                  {["Everything in Pro", "Health Insurance Add-on", "Family Coverage", "Legal Assistance"].map(f => (
+                  {["Everything in Premium", "Flash Payouts up to ₹5,000", "Comprehensive Legal Shield", "Multi-platform Cloud Support"].map(f => (
                     <li key={f} className="flex items-center gap-3">
                       <CheckCircle size={20} className="text-[#bbf7d0] flex-shrink-0" />
                       <span className="text-sm font-medium text-white/90">{f}</span>
