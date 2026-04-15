@@ -63,9 +63,9 @@ By analyzing live weather, traffic, and platform telemetry, ZafBy detects unprev
 4. The Python Image Forensics module decomposes the image bytes. If deemed authentic, it flags `is_verified=True`.
 
 ### Step 3: Activating Protection & Operating
-1. The worker secures their final Active Policy (Standard or Premium) tier, with the secure discount automatically applied if their forensics score returned clean.
+1. The worker secures their final Active Policy (Standard, Premium, or Elite tier), with the secure discount automatically applied if their forensics and Aadhaar/PAN KYC score returned clean.
 2. Once activated, they are dropped into their **Live Dashboard**.
-3. Here, they safely monitor their "Coverage Per Event" (e.g., ₹2000), "Weekly Premium" (e.g., ₹35 deduction), and watch their "Earnings vs. Protected" trends dynamically scale.
+3. Here, they safely monitor their "Max Coverage" (up to ₹5,000 for Flash Payouts), "Weekly Premium" (e.g., ₹59 deduction), and watch their "Earnings vs. Protected" trends dynamically scale.
 
 ### Step 4: Claim Orchestration (The Admin)
 1. Whenever a disruption triggers or a worker files a manual issue within the "Claims Center", it queues in the backend.
@@ -80,14 +80,17 @@ By analyzing live weather, traffic, and platform telemetry, ZafBy detects unprev
 ### Frontend Layer
 - **Framework**: `React-DOM` configured via `Vite` for lightning-fast bundling.
 - **Routing**: `react-router-dom` utilizing high-order wrapper components (`AdminGuard`, `UserGuard`) for strict authorization.
-- **Styling**: `Tailwind CSS`, highly optimized using `cn` (clsx/tailwind-merge) utilities for complex, adaptive, glassmorphism aesthetics.
-- **Data Visuals**: Recharts integration (`LineChart`, `PieChart`, `BarChart`) bound seamlessly within Tailwind's responsive grid boundaries.
+- **Styling**: `Tailwind CSS` with complex, adaptive, glassmorphism aesthetics.
+- **Data Visuals**: Recharts integration (`LineChart`, `PieChart`, `BarChart`).
+- **Deployment**: Auto-deployed to Vercel via GitHub triggers.
+- **Live URL**: [https://zafbyy.vercel.app](https://zafbyy.vercel.app)
 
 ### Backend Protocol
-- **Core Server**: `Python 3` + `Django REST Framework`.
-- **Database**: `SQLite3` (Development) transitioning robustly into scalable SQL instances.
-- **Architecture**: Separated context apps (`users`, `fraud_detection`, `policies`, `celery_tasks`).
-- **Validation**: Strict `ViewSets` parsing `multipart-form` data alongside token-based session tracking (`RefreshTokens`).
+- **Core Server**: `Python 3` + `Django REST Framework` + OTP via Telegram Bot.
+- **Database**: `Neon PostgreSQL` (Production) & `SQLite3` (Development).
+- **Architecture**: Separated context apps (`users`, `fraud_detection`, `policies`, `celery_tasks`, `ai_engine`, `deliveries`).
+- **Deployment**: Dockerized (`web`, `nginx`) deployed on a Linux VPS.
+- **Live API Endpoint**: `https://zafby.duckdns.org/api/`
 
 ---
 
@@ -262,6 +265,24 @@ ZafBy does not merely detect GPS spoofing. It **makes large-scale GPS spoofing m
 ## 📅 7. Changelog
 
 All notable changes are documented here in reverse chronological order.
+
+---
+
+### [2026-04-15] — Production Deployment & Document Verification Enhancements
+
+#### 🚀 Deployment
+- Successfully deployed the Django backend to VPS (`157.245.110.122`) via Docker Compose.
+- Finalized production domain `zafby.duckdns.org` with proper Nginx reverse proxy and SSL routing.
+- Configured Neon Serverless PostgreSQL as the production database in `.env`.
+- Frontend automatically deploying to Vercel triggered via GitHub changes.
+
+#### 🛡️ Security & Verification
+- Activated full **Document Verification (Aadhaar Front/Back, PAN)** via `/auth/document/verify/` endpoint leveraging AI KYC classifier.
+- Transitioned backend config to `DEBUG = False` and restricted `ALLOWED_HOSTS` for production hardening.
+
+#### 🎨 Frontend Alignment
+- Standardized the core product offerings: **Standard** (₹59/week), **Premium** (₹89/week), and **Elite** (₹119/week).
+- Aligned `Landing.tsx` UI components to seamlessly mirror `BuyPlan.tsx`.
 
 ---
 
