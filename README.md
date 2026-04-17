@@ -265,6 +265,20 @@ All notable changes are documented here in reverse chronological order.
 
 ---
 
+### [2026-04-17] — User Dashboard Location Accuracy & Registration Flow
+
+- **Location Synchronization:** Fixed an issue where the worker's geographical location was not automatically refreshing upon reaching the dashboard. The `Profile.tsx` now successfully fetches and falls back on reverse geocoding via OpenStreetMap or syncing via the backend if local lat/lng are present.
+- **Onboarding Pipeline Polish:** Refined the unified post-signup onboarding timeline. The system now guides users sequentially through account creation, profile setup, location access verification, and mandatory document verification.
+
+---
+
+### [2026-04-05] — Onboarding Flow Registration Integration
+
+- **Comprehensive Onboarding Flow:** Streamlined the seamless, automated sequence that guides users from initial signup through complete account setup to securely grant platform access.
+- **Workflow Verification:** Ensured seamless automated sequence from account creation -> profile setup -> location access -> mandatory document verification.
+
+---
+
 ### [2026-04-04] — Admin Command Center: Actions, Security & Review Queue
 
 #### 🔐 Security
