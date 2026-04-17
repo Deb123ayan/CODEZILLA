@@ -104,11 +104,9 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem(REFRESH_TOKEN, res.refresh);
             
             // If user is existing, we might get worker data back
-            if (!res.is_new_user && res.worker) {
-                const w = res.worker;
-                login(w.platform, w.name, w.email, phone, w.partner_id, w.id);
-            }
-            
+            // DO NOT call login() here. Let the UI components (Login.tsx / BaseRegistration.tsx)
+            // handle the login state post-verification to ensure proper route directing
+            // (e.g. to /profile-setup vs /dashboard).
             return { success: true, data: res };
         } catch (error: any) {
             toast.error(error.message || "Invalid OTP");

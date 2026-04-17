@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useUserAuth } from "@/context/UserAuthContext";
 import { api } from "@/lib/api-client";
+import BrandLogo from "./BrandLogo";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,10 +53,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <img src="/logo.png" alt="Zafby Logo" className="w-12 h-12 object-contain group-hover:rotate-6 transition-transform duration-500" />
-            <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b] group-hover:text-[#004191] transition-colors">
-              Zafby<span className="text-[#004191]">.</span>
-            </span>
+            <BrandLogo />
           </Link>
 
           {/* Desktop Nav Links */}

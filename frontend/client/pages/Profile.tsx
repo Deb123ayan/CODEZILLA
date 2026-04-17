@@ -23,6 +23,7 @@ interface WorkerProfile {
   zone: string;
   weekly_earnings: number;
   total_deliveries: number;
+  upi_id: string | null;
   rating: number | null;
   vehicle_type: string;
   joined_date: string;
@@ -127,7 +128,7 @@ export default function Profile() {
   const displayJoined     = profile?.joined_date
     ? new Date(profile.joined_date).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
     : "—";
-  const displayUPI        = displayPhone ? `${displayPhone}@okaxis` : "Not set";
+  const displayUPI        = profile?.upi_id || "Not set";
   const initials          = displayName.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
 
   const getPlatformColors = (platform: string) => {

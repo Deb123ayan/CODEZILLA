@@ -20,6 +20,7 @@ export default function ProfileSetup() {
     govtId: "",
     platform: contextPlatform ? contextPlatform.toLowerCase() : "",
     city: "",
+    upiId: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -132,6 +133,7 @@ export default function ProfileSetup() {
         aadhaar_number: formData.govtId,
         city: formData.city,
         platform: formData.platform,
+        upi_id: formData.upiId,
       });
       toast.success("Profile details saved successfully!");
       navigate("/document-verification");
@@ -248,10 +250,10 @@ export default function ProfileSetup() {
                     <option disabled value="">Select Platform</option>
                     <option value="zomato">Zomato</option>
                     <option value="swiggy">Swiggy</option>
-                    <option value="uber">Uber</option>
-                    <option value="doordash">DoorDash</option>
+                    <option value="blinkit">Blinkit</option>
+                    <option value="amazon">Amazon</option>
+                    <option value="flipkart">Flipkart</option>
                     <option value="zepto">Zepto</option>
-                    <option value="other">Other</option>
                   </select>
                   {errors.platform && <p className="text-xs text-[#ba1a1a] font-medium ml-1 mt-1">{errors.platform}</p>}
                 </div>
@@ -282,6 +284,26 @@ export default function ProfileSetup() {
                   <MapPin size={12} /> Auto-detect my location
                 </button>
               </div>
+            </div>
+
+            {/* Row 4: UPI ID */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#424754] ml-1">Payment Details (UPI ID)</label>
+              <div className="relative">
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[#c2c6d6] font-bold text-xs uppercase tracking-tighter">UPI Verified</div>
+                <input
+                  type="text"
+                  name="upiId"
+                  value={formData.upiId}
+                  onChange={handleChange}
+                  placeholder="yourname@upi"
+                  className={cn(
+                    "w-full bg-[#f6f3f2] border-none rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-[#0058be]/20 focus:bg-[#ffffff] transition-all placeholder:text-[#c2c6d6]",
+                    errors.upiId && "ring-2 ring-[#ba1a1a]/40 bg-[#ffdad6]/20"
+                  )}
+                />
+              </div>
+              <p className="text-[10px] text-[#424754]/60 font-medium ml-1">Payouts are settled instantly to this ID after claim approval.</p>
             </div>
 
             {/* Actions */}

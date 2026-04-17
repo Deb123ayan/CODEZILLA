@@ -63,9 +63,9 @@ By analyzing live weather, traffic, and platform telemetry, ZafBy detects unprev
 4. The Python Image Forensics module decomposes the image bytes. If deemed authentic, it flags `is_verified=True`.
 
 ### Step 3: Activating Protection & Operating
-1. The worker secures their final Active Policy (Standard or Premium) tier, with the secure discount automatically applied if their forensics score returned clean.
+1. The worker secures their final Active Policy (Standard, Premium, or Elite tier), with the secure discount automatically applied if their forensics and Aadhaar/PAN KYC score returned clean.
 2. Once activated, they are dropped into their **Live Dashboard**.
-3. Here, they safely monitor their "Coverage Per Event" (e.g., ₹2000), "Weekly Premium" (e.g., ₹35 deduction), and watch their "Earnings vs. Protected" trends dynamically scale.
+3. Here, they safely monitor their "Max Coverage" (up to ₹5,000 for Flash Payouts), "Weekly Premium" (e.g., ₹59 deduction), and watch their "Earnings vs. Protected" trends dynamically scale.
 
 ### Step 4: Claim Orchestration (The Admin)
 1. Whenever a disruption triggers or a worker files a manual issue within the "Claims Center", it queues in the backend.
@@ -80,14 +80,17 @@ By analyzing live weather, traffic, and platform telemetry, ZafBy detects unprev
 ### Frontend Layer
 - **Framework**: `React-DOM` configured via `Vite` for lightning-fast bundling.
 - **Routing**: `react-router-dom` utilizing high-order wrapper components (`AdminGuard`, `UserGuard`) for strict authorization.
-- **Styling**: `Tailwind CSS`, highly optimized using `cn` (clsx/tailwind-merge) utilities for complex, adaptive, glassmorphism aesthetics.
-- **Data Visuals**: Recharts integration (`LineChart`, `PieChart`, `BarChart`) bound seamlessly within Tailwind's responsive grid boundaries.
+- **Styling**: `Tailwind CSS` with complex, adaptive, glassmorphism aesthetics.
+- **Data Visuals**: Recharts integration (`LineChart`, `PieChart`, `BarChart`).
+- **Deployment**: Auto-deployed to Vercel via GitHub triggers.
+- **Live URL**: [https://zafbyy.vercel.app](https://zafbyy.vercel.app)
 
 ### Backend Protocol
-- **Core Server**: `Python 3` + `Django REST Framework`.
-- **Database**: `SQLite3` (Development) transitioning robustly into scalable SQL instances.
-- **Architecture**: Separated context apps (`users`, `fraud_detection`, `policies`, `celery_tasks`).
-- **Validation**: Strict `ViewSets` parsing `multipart-form` data alongside token-based session tracking (`RefreshTokens`).
+- **Core Server**: `Python 3` + `Django REST Framework` + OTP via Telegram Bot.
+- **Database**: `Neon PostgreSQL` (Production) & `SQLite3` (Development).
+- **Architecture**: Separated context apps (`users`, `fraud_detection`, `policies`, `celery_tasks`, `ai_engine`, `deliveries`).
+- **Deployment**: Dockerized (`web`, `nginx`) deployed on a Linux VPS.
+- **Live API Endpoint**: `https://zafby.duckdns.org/api/`
 
 ---
 
@@ -262,20 +265,6 @@ ZafBy does not merely detect GPS spoofing. It **makes large-scale GPS spoofing m
 ## 📅 7. Changelog
 
 All notable changes are documented here in reverse chronological order.
-
----
-
-### [2026-04-17] — User Dashboard Location Accuracy & Registration Flow
-
-- **Location Synchronization:** Fixed an issue where the worker's geographical location was not automatically refreshing upon reaching the dashboard. The `Profile.tsx` now successfully fetches and falls back on reverse geocoding via OpenStreetMap or syncing via the backend if local lat/lng are present.
-- **Onboarding Pipeline Polish:** Refined the unified post-signup onboarding timeline. The system now guides users sequentially through account creation, profile setup, location access verification, and mandatory document verification.
-
----
-
-### [2026-04-05] — Onboarding Flow Registration Integration
-
-- **Comprehensive Onboarding Flow:** Streamlined the seamless, automated sequence that guides users from initial signup through complete account setup to securely grant platform access.
-- **Workflow Verification:** Ensured seamless automated sequence from account creation -> profile setup -> location access -> mandatory document verification.
 
 ---
 

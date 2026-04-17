@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { useUserAuth } from "@/context/UserAuthContext";
+import BrandLogo from "./BrandLogo";
 
 interface SidebarProps {
   isAdmin?: boolean;
@@ -88,8 +89,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
         {/* Sidebar Header */}
         <div className="p-8 border-b border-gray-50 flex items-center justify-between pl-24 md:pl-8">
           <Link to="/" className="flex items-center space-x-3 group">
-            <img src="/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
-            <span className="font-black text-2xl text-gray-900 tracking-tighter">Zafby</span>
+            <BrandLogo />
           </Link>
         </div>
 

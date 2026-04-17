@@ -58,8 +58,15 @@ class ClaimSubmitView(views.APIView):
             return Response({"error": "worker_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ── 1. Find worker ─────────────────────────────────────────────
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -288,8 +295,15 @@ class ClaimHistoryView(views.APIView):
         if not worker_id:
             return Response({"error": "worker_id query param is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        import uuid
         try:
+            uuid_obj = uuid.UUID(worker_id)
             worker = Worker.objects.get(id=worker_id)
+        except ValueError:
+            try:
+                worker = Worker.objects.get(phone=worker_id)
+            except Worker.DoesNotExist:
+                return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
         except Worker.DoesNotExist:
             return Response({"error": "Worker not found"}, status=status.HTTP_404_NOT_FOUND)
 

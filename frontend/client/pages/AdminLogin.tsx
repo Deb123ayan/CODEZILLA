@@ -4,6 +4,7 @@ import { Lock, ShieldAlert, ArrowRight, ShieldCheck, Zap, LayoutGrid } from "luc
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
@@ -43,8 +44,9 @@ export default function AdminLogin() {
             <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/80 backdrop-blur-xl border-b border-[#e4e2e0]/50">
                 <div className="flex justify-between items-center px-6 py-5 max-w-7xl mx-auto md:px-8 md:py-6">
                     <div className="flex items-center gap-3 md:gap-4 cursor-pointer" onClick={() => navigate("/")}>
-                        <img src="/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
-                        <span className="text-2xl font-extrabold tracking-tighter text-[#1b1c1b]">Zafby</span>
+                        <BrandLogo>
+                            <span className="text-[#ba1a1a] text-sm font-medium ml-2 bg-[#ba1a1a]/10 px-2 py-0.5 rounded-full">Admin</span>
+                        </BrandLogo>
                     </div>
                 </div>
             </header>

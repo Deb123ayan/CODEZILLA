@@ -14,31 +14,27 @@ export default function BuyPlan() {
   const { phoneNumber: workerPhone } = useUserAuth();
   const navigate = useNavigate();
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = (planId: string) => {
     if (!workerPhone) {
       toast.error("User session mismatch. Please login again.");
       return;
     }
 
-    setLoading(true);
-    const promise = api.post<any>("/auth/finalize/", {
-      phone: workerPhone,
-      plan_type: planId.toUpperCase(),
-      payment_method: "MOCK_GATEWAY"
-    });
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
 
-    toast.promise(promise, {
-      loading: "Activating protection plan...",
-      success: (data) => {
-        setLoading(false);
-        navigate("/dashboard");
-        return `Shield Activated! Weekly Premium: ₹${data.weekly_premium}`;
-      },
-      error: (err) => {
-        setLoading(false);
-        return err.message || "Failed to start coverage";
-      }
-    });
+    // Prepare data for Payment page
+    const paymentData = {
+      planKey: plan.id,
+      name: plan.name,
+      price: plan.price,
+      premium: parseInt(plan.price.replace("₹", "")),
+      coverageValue: plan.id === 'STANDARD' ? 1500 : plan.id === 'PRO' ? 3000 : 5000,
+      features: plan.features,
+      isPopular: plan.popular || false
+    };
+
+    navigate("/payment", { state: { plan: paymentData } });
   };
 
   const plans = [

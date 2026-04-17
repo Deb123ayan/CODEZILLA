@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useUserAuth } from "@/context/UserAuthContext";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -17,7 +18,9 @@ export default function Login() {
   const location = useLocation();
   const { status, login, generateOTP, verifyOTP } = useUserAuth();
 
-  if (status === "authenticated") {
+  const [isManualLogin, setIsManualLogin] = useState(false);
+
+  if (status === "authenticated" && !isManualLogin) {
     const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
     return <Navigate to={destination} replace />;
   }
@@ -44,26 +47,29 @@ export default function Login() {
       return;
     }
     setLoading(true);
+    setIsManualLogin(true);
     const res = await verifyOTP(phoneNumber, otp);
     setLoading(false);
     if (res.success) {
+      // If the backend indicates this is a brand new user, redirect them to registration.
       if (res.data?.is_new_user) {
-        toast.info("Please select a platform to complete your registration.");
+        toast.info("Account not found. Please register first.");
         navigate("/register", { replace: true });
         return;
       }
 
-      // Use workerId from backend if available, else derive a fallback
+      // User exists, so proceed with login
       const wId = res.data?.worker?.id || `EMP-${phoneNumber.slice(-4)}`;
       const pName = res.data?.worker?.platform || "Zomato";
       const uName = res.data?.worker?.name || "Delivery Partner";
       
       login(pName, uName, "", phoneNumber, wId, wId);
-      toast.success(`Welcome back!`);
       
       if (res.data?.onboarding_completed === false) {
+        toast.info("Please complete your profile setup.");
         navigate("/profile-setup", { replace: true });
       } else {
+        toast.success(`Welcome back!`);
         const destination = (location.state as any)?.from?.pathname ?? "/dashboard";
         navigate(destination, { replace: true });
       }
@@ -105,7 +111,7 @@ export default function Login() {
               
               {/* Brand Anchor */}
               <div className="flex justify-center mb-10">
-                <span className="font-['Manrope'] font-bold tracking-[0.2em] text-2xl text-[#1c1b1b]">ZAFBY</span>
+                <BrandLogo />
               </div>
               
               <div className="space-y-2 mb-10 text-center lg:text-left">

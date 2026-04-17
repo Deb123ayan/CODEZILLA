@@ -1,6 +1,7 @@
 import { Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import BrandLogo from "./BrandLogo";
 
 interface DashboardFooterProps {
   className?: string;
@@ -21,8 +22,7 @@ export default function DashboardFooter({ className }: DashboardFooterProps) {
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
         <div className="flex flex-col items-center md:items-start space-y-4">
           <div className="flex items-center space-x-3 group cursor-pointer">
-            <img src="/logo.png" alt="Zafby Logo" className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500" />
-            <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">Zafby<span className="text-[#004191]">.</span></span>
+            <BrandLogo />
           </div>
           <p className="text-[10px] font-inter font-bold uppercase tracking-[0.2em] text-[#a8aebf]">
             Securing Indian Gig Workers &bull; Beta Version

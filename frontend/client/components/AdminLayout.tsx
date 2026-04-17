@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Home, Users, Shield, CreditCard, TrendingUp, LogOut } from "lucide-react";
+import { Menu, X, Home, Users, Shield, CreditCard, TrendingUp, LogOut, ShieldAlert } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { cn } from "@/lib/utils";
+import BrandLogo from "./BrandLogo";
 
 const adminNavLinks = [
   { name: "Overview",  href: "/admin/dashboard" },
@@ -10,6 +11,7 @@ const adminNavLinks = [
   { name: "Claims",    href: "/admin/claims" },
   { name: "Policies",  href: "/admin/policies" },
   { name: "Analytics", href: "/admin/analytics" },
+  { name: "Alerts",    href: "/admin/alerts" },
 ];
 
 const adminBottomNav = [
@@ -18,6 +20,7 @@ const adminBottomNav = [
   { name: "Claims",    href: "/admin/claims",     Icon: Shield },
   { name: "Policies",  href: "/admin/policies",   Icon: CreditCard },
   { name: "Analytics", href: "/admin/analytics",  Icon: TrendingUp },
+  { name: "Alerts",     href: "/admin/alerts",     Icon: ShieldAlert },
 ];
 
 interface AdminLayoutProps {
@@ -47,15 +50,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             className="flex items-center space-x-3 group cursor-pointer"
             onClick={() => navigate("/admin/dashboard")}
           >
-            <img
-              src="/logo.png"
-              alt="Zafby Logo"
-              className="w-10 h-10 object-contain group-hover:rotate-6 transition-transform duration-500"
-            />
-            <span className="font-extrabold text-2xl tracking-tighter text-[#1b1c1b]">
-              Zafby<span className="text-[#004191]">.</span>
+            <BrandLogo>
               <span className="text-[#ba1a1a] text-sm font-medium ml-2 bg-[#ba1a1a]/10 px-2 py-0.5 rounded-full">Admin</span>
-            </span>
+            </BrandLogo>
           </div>
 
           <div className="flex items-center gap-6">
